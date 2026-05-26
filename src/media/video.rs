@@ -79,6 +79,10 @@ pub struct Movie {
     /// Genre / Director / Writer / Role / Collection / etc. tags
     /// aggregated into one flat list. Empty when not emitted.
     pub tags: Vec<super::tags::Tag>,
+    /// Auto-detected intro / credits / commercial markers.
+    pub markers: Vec<super::markers::Marker>,
+    /// Embedded DVD-style chapter index.
+    pub chapters: Vec<super::markers::Chapter>,
     /// Back-reference to the owning library section, used for M3 edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -329,6 +333,10 @@ pub struct Episode {
     pub media: Vec<super::streams::Media>,
     /// Director / Writer / etc. tags. Empty when not emitted.
     pub tags: Vec<super::tags::Tag>,
+    /// Auto-detected intro / credits / commercial markers.
+    pub markers: Vec<super::markers::Marker>,
+    /// Embedded chapter index.
+    pub chapters: Vec<super::markers::Chapter>,
 
     /// Episode poster path.
     pub thumb: Option<String>,
@@ -520,6 +528,12 @@ pub(crate) struct MetadataDto {
     pub(crate) moods: Vec<super::tags::TagDto>,
     #[serde(default, rename = "Style")]
     pub(crate) styles: Vec<super::tags::TagDto>,
+    /// Intro / credits / commercial markers.
+    #[serde(default, rename = "Marker")]
+    pub(crate) markers: Vec<super::markers::MarkerDto>,
+    /// Embedded chapter index.
+    #[serde(default, rename = "Chapter")]
+    pub(crate) chapters: Vec<super::markers::ChapterDto>,
 }
 
 impl MetadataDto {
@@ -614,6 +628,16 @@ impl MetadataDto {
     pub(crate) fn into_episode(mut self, section_ref: LibrarySectionRef) -> Result<Episode> {
         let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
         let tags = self.collect_tags();
+        let markers = self
+            .markers
+            .into_iter()
+            .map(super::markers::MarkerDto::into_domain)
+            .collect();
+        let chapters = self
+            .chapters
+            .into_iter()
+            .map(super::markers::ChapterDto::into_domain)
+            .collect();
         let parent_rating_key = self
             .parent_rating_key
             .as_deref()
@@ -657,6 +681,8 @@ impl MetadataDto {
             grandparent_theme: self.grandparent_theme,
             media,
             tags,
+            markers,
+            chapters,
             thumb: self.thumb,
             art: self.art,
             view_count: self.view_count.unwrap_or(0),
@@ -676,6 +702,16 @@ impl MetadataDto {
             .media
             .into_iter()
             .map(super::streams::MediaDto::into_domain)
+            .collect();
+        let markers = self
+            .markers
+            .into_iter()
+            .map(super::markers::MarkerDto::into_domain)
+            .collect();
+        let chapters = self
+            .chapters
+            .into_iter()
+            .map(super::markers::ChapterDto::into_domain)
             .collect();
         Ok(Movie {
             rating_key,
@@ -703,6 +739,8 @@ impl MetadataDto {
             guid: self.guid,
             media,
             tags,
+            markers,
+            chapters,
             section_ref,
         })
     }

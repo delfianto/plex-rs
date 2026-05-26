@@ -43,6 +43,22 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.7 (Read-only media — Markers + Chapters)** — playable-video
+  navigation surfaces:
+  - `media::Marker` — auto-detected intro/credits/commercial range
+    with `start_ms`, `end_ms`, and a `final_credits` flag for the
+    end-of-show credits (Plex's post-credits-scene detection).
+    `Marker::duration_ms()` and `Marker::contains(time_ms)`
+    convenience helpers.
+  - `media::MarkerKind` enum (`Intro | Credits | Commercial |
+    Other(String)`) — `Other` preserves wire-format strings Plex
+    adds later.
+  - `media::Chapter` — embedded DVD-style scene index entry with
+    optional title, index, end time, and per-chapter thumb.
+  - `Movie` and `Episode` gain `markers: Vec<Marker>` and
+    `chapters: Vec<Chapter>`. Music and photos don't carry these
+    on the wire — left off.
+
 - **M2.6 (Read-only media — Tags)** — `Genre`/`Director`/`Writer`/
   `Country`/`Producer`/`Role`/`Collection`/`Label`/`Mood`/`Style`
   child elements collapsed into a unified `Tag` type:

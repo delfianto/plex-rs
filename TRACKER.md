@@ -108,7 +108,11 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
 - [x] **2.6 `src/media/tags.rs`** — `Tag` + `TagKind` enum covering 10
   named families + `Other(String)` forward-compat. Movie/Show/Episode/
   Album/Track gain `tags: Vec<Tag>`. _4 unit tests._
-- [ ] **2.6 `src/media/markers.rs`** — `Marker { kind, … }`, `Chapter`.
+- [x] **2.7 `src/media/markers.rs`** — `Marker { kind, start_ms, end_ms,
+  final_credits }` with `MarkerKind` enum (`Intro|Credits|Commercial|Other`).
+  `Chapter { id, title, index, start_ms, end_ms, thumb }`. Both attached
+  as `Vec<…>` to Movie and Episode. `Marker::duration_ms()` /
+  `Marker::contains(time_ms)` convenience helpers. _7 unit tests._
 - [ ] **2.7 `src/xml/dto/metadata.rs`** — DTO per `<Video>` / `<Track>` / `<Photo>` / `<Directory>` shape.
 - [ ] **2.8 `src/library/search.rs`** — `LibrarySection::all()`, `::search(title)`, `::recently_added()`, `::on_deck()`, hub search.
 - [ ] **2.9 `src/library/filters.rs`** — `FilterBuilder` (analysis/11§7), server-side namespace only.
