@@ -73,6 +73,9 @@ pub struct Movie {
     pub art: Option<String>,
     /// Primary GUID (`plex://movie/...` or legacy `com.plexapp.agents.imdb://tt...`).
     pub guid: Option<String>,
+    /// File / part / stream chain. Empty when not populated by the
+    /// originating endpoint (most listing endpoints omit `Media[]`).
+    pub media: Vec<super::streams::Media>,
     /// Back-reference to the owning library section, used for M3 edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -316,6 +319,10 @@ pub struct Episode {
     /// Show theme path.
     pub grandparent_theme: Option<String>,
 
+    /// File / part / stream chain. Empty when not populated by the
+    /// originating endpoint.
+    pub media: Vec<super::streams::Media>,
+
     /// Episode poster path.
     pub thumb: Option<String>,
     /// Episode background art (rare).
@@ -479,6 +486,10 @@ pub(crate) struct MetadataDto {
     pub(crate) grandparent_art: Option<String>,
     #[serde(default)]
     pub(crate) grandparent_theme: Option<String>,
+    /// Per-encoding Media chain (file / part / stream). Empty when
+    /// the endpoint is a listing that doesn't include media metadata.
+    #[serde(default, rename = "Media")]
+    pub(crate) media: Vec<super::streams::MediaDto>,
 }
 
 /// Parse a stringified rating key into a [`RatingKey`].
@@ -564,6 +575,11 @@ impl MetadataDto {
             .map(|s| parse_rating_key(s, "grandparentRatingKey"))
             .transpose()?
             .ok_or_else(|| Error::Config("episode missing grandparentRatingKey".to_owned()))?;
+        let media = self
+            .media
+            .into_iter()
+            .map(super::streams::MediaDto::into_domain)
+            .collect();
         Ok(Episode {
             rating_key,
             key: self.key,
@@ -588,6 +604,7 @@ impl MetadataDto {
             grandparent_thumb: self.grandparent_thumb,
             grandparent_art: self.grandparent_art,
             grandparent_theme: self.grandparent_theme,
+            media,
             thumb: self.thumb,
             art: self.art,
             view_count: self.view_count.unwrap_or(0),
@@ -602,6 +619,11 @@ impl MetadataDto {
 
     pub(crate) fn into_movie(self, section_ref: LibrarySectionRef) -> Result<Movie> {
         let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        let media = self
+            .media
+            .into_iter()
+            .map(super::streams::MediaDto::into_domain)
+            .collect();
         Ok(Movie {
             rating_key,
             key: self.key,
@@ -626,6 +648,7 @@ impl MetadataDto {
             thumb: self.thumb,
             art: self.art,
             guid: self.guid,
+            media,
             section_ref,
         })
     }
