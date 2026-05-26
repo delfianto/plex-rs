@@ -114,7 +114,12 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   as `Vec<…>` to Movie and Episode. `Marker::duration_ms()` /
   `Marker::contains(time_ms)` convenience helpers. _7 unit tests._
 - [ ] **2.7 `src/xml/dto/metadata.rs`** — DTO per `<Video>` / `<Track>` / `<Photo>` / `<Directory>` shape.
-- [ ] **2.8 `src/library/search.rs`** — `LibrarySection::all()`, `::search(title)`, `::recently_added()`, `::on_deck()`, hub search.
+- [x] **2.8 `LibrarySection::search/recently_added/on_deck/unwatched`** —
+  Mixed-content listing endpoints. New `LibraryItem` sum type
+  (`Movie|Show|Season|Episode|Artist|Album|Track|Photoalbum|Photo`)
+  dispatches on the wire `type` discriminator. `LibraryItem::title()` /
+  `rating_key()` accessors hide the variant. Hub search (universal,
+  cross-section) deferred to a follow-up. _4 wiremock integration tests._
 - [ ] **2.9 `src/library/filters.rs`** — `FilterBuilder` (analysis/11§7), server-side namespace only.
 - [ ] **2.10 Parser snapshot tests via insta** — every leaf has at least one fixture-driven snapshot test.
 

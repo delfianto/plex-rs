@@ -16,8 +16,38 @@ use url::Url;
 
 use crate::client::HttpClient;
 use crate::error::{Error, Result};
+
+/// Minimal RFC 3986 percent-encoder for user-supplied query parameter
+/// values. Encodes space as `%20` (not `+`) so the result is
+/// unambiguous in URL query position — `+` is a literal `+` in RFC
+/// 3986 query strings; only `application/x-www-form-urlencoded` bodies
+/// use `+` for space.
+fn url_form_encode(input: &str) -> String {
+    let mut out = String::with_capacity(input.len());
+    for byte in input.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.' | b'_' | b'~' => {
+                out.push(byte as char);
+            }
+            _ => {
+                out.push('%');
+                out.push(hex_upper(byte >> 4));
+                out.push(hex_upper(byte & 0x0F));
+            }
+        }
+    }
+    out
+}
+
+const fn hex_upper(n: u8) -> char {
+    match n {
+        0..=9 => (b'0' + n) as char,
+        10..=15 => (b'A' + (n - 10)) as char,
+        _ => '?',
+    }
+}
 use crate::media::video::MetadataDto;
-use crate::media::{Artist, Movie, Photoalbum, Show};
+use crate::media::{Artist, LibraryItem, Movie, Photoalbum, Show};
 use crate::server::join_path;
 use crate::xml::MediaContainer;
 
@@ -224,6 +254,74 @@ impl LibrarySection {
             MetadataDto::into_photoalbum,
         )
         .await
+    }
+
+    /// Title-search every item in this section.
+    ///
+    /// Calls `GET /library/sections/<id>/all?title=<query>`. Plex's
+    /// title filter is substring + case-insensitive. The response is
+    /// kind-agnostic so the return type is a mixed
+    /// [`Vec<LibraryItem>`]; callers can pattern-match to recover
+    /// concrete leaves.
+    ///
+    /// # Errors
+    /// Any transport [`Error`].
+    pub async fn search(&self, title: &str) -> Result<Vec<LibraryItem>> {
+        let q = url_form_encode(title);
+        self.list_mixed(&format!("/all?title={q}")).await
+    }
+
+    /// Items added to this section most recently.
+    ///
+    /// Calls `GET /library/sections/<id>/recentlyAdded`.
+    ///
+    /// # Errors
+    /// Any transport [`Error`].
+    pub async fn recently_added(&self) -> Result<Vec<LibraryItem>> {
+        self.list_mixed("/recentlyAdded").await
+    }
+
+    /// Items the user is currently watching — Plex's "On Deck" page.
+    ///
+    /// Calls `GET /library/sections/<id>/onDeck`. Returns the next
+    /// unplayed episode for shows the user has started, or partially-
+    /// watched movies.
+    ///
+    /// # Errors
+    /// Any transport [`Error`].
+    pub async fn on_deck(&self) -> Result<Vec<LibraryItem>> {
+        self.list_mixed("/onDeck").await
+    }
+
+    /// Items the user has never finished.
+    ///
+    /// Calls `GET /library/sections/<id>/unwatched`. Behaviour
+    /// depends on section kind — see analysis/05 §11.
+    ///
+    /// # Errors
+    /// Any transport [`Error`].
+    pub async fn unwatched(&self) -> Result<Vec<LibraryItem>> {
+        self.list_mixed("/unwatched").await
+    }
+
+    /// Generic helper for the mixed-content listing endpoints. Fetches
+    /// `/library/sections/<id><suffix>` and dispatches each metadata
+    /// element on its `type` discriminator to the right [`LibraryItem`]
+    /// variant.
+    async fn list_mixed(&self, suffix: &str) -> Result<Vec<LibraryItem>> {
+        let url = self.section_ref.url(suffix)?;
+        let body = self.section_ref.http.get_bytes(url.as_str()).await?;
+        let body_str = std::str::from_utf8(&body).map_err(|e| {
+            Error::Config(format!(
+                "sections/{}{suffix} body not utf-8: {e}",
+                self.section_ref.id
+            ))
+        })?;
+        let mc: MediaContainer<MetadataDto> = MediaContainer::from_json(body_str, "Metadata")?;
+        mc.items
+            .into_iter()
+            .map(|dto| dto.into_library_item(self.section_ref.clone()))
+            .collect()
     }
 
     /// Internal helper: ensure the section's kind matches, fetch
