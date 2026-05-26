@@ -43,6 +43,25 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.3 (Read-only media — Music hierarchy)** — Artist / Album / Track:
+  - `media::Artist` — top-level music entity with `child_count`
+    (number of albums), bio summary, image surface, and
+    `Artist::albums()` listing helper.
+  - `media::Album` — parent (artist) typed back-reference, year +
+    release date, label/studio, leaf_count + viewed_leaf_count,
+    rating. `Album::tracks()` lists tracks.
+  - `media::Track` — leaf playable with parent (album) +
+    grandparent (artist) back-references, index (track within
+    disc), `disc_number` (mapped from Plex's `parentIndex`, which
+    is intentionally counterintuitive), duration, view count + offset,
+    `original_title` for compilation per-track artist, GUID.
+    `Track::is_played()` helper.
+  - `LibrarySection::artists()` — `?type=8` dispatch on
+    `SectionKind::Music`. Shared `list_typed()` boilerplate-eliminator
+    from M2.2 reused.
+  - `tests/m2_music.rs` — 2 wiremock integration tests covering
+    Artist → Album → Track walk and kind-mismatch error path.
+
 - **M2.2 (Read-only media — TV hierarchy)** — Show / Season / Episode:
   - `media::Show` — 24 scalar fields including child_count (seasons),
     leaf_count (total episodes), viewed_leaf_count (played episodes),

@@ -83,7 +83,13 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   and `*Session` / `*History` composition types in follow-ups. _5 unit
   tests + 6 wiremock integration tests across `tests/m2_movies.rs`
   and `tests/m2_tv.rs`._
-- [ ] **2.2 `src/media/audio.rs`** — `Artist`, `Album`, `Track`.
+- [x] **2.3 `src/media/audio.rs`** — Artist / Album / Track using the shared
+  `MetadataDto`. `LibrarySection::artists()` for `?type=8`,
+  `Artist::albums()` and `Album::tracks()` via the shared
+  `list_children` helper. `Track::disc_number` maps Plex's
+  `parentIndex` (the per-track parent is the album; index is
+  position-on-disc — `parentIndex` is the disc number, easy to
+  swap). _2 wiremock integration tests covering the full walk._
 - [ ] **2.3 `src/media/photo.rs`** — `Photoalbum`, `Photo`.
 - [ ] **2.4 `src/media/media_stream.rs`** — `Media`, `MediaPart`, `Stream` enum (`Video | Audio | Subtitle | Lyric`).
 - [ ] **2.5 `src/media/tags.rs`** — `Tag { kind, value, … }`, 14-variant `TagKind` collapsed per analysis/06§F.

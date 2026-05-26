@@ -17,7 +17,7 @@ use url::Url;
 use crate::client::HttpClient;
 use crate::error::{Error, Result};
 use crate::media::video::MetadataDto;
-use crate::media::{Movie, Show};
+use crate::media::{Artist, Movie, Show};
 use crate::server::join_path;
 use crate::xml::MediaContainer;
 
@@ -191,6 +191,19 @@ impl LibrarySection {
     /// - Any transport [`Error`] from the underlying [`HttpClient`].
     pub async fn shows(&self) -> Result<Vec<Show>> {
         self.list_typed(SectionKind::Show, "2", "show", MetadataDto::into_show)
+            .await
+    }
+
+    /// List every artist in this section.
+    ///
+    /// Calls `GET /library/sections/<id>/all?type=8` and parses each
+    /// `<Directory type="artist">` into an [`Artist`].
+    ///
+    /// # Errors
+    /// - [`Error::Config`] if this section is not [`SectionKind::Music`].
+    /// - Any transport [`Error`].
+    pub async fn artists(&self) -> Result<Vec<Artist>> {
+        self.list_typed(SectionKind::Music, "8", "artist", MetadataDto::into_artist)
             .await
     }
 

@@ -84,7 +84,7 @@ pub use crate::config::{ClientConfig, ClientConfigBuilder};
 pub use crate::error::{Error, Result};
 pub use crate::headers::PlexIdentity;
 pub use crate::library::{Library, LibrarySection, LibrarySectionRef, SectionKind};
-pub use crate::media::{Episode, Movie, Season, Show};
+pub use crate::media::{Album, Artist, Episode, Movie, Season, Show, Track};
 pub use crate::pagination::PageRange;
 pub use crate::server::{PlexServer, ServerIdentity};
 pub use crate::uri::PlexUri;
