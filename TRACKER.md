@@ -105,7 +105,9 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   now carry `media: Vec<Media>` populated when the source endpoint
   emits it (always empty for plain listings). _2 unit tests covering
   the full chain incl. Unknown forward-compat path._
-- [ ] **2.5 `src/media/tags.rs`** — `Tag { kind, value, … }`, 14-variant `TagKind` collapsed per analysis/06§F.
+- [x] **2.6 `src/media/tags.rs`** — `Tag` + `TagKind` enum covering 10
+  named families + `Other(String)` forward-compat. Movie/Show/Episode/
+  Album/Track gain `tags: Vec<Tag>`. _4 unit tests._
 - [ ] **2.6 `src/media/markers.rs`** — `Marker { kind, … }`, `Chapter`.
 - [ ] **2.7 `src/xml/dto/metadata.rs`** — DTO per `<Video>` / `<Track>` / `<Photo>` / `<Directory>` shape.
 - [ ] **2.8 `src/library/search.rs`** — `LibrarySection::all()`, `::search(title)`, `::recently_added()`, `::on_deck()`, hub search.
