@@ -73,7 +73,10 @@ vertical slice: `PlexServer::connect → identity → library().sections()`.
 
 Read parity with python-plexapi. DTO + From conversion for every leaf.
 
-- [ ] **2.1 `src/media/video.rs`** — `Movie`, `Show`, `Season`, `Episode`, `Clip`, `Extra` + composition types `*Session` / `*History`.
+- [~] **2.1 `src/media/video.rs`** — **Movie landed** (24 scalar fields,
+  DTO parsing, `LibrarySection::movies()` listing). Show / Season / Episode
+  / Clip / Extra and `*Session` / `*History` composition types in
+  follow-ups. _5 unit tests + 2 wiremock integration tests._
 - [ ] **2.2 `src/media/audio.rs`** — `Artist`, `Album`, `Track`.
 - [ ] **2.3 `src/media/photo.rs`** — `Photoalbum`, `Photo`.
 - [ ] **2.4 `src/media/media_stream.rs`** — `Media`, `MediaPart`, `Stream` enum (`Video | Audio | Subtitle | Lyric`).
