@@ -124,6 +124,8 @@ pub struct Album {
     pub updated_at: Option<i64>,
     /// Primary GUID.
     pub guid: Option<String>,
+    /// Genre / Mood / Style / Label tags. Empty when not emitted.
+    pub tags: Vec<super::tags::Tag>,
     /// Back-reference for edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -206,6 +208,8 @@ pub struct Track {
     /// File / part / stream chain. Empty when not populated by the
     /// originating endpoint.
     pub media: Vec<super::streams::Media>,
+    /// Mood / Style / Collection / etc. tags.
+    pub tags: Vec<super::tags::Tag>,
     /// Back-reference for edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -229,6 +233,7 @@ fn parse_rk(s: &str, field: &str) -> Result<RatingKey> {
 
 impl MetadataDto {
     pub(crate) fn into_artist(self, section_ref: LibrarySectionRef) -> Result<Artist> {
+        // Artists carry no tag families on their own metadata row.
         let rating_key = parse_rk(&self.rating_key, "ratingKey")?;
         Ok(Artist {
             rating_key,
@@ -248,8 +253,9 @@ impl MetadataDto {
         })
     }
 
-    pub(crate) fn into_album(self, section_ref: LibrarySectionRef) -> Result<Album> {
+    pub(crate) fn into_album(mut self, section_ref: LibrarySectionRef) -> Result<Album> {
         let rating_key = parse_rk(&self.rating_key, "ratingKey")?;
+        let tags = self.collect_tags();
         let parent_rating_key = self
             .parent_rating_key
             .as_deref()
@@ -279,11 +285,12 @@ impl MetadataDto {
             added_at: self.added_at,
             updated_at: self.updated_at,
             guid: self.guid,
+            tags,
             section_ref,
         })
     }
 
-    pub(crate) fn into_track(self, section_ref: LibrarySectionRef) -> Result<Track> {
+    pub(crate) fn into_track(mut self, section_ref: LibrarySectionRef) -> Result<Track> {
         let rating_key = parse_rk(&self.rating_key, "ratingKey")?;
         let parent_rating_key = self
             .parent_rating_key
@@ -297,6 +304,7 @@ impl MetadataDto {
             .map(|s| parse_rk(s, "grandparentRatingKey"))
             .transpose()?
             .ok_or_else(|| Error::Config("track missing grandparentRatingKey".to_owned()))?;
+        let tags = self.collect_tags();
         let media = self
             .media
             .into_iter()
@@ -329,6 +337,7 @@ impl MetadataDto {
             thumb: self.thumb,
             guid: self.guid,
             media,
+            tags,
             section_ref,
         })
     }

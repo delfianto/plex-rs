@@ -76,6 +76,9 @@ pub struct Movie {
     /// File / part / stream chain. Empty when not populated by the
     /// originating endpoint (most listing endpoints omit `Media[]`).
     pub media: Vec<super::streams::Media>,
+    /// Genre / Director / Writer / Role / Collection / etc. tags
+    /// aggregated into one flat list. Empty when not emitted.
+    pub tags: Vec<super::tags::Tag>,
     /// Back-reference to the owning library section, used for M3 edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -162,6 +165,8 @@ pub struct Show {
     pub theme: Option<String>,
     /// Primary GUID.
     pub guid: Option<String>,
+    /// Genre / Country / Role / Collection / etc. tags.
+    pub tags: Vec<super::tags::Tag>,
     /// Back-reference for M3 edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -322,6 +327,8 @@ pub struct Episode {
     /// File / part / stream chain. Empty when not populated by the
     /// originating endpoint.
     pub media: Vec<super::streams::Media>,
+    /// Director / Writer / etc. tags. Empty when not emitted.
+    pub tags: Vec<super::tags::Tag>,
 
     /// Episode poster path.
     pub thumb: Option<String>,
@@ -490,6 +497,47 @@ pub(crate) struct MetadataDto {
     /// the endpoint is a listing that doesn't include media metadata.
     #[serde(default, rename = "Media")]
     pub(crate) media: Vec<super::streams::MediaDto>,
+
+    // Tag families — collected into a single Vec<Tag> by the
+    // conversion methods. All optional / default-empty.
+    #[serde(default, rename = "Genre")]
+    pub(crate) genres: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Director")]
+    pub(crate) directors: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Writer")]
+    pub(crate) writers: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Country")]
+    pub(crate) countries: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Producer")]
+    pub(crate) producers: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Role")]
+    pub(crate) roles: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Collection")]
+    pub(crate) collections: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Label")]
+    pub(crate) labels: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Mood")]
+    pub(crate) moods: Vec<super::tags::TagDto>,
+    #[serde(default, rename = "Style")]
+    pub(crate) styles: Vec<super::tags::TagDto>,
+}
+
+impl MetadataDto {
+    /// Collect every tag-family vector into a single `Vec<Tag>`.
+    pub(crate) fn collect_tags(&mut self) -> Vec<super::tags::Tag> {
+        super::tags::collect(super::tags::TagFamilies {
+            genres: std::mem::take(&mut self.genres),
+            directors: std::mem::take(&mut self.directors),
+            writers: std::mem::take(&mut self.writers),
+            countries: std::mem::take(&mut self.countries),
+            producers: std::mem::take(&mut self.producers),
+            roles: std::mem::take(&mut self.roles),
+            collections: std::mem::take(&mut self.collections),
+            labels: std::mem::take(&mut self.labels),
+            moods: std::mem::take(&mut self.moods),
+            styles: std::mem::take(&mut self.styles),
+        })
+    }
 }
 
 /// Parse a stringified rating key into a [`RatingKey`].
@@ -499,8 +547,9 @@ fn parse_rating_key(s: &str, field: &str) -> Result<RatingKey> {
 }
 
 impl MetadataDto {
-    pub(crate) fn into_show(self, section_ref: LibrarySectionRef) -> Result<Show> {
+    pub(crate) fn into_show(mut self, section_ref: LibrarySectionRef) -> Result<Show> {
         let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        let tags = self.collect_tags();
         Ok(Show {
             rating_key,
             key: self.key,
@@ -525,6 +574,7 @@ impl MetadataDto {
             art: self.art,
             theme: self.theme,
             guid: self.guid,
+            tags,
             section_ref,
         })
     }
@@ -561,8 +611,9 @@ impl MetadataDto {
         })
     }
 
-    pub(crate) fn into_episode(self, section_ref: LibrarySectionRef) -> Result<Episode> {
+    pub(crate) fn into_episode(mut self, section_ref: LibrarySectionRef) -> Result<Episode> {
         let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        let tags = self.collect_tags();
         let parent_rating_key = self
             .parent_rating_key
             .as_deref()
@@ -605,6 +656,7 @@ impl MetadataDto {
             grandparent_art: self.grandparent_art,
             grandparent_theme: self.grandparent_theme,
             media,
+            tags,
             thumb: self.thumb,
             art: self.art,
             view_count: self.view_count.unwrap_or(0),
@@ -617,8 +669,9 @@ impl MetadataDto {
         })
     }
 
-    pub(crate) fn into_movie(self, section_ref: LibrarySectionRef) -> Result<Movie> {
+    pub(crate) fn into_movie(mut self, section_ref: LibrarySectionRef) -> Result<Movie> {
         let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        let tags = self.collect_tags();
         let media = self
             .media
             .into_iter()
@@ -649,6 +702,7 @@ impl MetadataDto {
             art: self.art,
             guid: self.guid,
             media,
+            tags,
             section_ref,
         })
     }
