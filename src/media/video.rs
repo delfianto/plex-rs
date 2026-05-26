@@ -355,8 +355,10 @@ impl Episode {
 }
 
 // Shared helper: fetch /library/metadata/<rk>/children and convert
-// each item with the caller-provided closure.
-async fn list_children<T, F>(
+// each item with the caller-provided closure. Used by both the video
+// and audio hierarchies (Show::seasons / Season::episodes /
+// Artist::albums / Album::tracks).
+pub(crate) async fn list_children<T, F>(
     section_ref: &LibrarySectionRef,
     rating_key: RatingKey,
     convert: F,
@@ -376,6 +378,10 @@ where
         .map(|dto| convert(dto, section_ref.clone()))
         .collect()
 }
+
+/// Audio-side alias so `media::audio` doesn't have to import the
+/// long path. Same function — both hierarchies use the same wire shape.
+pub(crate) use self::list_children as list_children_audio;
 
 // -----------------------------------------------------------------------------
 // DTO (JSON metadata element).
