@@ -43,6 +43,30 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.2 (Read-only media — TV hierarchy)** — Show / Season / Episode:
+  - `media::Show` — 24 scalar fields including child_count (seasons),
+    leaf_count (total episodes), viewed_leaf_count (played episodes),
+    theme path, network/studio. `Show::seasons()` lists seasons via
+    `GET /library/metadata/<rk>/children`. `Show::watch_progress()`
+    returns `viewed_leaf_count / leaf_count`.
+  - `media::Season` — parent_rating_key (typed `RatingKey`),
+    parent/show metadata back-link, index (season number),
+    leaf_count / child_count / viewed_leaf_count.
+    `Season::episodes()` lists episodes via the same `/children`
+    endpoint.
+  - `media::Episode` — parent (season) and grandparent (show) typed
+    back-references, index (episode number), parent_index (season
+    number), summary, duration, view-count/offset, full image and
+    GUID surface. `Episode::season_episode_label()` returns the
+    `S01E03`-style display label.
+  - `LibrarySection::shows()` — analogous to `movies()`, dispatches
+    on `SectionKind::Show` and queries with `?type=2`. Internal
+    `list_typed()` helper eliminates the listing-method
+    boilerplate.
+  - `tests/m2_tv.rs` — 4 wiremock integration tests covering the
+    full Show → Season → Episode walk plus the kind-mismatch error
+    path.
+
 - **M2.1 (Read-only media — Movie)** — first content type:
   - `media::Movie` — 24 scalar fields covering Plex's `<Video type="movie">`
     payload (rating_key, title, year, summary, rating triple, duration,
