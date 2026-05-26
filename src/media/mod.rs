@@ -15,8 +15,13 @@
 
 pub mod audio;
 pub mod photo;
+pub mod streams;
 pub mod video;
 
 pub use audio::{Album, Artist, Track};
 pub use photo::{Photo, PhotoEntry, Photoalbum};
+pub use streams::{
+    AudioStream, LyricStream, Media, MediaPart, Stream, StreamCommon, SubtitleStream,
+    UnknownStream, VideoStream,
+};
 pub use video::{Episode, Movie, Season, Show};

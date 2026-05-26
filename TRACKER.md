@@ -96,7 +96,15 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   `metadata_type`); `sub_albums()` / `photos()` convenience filters.
   `LibrarySection::photoalbums()` for `?type=14` top-level listing.
   _1 wiremock integration test exercising the mixed-children walk._
-- [ ] **2.4 `src/media/media_stream.rs`** — `Media`, `MediaPart`, `Stream` enum (`Video | Audio | Subtitle | Lyric`).
+- [x] **2.5 `src/media/streams.rs`** — Full Media → MediaPart → Stream chain.
+  Stream is a sum type (`Video|Audio|Subtitle|Lyric|Unknown`) dispatched
+  on Plex's `streamType` integer; `Unknown(StreamCommon)` preserves
+  forward-compat for new stream kinds. Per-variant fields cover codec,
+  language, dimensions, frame rate, channel layout, default/selected/
+  forced flags, external-track keys. Movie / Episode / Track / Photo
+  now carry `media: Vec<Media>` populated when the source endpoint
+  emits it (always empty for plain listings). _2 unit tests covering
+  the full chain incl. Unknown forward-compat path._
 - [ ] **2.5 `src/media/tags.rs`** — `Tag { kind, value, … }`, 14-variant `TagKind` collapsed per analysis/06§F.
 - [ ] **2.6 `src/media/markers.rs`** — `Marker { kind, … }`, `Chapter`.
 - [ ] **2.7 `src/xml/dto/metadata.rs`** — DTO per `<Video>` / `<Track>` / `<Photo>` / `<Directory>` shape.

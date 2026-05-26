@@ -203,6 +203,9 @@ pub struct Track {
     pub thumb: Option<String>,
     /// Primary GUID.
     pub guid: Option<String>,
+    /// File / part / stream chain. Empty when not populated by the
+    /// originating endpoint.
+    pub media: Vec<super::streams::Media>,
     /// Back-reference for edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -294,6 +297,11 @@ impl MetadataDto {
             .map(|s| parse_rk(s, "grandparentRatingKey"))
             .transpose()?
             .ok_or_else(|| Error::Config("track missing grandparentRatingKey".to_owned()))?;
+        let media = self
+            .media
+            .into_iter()
+            .map(super::streams::MediaDto::into_domain)
+            .collect();
         Ok(Track {
             rating_key,
             key: self.key,
@@ -320,6 +328,7 @@ impl MetadataDto {
             rating: self.rating,
             thumb: self.thumb,
             guid: self.guid,
+            media,
             section_ref,
         })
     }

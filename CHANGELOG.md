@@ -43,6 +43,31 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.5 (Read-only media — Media/Part/Stream chain)** — file-level
+  metadata for every playable type:
+  - `media::Media` — one re-encode of a playable item (quality /
+    container variant). Holds duration, bitrate, dimensions,
+    aspect ratio, audio channels + codec, video codec, container,
+    frame rate + resolution buckets, optimised-for-streaming flag,
+    and a `Vec<MediaPart>` of the underlying files.
+  - `media::MediaPart` — one file on disk. Carries the download
+    key, filesystem path, size, container, duration,
+    has-thumbnail / optimised-for-streaming flags, and a
+    `Vec<Stream>` of contained tracks.
+  - `media::Stream` — sum type
+    `Video(VideoStream) | Audio(AudioStream) | Subtitle(SubtitleStream) | Lyric(LyricStream) | Unknown(UnknownStream)`
+    dispatched on Plex's `streamType` discriminator. Per-variant
+    fields cover codec, language, dimensions, frame rate, channel
+    layout, bitrate, sampling rate, bit depth, default/selected/
+    forced flags, display titles, and external-track keys.
+  - `Movie`, `Episode`, `Track`, `Photo` gain a
+    `media: Vec<Media>` field populated when the source endpoint
+    emits `Media[]` (always empty for plain `?type=N` listings;
+    populated on `/library/metadata/<rk>` direct fetches).
+  - Shared `MetadataDto` learns the wire-format `Media[]` →
+    `MediaDto[]` mapping; conversion methods now pre-compute the
+    typed chain.
+
 - **M2.4 (Read-only media — Photos)** — Photoalbum / Photo:
   - `media::Photoalbum` — top-level photo container, supports
     nesting. `children()` returns a `PhotoEntry` sum type mixing

@@ -85,7 +85,9 @@ pub use crate::error::{Error, Result};
 pub use crate::headers::PlexIdentity;
 pub use crate::library::{Library, LibrarySection, LibrarySectionRef, SectionKind};
 pub use crate::media::{
-    Album, Artist, Episode, Movie, Photo, PhotoEntry, Photoalbum, Season, Show, Track,
+    Album, Artist, AudioStream, Episode, LyricStream, Media, MediaPart, Movie, Photo, PhotoEntry,
+    Photoalbum, Season, Show, Stream, StreamCommon, SubtitleStream, Track, UnknownStream,
+    VideoStream,
 };
 pub use crate::pagination::PageRange;
 pub use crate::server::{PlexServer, ServerIdentity};

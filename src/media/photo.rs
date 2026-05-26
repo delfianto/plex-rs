@@ -156,6 +156,9 @@ pub struct Photo {
     pub view_count: u32,
     /// Primary GUID.
     pub guid: Option<String>,
+    /// File / part / stream chain. Empty when not populated by the
+    /// originating endpoint.
+    pub media: Vec<super::streams::Media>,
     /// Back-reference for edits.
     pub section_ref: LibrarySectionRef,
 }
@@ -217,6 +220,11 @@ impl MetadataDto {
     pub(crate) fn into_photo(self, section_ref: LibrarySectionRef) -> Result<Photo> {
         let rating_key = parse_rk(&self.rating_key, "ratingKey")?;
         let parent_rating_key = parse_rk_opt(self.parent_rating_key.as_deref(), "parentRatingKey")?;
+        let media = self
+            .media
+            .into_iter()
+            .map(super::streams::MediaDto::into_domain)
+            .collect();
         Ok(Photo {
             rating_key,
             key: self.key,
@@ -234,6 +242,7 @@ impl MetadataDto {
             thumb: self.thumb,
             view_count: self.view_count.unwrap_or(0),
             guid: self.guid,
+            media,
             section_ref,
         })
     }
