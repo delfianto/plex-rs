@@ -43,6 +43,23 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.6 (Read-only media — Tags)** — `Genre`/`Director`/`Writer`/
+  `Country`/`Producer`/`Role`/`Collection`/`Label`/`Mood`/`Style`
+  child elements collapsed into a unified `Tag` type:
+  - `media::Tag` carries `kind: TagKind`, `value`, optional `id`
+    (numeric Plex tag id used by edit operations), `role` and
+    `thumb` (for actor `<Role>` entries), and `filter` (the
+    smart-filter URI Plex uses for "find more like this").
+  - `media::TagKind` enum with all 10 known families plus
+    `Other(String)` forward-compat.
+  - `Movie`, `Show`, `Episode`, `Album`, `Track` gain
+    `tags: Vec<Tag>` populated by `MetadataDto::collect_tags()`.
+    `Artist`, `Photo`, `Photoalbum`, `Season` don't carry tags on
+    the wire — left out by design.
+  - `Field` (per-field edit-lock indicator) intentionally not
+    modelled as a `Tag` — different shape, lands with the edit
+    traits in M3.
+
 - **M2.5 (Read-only media — Media/Part/Stream chain)** — file-level
   metadata for every playable type:
   - `media::Media` — one re-encode of a playable item (quality /

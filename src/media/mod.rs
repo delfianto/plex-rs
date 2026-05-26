@@ -16,6 +16,7 @@
 pub mod audio;
 pub mod photo;
 pub mod streams;
+pub mod tags;
 pub mod video;
 
 pub use audio::{Album, Artist, Track};
@@ -24,4 +25,5 @@ pub use streams::{
     AudioStream, LyricStream, Media, MediaPart, Stream, StreamCommon, SubtitleStream,
     UnknownStream, VideoStream,
 };
+pub use tags::{Tag, TagKind};
 pub use video::{Episode, Movie, Season, Show};
