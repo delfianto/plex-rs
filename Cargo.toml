@@ -1,0 +1,111 @@
+[package]
+name        = "plex-rs"
+version     = "0.0.1"
+edition     = "2024"
+rust-version = "1.85"
+authors     = ["Dwi <dwi.elfianto@accenture.com>"]
+license     = "MIT"
+description = "Idiomatic, fully-async Rust 2024 client for the Plex Media Server HTTP API and plex.tv (MyPlex)."
+repository  = "https://github.com/justdewey/plex-rs"
+homepage    = "https://github.com/justdewey/plex-rs"
+documentation = "https://docs.rs/plex-rs"
+readme      = "README.md"
+keywords    = ["plex", "media", "api", "client", "async"]
+categories  = ["api-bindings", "multimedia", "asynchronous"]
+include = [
+    "src/**/*.rs",
+    "Cargo.toml",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+]
+
+[lib]
+name = "plex_rs"
+path = "src/lib.rs"
+
+# ---------------------------------------------------------------------------
+# Dependencies — see CLAUDE.md §5. Keep the tree small and rustls-by-default.
+# ---------------------------------------------------------------------------
+
+[dependencies]
+reqwest      = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream", "gzip", "http2", "charset"] }
+tokio        = { version = "1",    default-features = false, features = ["rt", "macros", "sync", "time"] }
+serde        = { version = "1",    features = ["derive"] }
+serde_json   = "1"
+quick-xml    = { version = "0.36", features = ["serialize"] }
+thiserror    = "1"
+url          = { version = "2", features = ["serde"] }
+chrono       = { version = "0.4", default-features = false, features = ["serde", "clock"] }
+uuid         = { version = "1",   features = ["v4", "serde"] }
+tracing      = "0.1"
+bytes        = "1"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+http         = "1"
+regex        = { version = "1", default-features = false, features = ["std", "perf"] }
+
+# Optional feature deps
+axum         = { version = "0.7", optional = true, default-features = false, features = ["json", "tokio"] }
+tokio-tungstenite = { version = "0.24", optional = true, default-features = false, features = ["rustls-tls-webpki-roots"] }
+# Note: GDM is NOT mDNS — see analysis/09-realtime-and-discovery.md.
+# Discovery is implemented with raw `tokio::net::UdpSocket` + HTTP/1.0 M-SEARCH;
+# no extra dependency required, so the `discovery` feature is a pure marker.
+
+[features]
+default          = ["rustls"]
+rustls           = []                                # alias / documentation marker
+native-tls       = ["reqwest/native-tls"]
+webhook-axum     = ["dep:axum"]
+discovery        = []                                # GDM uses raw UDP — no extra deps
+alerts           = ["dep:tokio-tungstenite"]         # WebSocket alert stream
+
+# ---------------------------------------------------------------------------
+# Dev / test dependencies
+# ---------------------------------------------------------------------------
+
+[dev-dependencies]
+tokio        = { version = "1", features = ["full", "test-util"] }
+wiremock     = "0.6"
+insta        = { version = "1", features = ["yaml", "json", "redactions"] }
+pretty_assertions = "1"
+rstest       = "0.21"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tokio-test   = "0.4"
+
+# Criterion benches are opt-in to avoid pulling them in for `cargo test`.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+# ---------------------------------------------------------------------------
+# Profile tweaks
+# ---------------------------------------------------------------------------
+
+[profile.dev]
+opt-level = 0
+debug     = true
+
+[profile.release]
+opt-level = 3
+lto       = "thin"
+codegen-units = 1
+strip     = "symbols"
+debug     = false
+
+# Faster test iteration without sacrificing useful backtraces.
+[profile.test]
+opt-level = 0
+debug     = true
+
+# Benches need release-level optimisation.
+[profile.bench]
+opt-level = 3
+lto       = "thin"
+codegen-units = 1
+
+# ---------------------------------------------------------------------------
+# Documentation
+# ---------------------------------------------------------------------------
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
