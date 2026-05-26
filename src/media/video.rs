@@ -105,6 +105,279 @@ impl Movie {
 }
 
 // -----------------------------------------------------------------------------
+// Show — a TV series at the top of the season → episode hierarchy.
+// -----------------------------------------------------------------------------
+
+/// A Plex TV show — one entry under a `SectionKind::Show` library
+/// section. Contains seasons (fetched via [`Show::seasons`]).
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct Show {
+    /// Show's primary metadata identifier.
+    pub rating_key: RatingKey,
+    /// Relative key — `/library/metadata/<rating_key>`.
+    pub key: String,
+    /// Title.
+    pub title: String,
+    /// Sort title.
+    pub title_sort: Option<String>,
+    /// Plot summary.
+    pub summary: Option<String>,
+    /// Network / studio.
+    pub studio: Option<String>,
+    /// Content rating (`TV-MA`, `TV-PG`, …).
+    pub content_rating: Option<String>,
+    /// First-air year.
+    pub year: Option<u16>,
+    /// Plex's user rating, 0..=10.
+    pub rating: Option<f32>,
+    /// Audience score, 0..=10.
+    pub audience_rating: Option<f32>,
+    /// Episode duration in milliseconds (typical, not guaranteed).
+    pub duration_ms: Option<u64>,
+    /// `YYYY-MM-DD` first-air date of the pilot.
+    pub originally_available_at: Option<String>,
+    /// Number of seasons.
+    pub child_count: Option<u32>,
+    /// Total number of episodes in the show.
+    pub leaf_count: Option<u32>,
+    /// Number of episodes the user has played.
+    pub viewed_leaf_count: Option<u32>,
+    /// View count at the show level (rarely populated).
+    pub view_count: u32,
+    /// Last playback timestamp (epoch seconds).
+    pub last_viewed_at: Option<i64>,
+    /// Add timestamp (epoch seconds).
+    pub added_at: Option<i64>,
+    /// Metadata update timestamp (epoch seconds).
+    pub updated_at: Option<i64>,
+    /// Poster path.
+    pub thumb: Option<String>,
+    /// Background-art path.
+    pub art: Option<String>,
+    /// Theme-song path.
+    pub theme: Option<String>,
+    /// Primary GUID.
+    pub guid: Option<String>,
+    /// Back-reference for M3 edits.
+    pub section_ref: LibrarySectionRef,
+}
+
+impl Show {
+    /// List the seasons of this show.
+    ///
+    /// Calls `GET /library/metadata/<rk>/children` and parses the
+    /// response into [`Season`] values.
+    ///
+    /// # Errors
+    /// Any [`Error`] variant; see [`crate::HttpClient`].
+    pub async fn seasons(&self) -> Result<Vec<Season>> {
+        list_children::<Season, _>(&self.section_ref, self.rating_key, |dto, sref| {
+            dto.into_season(sref)
+        })
+        .await
+    }
+
+    /// Watched-fraction convenience: `viewed_leaf_count / leaf_count`
+    /// (returns `None` when either count is missing or zero).
+    #[must_use]
+    pub fn watch_progress(&self) -> Option<f32> {
+        match (self.leaf_count, self.viewed_leaf_count) {
+            (Some(total), Some(viewed)) if total > 0 =>
+            {
+                #[allow(clippy::cast_precision_loss)]
+                Some(viewed as f32 / total as f32)
+            }
+            _ => None,
+        }
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Season — under a Show, contains episodes.
+// -----------------------------------------------------------------------------
+
+/// A Plex season (one container under a [`Show`]).
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct Season {
+    /// Season's metadata identifier.
+    pub rating_key: RatingKey,
+    /// Relative key — `/library/metadata/<rating_key>`.
+    pub key: String,
+    /// Season title (often `"Season N"`).
+    pub title: String,
+    /// Season number (`index` on the wire). `None` for "All Episodes"
+    /// or specials placeholder seasons.
+    pub index: Option<i32>,
+    /// Show this season belongs to.
+    pub parent_rating_key: RatingKey,
+    /// Show key.
+    pub parent_key: Option<String>,
+    /// Show title.
+    pub parent_title: Option<String>,
+    /// Show poster (sometimes shown on the season list).
+    pub parent_thumb: Option<String>,
+    /// Number of episodes in this season.
+    pub leaf_count: Option<u32>,
+    /// Number of episodes the user has played.
+    pub viewed_leaf_count: Option<u32>,
+    /// Number of children (typically equals `leaf_count`).
+    pub child_count: Option<u32>,
+    /// Summary (often empty for seasons).
+    pub summary: Option<String>,
+    /// Season-poster path.
+    pub thumb: Option<String>,
+    /// Season-art path.
+    pub art: Option<String>,
+    /// Add timestamp (epoch seconds).
+    pub added_at: Option<i64>,
+    /// Metadata update timestamp (epoch seconds).
+    pub updated_at: Option<i64>,
+    /// Last playback timestamp (epoch seconds).
+    pub last_viewed_at: Option<i64>,
+    /// View count.
+    pub view_count: u32,
+    /// Primary GUID.
+    pub guid: Option<String>,
+    /// Back-reference for M3 edits.
+    pub section_ref: LibrarySectionRef,
+}
+
+impl Season {
+    /// List the episodes of this season.
+    ///
+    /// Calls `GET /library/metadata/<rk>/children`.
+    ///
+    /// # Errors
+    /// Any [`Error`] variant.
+    pub async fn episodes(&self) -> Result<Vec<Episode>> {
+        list_children::<Episode, _>(&self.section_ref, self.rating_key, |dto, sref| {
+            dto.into_episode(sref)
+        })
+        .await
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Episode — leaf playable.
+// -----------------------------------------------------------------------------
+
+/// A Plex episode — a single playable leaf under a [`Season`].
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct Episode {
+    /// Episode's metadata identifier.
+    pub rating_key: RatingKey,
+    /// Relative key — `/library/metadata/<rating_key>`.
+    pub key: String,
+    /// Episode title.
+    pub title: String,
+    /// Episode-number-within-season (`index`).
+    pub index: Option<i32>,
+    /// Sort title.
+    pub title_sort: Option<String>,
+    /// Plot summary.
+    pub summary: Option<String>,
+    /// Content rating.
+    pub content_rating: Option<String>,
+    /// Air year.
+    pub year: Option<u16>,
+    /// User rating, 0..=10.
+    pub rating: Option<f32>,
+    /// Audience rating, 0..=10.
+    pub audience_rating: Option<f32>,
+    /// Duration in milliseconds.
+    pub duration_ms: Option<u64>,
+    /// Air date `YYYY-MM-DD`.
+    pub originally_available_at: Option<String>,
+
+    /// Season (parent) rating key.
+    pub parent_rating_key: RatingKey,
+    /// Season key.
+    pub parent_key: Option<String>,
+    /// Season title.
+    pub parent_title: Option<String>,
+    /// Season number (`parentIndex`).
+    pub parent_index: Option<i32>,
+    /// Season poster path.
+    pub parent_thumb: Option<String>,
+
+    /// Show (grandparent) rating key.
+    pub grandparent_rating_key: RatingKey,
+    /// Show key.
+    pub grandparent_key: Option<String>,
+    /// Show title.
+    pub grandparent_title: Option<String>,
+    /// Show poster path.
+    pub grandparent_thumb: Option<String>,
+    /// Show background-art path.
+    pub grandparent_art: Option<String>,
+    /// Show theme path.
+    pub grandparent_theme: Option<String>,
+
+    /// Episode poster path.
+    pub thumb: Option<String>,
+    /// Episode background art (rare).
+    pub art: Option<String>,
+    /// View count.
+    pub view_count: u32,
+    /// Last playback timestamp (epoch seconds).
+    pub last_viewed_at: Option<i64>,
+    /// Resume position in milliseconds.
+    pub view_offset_ms: Option<u64>,
+    /// Add timestamp (epoch seconds).
+    pub added_at: Option<i64>,
+    /// Metadata update timestamp (epoch seconds).
+    pub updated_at: Option<i64>,
+    /// Primary GUID.
+    pub guid: Option<String>,
+    /// Back-reference for M3 edits.
+    pub section_ref: LibrarySectionRef,
+}
+
+impl Episode {
+    /// Has this episode ever been played?
+    #[must_use]
+    pub const fn is_played(&self) -> bool {
+        self.view_count > 0
+    }
+
+    /// `Sn × Ee` short label (e.g. `"S02E07"`). Returns
+    /// [`None`] when either index is missing.
+    #[must_use]
+    pub fn season_episode_label(&self) -> Option<String> {
+        match (self.parent_index, self.index) {
+            (Some(s), Some(e)) => Some(format!("S{s:02}E{e:02}")),
+            _ => None,
+        }
+    }
+}
+
+// Shared helper: fetch /library/metadata/<rk>/children and convert
+// each item with the caller-provided closure.
+async fn list_children<T, F>(
+    section_ref: &LibrarySectionRef,
+    rating_key: RatingKey,
+    convert: F,
+) -> Result<Vec<T>>
+where
+    F: Fn(MetadataDto, LibrarySectionRef) -> Result<T>,
+{
+    let path = format!("/library/metadata/{rating_key}/children");
+    let url = section_ref.base_url.join(&path)?;
+    let body = section_ref.http.get_bytes(url.as_str()).await?;
+    let body_str = std::str::from_utf8(&body)
+        .map_err(|e| Error::Config(format!("/children body not utf-8: {e}")))?;
+    let mc: crate::xml::MediaContainer<MetadataDto> =
+        crate::xml::MediaContainer::from_json(body_str, "Metadata")?;
+    mc.items
+        .into_iter()
+        .map(|dto| convert(dto, section_ref.clone()))
+        .collect()
+}
+
+// -----------------------------------------------------------------------------
 // DTO (JSON metadata element).
 // -----------------------------------------------------------------------------
 
@@ -160,14 +433,162 @@ pub(crate) struct MetadataDto {
     pub(crate) art: Option<String>,
     #[serde(default)]
     pub(crate) guid: Option<String>,
+    // TV-hierarchy fields (Show / Season / Episode).
+    #[serde(default)]
+    pub(crate) index: Option<i32>,
+    #[serde(default)]
+    pub(crate) child_count: Option<u32>,
+    #[serde(default)]
+    pub(crate) leaf_count: Option<u32>,
+    #[serde(default)]
+    pub(crate) viewed_leaf_count: Option<u32>,
+    #[serde(default)]
+    pub(crate) theme: Option<String>,
+    #[serde(default)]
+    pub(crate) parent_rating_key: Option<String>,
+    #[serde(default)]
+    pub(crate) parent_key: Option<String>,
+    #[serde(default)]
+    pub(crate) parent_title: Option<String>,
+    #[serde(default)]
+    pub(crate) parent_index: Option<i32>,
+    #[serde(default)]
+    pub(crate) parent_thumb: Option<String>,
+    #[serde(default)]
+    pub(crate) grandparent_rating_key: Option<String>,
+    #[serde(default)]
+    pub(crate) grandparent_key: Option<String>,
+    #[serde(default)]
+    pub(crate) grandparent_title: Option<String>,
+    #[serde(default)]
+    pub(crate) grandparent_thumb: Option<String>,
+    #[serde(default)]
+    pub(crate) grandparent_art: Option<String>,
+    #[serde(default)]
+    pub(crate) grandparent_theme: Option<String>,
+}
+
+/// Parse a stringified rating key into a [`RatingKey`].
+fn parse_rating_key(s: &str, field: &str) -> Result<RatingKey> {
+    s.parse::<RatingKey>()
+        .map_err(|e| Error::Config(format!("metadata.{field} not numeric: {e}")))
 }
 
 impl MetadataDto {
+    pub(crate) fn into_show(self, section_ref: LibrarySectionRef) -> Result<Show> {
+        let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        Ok(Show {
+            rating_key,
+            key: self.key,
+            title: self.title,
+            title_sort: self.title_sort,
+            summary: self.summary,
+            studio: self.studio,
+            content_rating: self.content_rating,
+            year: self.year,
+            rating: self.rating,
+            audience_rating: self.audience_rating,
+            duration_ms: self.duration,
+            originally_available_at: self.originally_available_at,
+            child_count: self.child_count,
+            leaf_count: self.leaf_count,
+            viewed_leaf_count: self.viewed_leaf_count,
+            view_count: self.view_count.unwrap_or(0),
+            last_viewed_at: self.last_viewed_at,
+            added_at: self.added_at,
+            updated_at: self.updated_at,
+            thumb: self.thumb,
+            art: self.art,
+            theme: self.theme,
+            guid: self.guid,
+            section_ref,
+        })
+    }
+
+    pub(crate) fn into_season(self, section_ref: LibrarySectionRef) -> Result<Season> {
+        let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        let parent_rating_key = self
+            .parent_rating_key
+            .as_deref()
+            .map(|s| parse_rating_key(s, "parentRatingKey"))
+            .transpose()?
+            .ok_or_else(|| Error::Config("season missing parentRatingKey".to_owned()))?;
+        Ok(Season {
+            rating_key,
+            key: self.key,
+            title: self.title,
+            index: self.index,
+            parent_rating_key,
+            parent_key: self.parent_key,
+            parent_title: self.parent_title,
+            parent_thumb: self.parent_thumb,
+            leaf_count: self.leaf_count,
+            viewed_leaf_count: self.viewed_leaf_count,
+            child_count: self.child_count,
+            summary: self.summary,
+            thumb: self.thumb,
+            art: self.art,
+            added_at: self.added_at,
+            updated_at: self.updated_at,
+            last_viewed_at: self.last_viewed_at,
+            view_count: self.view_count.unwrap_or(0),
+            guid: self.guid,
+            section_ref,
+        })
+    }
+
+    pub(crate) fn into_episode(self, section_ref: LibrarySectionRef) -> Result<Episode> {
+        let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
+        let parent_rating_key = self
+            .parent_rating_key
+            .as_deref()
+            .map(|s| parse_rating_key(s, "parentRatingKey"))
+            .transpose()?
+            .ok_or_else(|| Error::Config("episode missing parentRatingKey".to_owned()))?;
+        let grandparent_rating_key = self
+            .grandparent_rating_key
+            .as_deref()
+            .map(|s| parse_rating_key(s, "grandparentRatingKey"))
+            .transpose()?
+            .ok_or_else(|| Error::Config("episode missing grandparentRatingKey".to_owned()))?;
+        Ok(Episode {
+            rating_key,
+            key: self.key,
+            title: self.title,
+            index: self.index,
+            title_sort: self.title_sort,
+            summary: self.summary,
+            content_rating: self.content_rating,
+            year: self.year,
+            rating: self.rating,
+            audience_rating: self.audience_rating,
+            duration_ms: self.duration,
+            originally_available_at: self.originally_available_at,
+            parent_rating_key,
+            parent_key: self.parent_key,
+            parent_title: self.parent_title,
+            parent_index: self.parent_index,
+            parent_thumb: self.parent_thumb,
+            grandparent_rating_key,
+            grandparent_key: self.grandparent_key,
+            grandparent_title: self.grandparent_title,
+            grandparent_thumb: self.grandparent_thumb,
+            grandparent_art: self.grandparent_art,
+            grandparent_theme: self.grandparent_theme,
+            thumb: self.thumb,
+            art: self.art,
+            view_count: self.view_count.unwrap_or(0),
+            last_viewed_at: self.last_viewed_at,
+            view_offset_ms: self.view_offset,
+            added_at: self.added_at,
+            updated_at: self.updated_at,
+            guid: self.guid,
+            section_ref,
+        })
+    }
+
     pub(crate) fn into_movie(self, section_ref: LibrarySectionRef) -> Result<Movie> {
-        let rating_key: RatingKey = self
-            .rating_key
-            .parse()
-            .map_err(|e: Error| Error::Config(format!("metadata.ratingKey not numeric: {e}")))?;
+        let rating_key = parse_rating_key(&self.rating_key, "ratingKey")?;
         Ok(Movie {
             rating_key,
             key: self.key,

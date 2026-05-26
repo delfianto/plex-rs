@@ -15,4 +15,4 @@
 
 pub mod video;
 
-pub use video::Movie;
+pub use video::{Episode, Movie, Season, Show};

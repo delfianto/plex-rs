@@ -16,8 +16,8 @@ use url::Url;
 
 use crate::client::HttpClient;
 use crate::error::{Error, Result};
-use crate::media::Movie;
 use crate::media::video::MetadataDto;
+use crate::media::{Movie, Show};
 use crate::server::join_path;
 use crate::xml::MediaContainer;
 
@@ -176,13 +176,44 @@ impl LibrarySection {
     ///   non-movie section is a programmer error.
     /// - Any [`Error`] variant from the underlying transport.
     pub async fn movies(&self) -> Result<Vec<Movie>> {
-        if self.kind != SectionKind::Movie {
+        self.list_typed(SectionKind::Movie, "1", "movie", MetadataDto::into_movie)
+            .await
+    }
+
+    /// List every show in this section.
+    ///
+    /// Equivalent to python-plexapi's `ShowSection.all()`. Calls
+    /// `GET /library/sections/<id>/all?type=2` and parses each
+    /// `<Video type="show">` into a [`Show`].
+    ///
+    /// # Errors
+    /// - [`Error::Config`] if this section is not [`SectionKind::Show`].
+    /// - Any transport [`Error`] from the underlying [`HttpClient`].
+    pub async fn shows(&self) -> Result<Vec<Show>> {
+        self.list_typed(SectionKind::Show, "2", "show", MetadataDto::into_show)
+            .await
+    }
+
+    /// Internal helper: ensure the section's kind matches, fetch
+    /// `/library/sections/<id>/all?type=<n>`, and convert each
+    /// `MetadataDto` with the caller-supplied closure.
+    async fn list_typed<T, F>(
+        &self,
+        expected: SectionKind,
+        type_param: &str,
+        type_label: &str,
+        convert: F,
+    ) -> Result<Vec<T>>
+    where
+        F: Fn(MetadataDto, LibrarySectionRef) -> Result<T>,
+    {
+        if self.kind != expected {
             return Err(Error::Config(format!(
-                "section {:?} is {} not movie",
-                self.title, self.kind
+                "section {:?} is {} not {type_label}",
+                self.title, self.kind,
             )));
         }
-        let url = self.section_ref.url("/all?type=1")?;
+        let url = self.section_ref.url(&format!("/all?type={type_param}"))?;
         let body = self.section_ref.http.get_bytes(url.as_str()).await?;
         let body_str = std::str::from_utf8(&body).map_err(|e| {
             Error::Config(format!(
@@ -193,7 +224,7 @@ impl LibrarySection {
         let mc: MediaContainer<MetadataDto> = MediaContainer::from_json(body_str, "Metadata")?;
         mc.items
             .into_iter()
-            .map(|dto| dto.into_movie(self.section_ref.clone()))
+            .map(|dto| convert(dto, self.section_ref.clone()))
             .collect()
     }
 }
