@@ -43,6 +43,29 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.8 (LibraryItem + mixed-content listings)** — search and
+  curated-list surfaces:
+  - `media::LibraryItem` — sum type discriminating on Plex's wire
+    `type` field. Nine variants: Movie / Show / Season / Episode /
+    Artist / Album / Track / Photoalbum / Photo.
+    `LibraryItem::title()` / `rating_key()` hide the variant.
+  - `MetadataDto::into_library_item()` performs the dispatch;
+    unknown `type` values surface as `Error::Config`.
+  - `LibrarySection::search(title)` — `GET /library/sections/<id>/all?title=<q>`
+    using a hand-written RFC 3986 percent-encoder (no `url`-crate
+    dependency for query construction).
+  - `LibrarySection::recently_added()` —
+    `GET /library/sections/<id>/recentlyAdded`.
+  - `LibrarySection::on_deck()` —
+    `GET /library/sections/<id>/onDeck`.
+  - `LibrarySection::unwatched()` —
+    `GET /library/sections/<id>/unwatched`.
+  - All four return `Vec<LibraryItem>` so callers can pattern-match
+    on the variant.
+  - `tests/m2_search.rs` — 4 wiremock integration tests covering
+    title search, mixed-type recently-added, empty on-deck, and
+    unknown-`type` error propagation.
+
 - **M2.7 (Read-only media — Markers + Chapters)** — playable-video
   navigation surfaces:
   - `media::Marker` — auto-detected intro/credits/commercial range
