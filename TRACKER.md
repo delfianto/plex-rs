@@ -90,7 +90,12 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   `parentIndex` (the per-track parent is the album; index is
   position-on-disc — `parentIndex` is the disc number, easy to
   swap). _2 wiremock integration tests covering the full walk._
-- [ ] **2.3 `src/media/photo.rs`** — `Photoalbum`, `Photo`.
+- [x] **2.4 `src/media/photo.rs`** — `Photoalbum`, `Photo`, `PhotoEntry`
+  sum type for mixed children. `Photoalbum::children()` dispatches on
+  the wire `type` discriminator (added to `MetadataDto` as
+  `metadata_type`); `sub_albums()` / `photos()` convenience filters.
+  `LibrarySection::photoalbums()` for `?type=14` top-level listing.
+  _1 wiremock integration test exercising the mixed-children walk._
 - [ ] **2.4 `src/media/media_stream.rs`** — `Media`, `MediaPart`, `Stream` enum (`Video | Audio | Subtitle | Lyric`).
 - [ ] **2.5 `src/media/tags.rs`** — `Tag { kind, value, … }`, 14-variant `TagKind` collapsed per analysis/06§F.
 - [ ] **2.6 `src/media/markers.rs`** — `Marker { kind, … }`, `Chapter`.

@@ -17,7 +17,7 @@ use url::Url;
 use crate::client::HttpClient;
 use crate::error::{Error, Result};
 use crate::media::video::MetadataDto;
-use crate::media::{Artist, Movie, Show};
+use crate::media::{Artist, Movie, Photoalbum, Show};
 use crate::server::join_path;
 use crate::xml::MediaContainer;
 
@@ -205,6 +205,25 @@ impl LibrarySection {
     pub async fn artists(&self) -> Result<Vec<Artist>> {
         self.list_typed(SectionKind::Music, "8", "artist", MetadataDto::into_artist)
             .await
+    }
+
+    /// List every top-level photo album in this section.
+    ///
+    /// Calls `GET /library/sections/<id>/all?type=14`. Sub-albums and
+    /// photos are reached via [`Photoalbum::children`] /
+    /// [`Photoalbum::sub_albums`] / [`Photoalbum::photos`].
+    ///
+    /// # Errors
+    /// - [`Error::Config`] if this section is not [`SectionKind::Photo`].
+    /// - Any transport [`Error`].
+    pub async fn photoalbums(&self) -> Result<Vec<Photoalbum>> {
+        self.list_typed(
+            SectionKind::Photo,
+            "14",
+            "photo",
+            MetadataDto::into_photoalbum,
+        )
+        .await
     }
 
     /// Internal helper: ensure the section's kind matches, fetch
