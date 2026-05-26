@@ -439,6 +439,13 @@ pub(crate) struct MetadataDto {
     pub(crate) art: Option<String>,
     #[serde(default)]
     pub(crate) guid: Option<String>,
+    /// Plex's `type` discriminator on `<Video>` / `<Track>` /
+    /// `<Photo>` / `<Directory>` (`movie`/`show`/`season`/
+    /// `episode`/`clip`/`artist`/`album`/`track`/`photoalbum`/
+    /// `photo`). Needed for mixed-content listings (e.g.
+    /// `Photoalbum::children()`).
+    #[serde(rename = "type", default)]
+    pub(crate) metadata_type: Option<String>,
     // TV-hierarchy fields (Show / Season / Episode).
     #[serde(default)]
     pub(crate) index: Option<i32>,

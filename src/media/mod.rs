@@ -14,7 +14,9 @@
 //! Episode follow in M2.2, music in M2.3, photos in M2.4.
 
 pub mod audio;
+pub mod photo;
 pub mod video;
 
 pub use audio::{Album, Artist, Track};
+pub use photo::{Photo, PhotoEntry, Photoalbum};
 pub use video::{Episode, Movie, Season, Show};

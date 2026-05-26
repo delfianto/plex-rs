@@ -43,6 +43,25 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.4 (Read-only media — Photos)** — Photoalbum / Photo:
+  - `media::Photoalbum` — top-level photo container, supports
+    nesting. `children()` returns a `PhotoEntry` sum type mixing
+    sub-albums and photos; `sub_albums()` / `photos()` filter
+    convenience helpers built on top.
+  - `media::Photo` — single photo (or video clip in a photo
+    section) with parent-album back-reference, EXIF caption,
+    capture year, position index, GUID. Width/height land with
+    Media/Part/Stream in M2.5.
+  - `media::PhotoEntry` — `Album(Photoalbum) | Photo(Photo)` sum
+    type for mixed listings.
+  - `MetadataDto` gains a `metadata_type` field (renamed from the
+    wire `type`) so the photo path can dispatch on
+    `photoalbum`/`photo`/`clip` discriminators.
+  - `LibrarySection::photoalbums()` — `?type=14` dispatch on
+    `SectionKind::Photo`.
+  - `tests/m2_photos.rs` — 1 wiremock integration test covering
+    the full mixed-children walk and both convenience filters.
+
 - **M2.3 (Read-only media — Music hierarchy)** — Artist / Album / Track:
   - `media::Artist` — top-level music entity with `child_count`
     (number of albums), bio summary, image surface, and
