@@ -19,3 +19,22 @@ target
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+
+# Reference clone of python-plexapi — kept locally for analysis only,
+# never committed to plex-rs.
+/python-plexapi/
+
+# Per-user Claude Code state — committed settings live in .claude/settings.json
+/.claude/settings.local.json
+
+# Local OS files
+.DS_Store
+
+# Editor / tooling
+.vscode/
+*.swp
+
+# Coverage output
+/lcov.info
+/coverage/
+/target-cov/

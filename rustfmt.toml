@@ -1,0 +1,5 @@
+# Default rustfmt config — keep this file minimal.
+# Per CLAUDE.md §4 we use defaults unless there is a strong reason not to.
+# Anything added here MUST be justified in a PR.
+
+edition = "2024"
