@@ -34,19 +34,40 @@ Pure-Rust primitives + HTTP transport layer. **All gates green.**
 - [x] **0.12 `src/client.rs`** — `HttpClient`: `reqwest::Client` wrapper. Default `Accept: application/json` via identity headers. Retry/backoff with full-jitter exponential (`retry_delay`, pure & unit-tested). `Debug` redacts the token. Status-to-`Error` mapping centralised in one place. _9 unit tests._
 - [x] **0.13 Wire-up** — re-exports in `lib.rs`. `tests/m0_http_smoke.rs` proves the foundation end-to-end against `wiremock`: identity headers reach the wire, JSON deserialisation works, 401/404/api-error mapping all green, retries succeed on transient 5xx and give up cleanly on permanent ones. _8 wiremock integration tests._
 
-## M1 — Minimum viable client
+## M1 — Minimum viable client  ✅ DONE (token sign-in slice)
 
-First wire I/O. Token sign-in only (PIN/password defer to M5).
+First wire I/O. Token sign-in only (PIN/password defer to M5). Single
+vertical slice: `PlexServer::connect → identity → library().sections()`.
 
-- [ ] **1.1 `src/auth/token.rs`** — `MyPlexAuth<Anonymous>::with_token(token)` typestate entry.
-- [ ] **1.2 `src/auth/mod.rs`** — `MyPlexAuth<S>` state type. `S = Anonymous | WithToken`.
-- [ ] **1.3 `src/myplex/mod.rs`** — `MyPlexAccount::connect(token)` → `GET https://plex.tv/api/v2/user`. DTO + domain conversion.
-- [ ] **1.4 `src/server/mod.rs`** — `PlexServer::connect(base_url, token)`. `GET /` for root document.
-- [ ] **1.5 `src/server/system.rs`** (identity slice) — `PlexServer::identity()` → `GET /identity`.
-- [ ] **1.6 `src/library/mod.rs`** — `Library::sections()`.
-- [ ] **1.7 `src/library/section.rs`** — `LibrarySection` enum: `Movie | Show | Music | Photo | Other`. `LibrarySectionRef` for back-reference (analysis/11§2.4).
-- [ ] **1.8 `src/xml/dto/library.rs`** — `<Directory>` DTO + `From` conversion.
-- [ ] **1.9 First wiremock integration tests** — list sections, fetch identity, 401 → `Unauthorized`, 404 → `NotFound`.
+- [-] **1.1-1.2 auth/** — deferred. Synthesis typestate was over-engineered
+  for a single sign-in flow; the M0 `ClientConfig::token()` setter already
+  satisfies M1's needs. The typestate machine lands in M5 alongside PIN
+  and password+2FA per [analysis/11 §9].
+- [-] **1.3 `myplex/`** — deferred to M5 (requires plex.tv `/api/v2/user`
+  which is in M5's MyPlex slice).
+- [x] **1.4-1.5 `src/server.rs`** — `PlexServer::connect(url, token)`,
+  `connect_with_config()`, `from_http()` for tests. `GET /` populates
+  `ServerIdentity` (`machine_identifier`, `version`, `friendly_name`,
+  platform, MyPlex linkage flags, capabilities). `ping()` hits
+  `/identity` as a lightweight reachability probe. _4 unit tests._
+- [x] **1.6-1.7 `src/library.rs`** — `Library::sections()`. `SectionKind`
+  enum `Movie | Show | Music | Photo | Other(String)` for forward-compat.
+  `LibrarySection` carries the descriptive fields + a `LibrarySectionRef`
+  back-link that future edit traits will use to build
+  `PUT /library/sections/<id>/all?...` mutation URLs (analysis/11 §2.4).
+  _5 unit tests._
+- [x] **1.8 DTO** — `DirectoryDto` (in `library.rs`) parses the
+  `<Directory>` shape Plex returns. Shared `PlexBool` flexible-boolean
+  deserialiser exposed `pub(crate)` from `server.rs` so it doesn't
+  duplicate across modules. The synthesis's `src/xml/dto/` directory
+  layout will materialise in M2 when there are enough DTOs to warrant
+  the split.
+- [x] **1.9 `tests/m1_server_library.rs`** — 5 end-to-end wiremock tests:
+  parses root identity with mixed-form booleans, 401 → `Unauthorized`,
+  lists 4 sections (movie/show/music/podcast=Other), `LibrarySectionRef`
+  builds the edit URL correctly, ping hits `/identity`.
+
+**Stats:** 148 unit tests + 13 wiremock integration tests = 161 passing.
 
 ## M2 — Read-only media domain
 

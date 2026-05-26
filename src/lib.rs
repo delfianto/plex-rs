@@ -71,7 +71,9 @@ pub mod client;
 pub mod config;
 pub mod error;
 pub mod headers;
+pub mod library;
 pub mod pagination;
+pub mod server;
 pub mod uri;
 pub mod util;
 pub mod xml;
@@ -80,7 +82,9 @@ pub use crate::client::HttpClient;
 pub use crate::config::{ClientConfig, ClientConfigBuilder};
 pub use crate::error::{Error, Result};
 pub use crate::headers::PlexIdentity;
+pub use crate::library::{Library, LibrarySection, LibrarySectionRef, SectionKind};
 pub use crate::pagination::PageRange;
+pub use crate::server::{PlexServer, ServerIdentity};
 pub use crate::uri::PlexUri;
 pub use crate::util::{
     ClientIdentifier, MachineIdentifier, PlayQueueId, PlexToken, RatingKey, SearchType,

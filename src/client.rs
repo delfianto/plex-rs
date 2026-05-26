@@ -47,6 +47,13 @@ use crate::error::{Error, Result};
 /// at construction time, meaning **rotating the token requires
 /// constructing a new `HttpClient`** (cheap — `reqwest::Client` is
 /// internally `Arc`-based).
+///
+/// `HttpClient` is `Clone`. `reqwest::Client` is internally
+/// reference-counted so cloning the outer struct is cheap (a
+/// `ClientConfig` clone — a handful of `String`s and integers). This
+/// lets sub-types (`PlexServer`, `Library`, …) each hold their own
+/// `HttpClient` handle without worrying about lifetimes.
+#[derive(Clone)]
 pub struct HttpClient {
     inner: reqwest::Client,
     config: ClientConfig,

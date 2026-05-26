@@ -43,5 +43,22 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M1 (Minimum viable client)** — first wire I/O surface, token sign-in
+  only:
+  - `HttpClient` is now `Clone` (reqwest's underlying client is
+    `Arc`-shared, so cloning is cheap).
+  - `server::PlexServer` — `connect(url, token)`,
+    `connect_with_config()`, `from_http()`, `identity()`, `library()`,
+    `ping()`. Eagerly parses `GET /` into `ServerIdentity`.
+  - `server::ServerIdentity` — captures machine identifier, version,
+    friendly name, platform, MyPlex linkage flags, capabilities. Parses
+    Plex's flexible boolean encoding (`"0"`/`"1"`/`0`/`1`/`true`).
+  - `library::Library` — bound to a PMS, exposes `sections()`.
+  - `library::LibrarySection` — typed section with `SectionKind` enum
+    (`Movie | Show | Music | Photo | Other`) and a `LibrarySectionRef`
+    back-link for future edit-trait URL construction.
+  - `tests/m1_server_library.rs` — 5 wiremock-driven end-to-end tests
+    covering identity parsing, 401 surfacing, section listing, and
+    edit-URL construction.
 
 [Unreleased]: https://github.com/justdewey/plex-rs/compare/HEAD...HEAD
