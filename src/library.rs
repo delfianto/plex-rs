@@ -15,7 +15,9 @@ use serde::Deserialize;
 use url::Url;
 
 use crate::client::HttpClient;
-use crate::error::Result;
+use crate::error::{Error, Result};
+use crate::media::Movie;
+use crate::media::video::MetadataDto;
 use crate::server::join_path;
 use crate::xml::MediaContainer;
 
@@ -159,6 +161,40 @@ impl LibrarySection {
     #[must_use]
     pub const fn id(&self) -> u32 {
         self.section_ref.id
+    }
+
+    /// List every movie in this section.
+    ///
+    /// Equivalent to python-plexapi's `MovieSection.all()`. Calls
+    /// `GET /library/sections/<id>/all` with `?type=1` (Plex's movie
+    /// search-type discriminator) and parses the
+    /// `MediaContainer.Metadata[]` payload.
+    ///
+    /// # Errors
+    /// - [`Error::Config`] if this section's [`kind`](Self::kind) is
+    ///   not [`SectionKind::Movie`] — calling `movies()` on a
+    ///   non-movie section is a programmer error.
+    /// - Any [`Error`] variant from the underlying transport.
+    pub async fn movies(&self) -> Result<Vec<Movie>> {
+        if self.kind != SectionKind::Movie {
+            return Err(Error::Config(format!(
+                "section {:?} is {} not movie",
+                self.title, self.kind
+            )));
+        }
+        let url = self.section_ref.url("/all?type=1")?;
+        let body = self.section_ref.http.get_bytes(url.as_str()).await?;
+        let body_str = std::str::from_utf8(&body).map_err(|e| {
+            Error::Config(format!(
+                "sections/{}/all body not utf-8: {e}",
+                self.section_ref.id
+            ))
+        })?;
+        let mc: MediaContainer<MetadataDto> = MediaContainer::from_json(body_str, "Metadata")?;
+        mc.items
+            .into_iter()
+            .map(|dto| dto.into_movie(self.section_ref.clone()))
+            .collect()
     }
 }
 

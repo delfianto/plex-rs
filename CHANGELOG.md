@@ -43,6 +43,16 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.1 (Read-only media — Movie)** — first content type:
+  - `media::Movie` — 24 scalar fields covering Plex's `<Video type="movie">`
+    payload (rating_key, title, year, summary, rating triple, duration,
+    view count + offset, GUIDs, thumb/art paths, timestamps).
+  - `LibrarySection::movies()` lists every movie in a movie section via
+    `GET /library/sections/<id>/all?type=1`; returns `Error::Config`
+    when called on a non-movie section.
+  - `Movie::is_played()`, `Movie::thumb_url()` convenience accessors.
+  - `tests/m2_movies.rs` — 2 wiremock integration tests.
+
 - **M1 (Minimum viable client)** — first wire I/O surface, token sign-in
   only:
   - `HttpClient` is now `Clone` (reqwest's underlying client is
