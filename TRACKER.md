@@ -144,7 +144,10 @@ Largest single trait-architecture investment.
   Implemented on Movie/Show/Season/Episode/Artist/Album/Track.
   `Playable` (full play-control surface) defers to M4 alongside
   PlayQueue + PlexClient. _3 wiremock integration tests._
-- [ ] **3.3 `src/traits/ratable.rs`** — `Ratable`.
+- [x] **3.3 `src/traits/ratable.rs`** — `Ratable` with `rate(Option<f32>)`.
+  PUT `/:/rate?key=<rk>&identifier=com.plexapp.plugins.library&rating=<v>`.
+  Client-side range validation (0..=10), `-1` sentinel for clear.
+  Impl on Movie/Show/Episode/Album/Track. _3 wiremock integration tests._
 - [ ] **3.4 `src/traits/editable.rs`** — `EditField`, `EditTags`, field-specific traits (`EditTitle`, `EditSummary`, …).
 - [ ] **3.5 `src/traits/images.rs`** — `HasArtUrl`, `HasArt`, `HasPoster*`, `HasTheme`, `HasLogo`, `HasSquareArt`.
 - [ ] **3.6 `src/traits/search.rs`** — `Splittable`, `Matchable`, `Watchlistable`.

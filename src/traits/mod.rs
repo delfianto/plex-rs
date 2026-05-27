@@ -16,8 +16,10 @@
 //!   subsequent M3 sub-items.
 
 pub mod played_unplayed;
+pub mod ratable;
 
 pub use played_unplayed::PlayedUnplayed;
+pub use ratable::Ratable;
 
 use url::Url;
 

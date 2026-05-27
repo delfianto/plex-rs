@@ -43,6 +43,21 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.3 (Ratable trait)** — set / clear the user's personal rating
+  on an item:
+  - `traits::Ratable` — single `rate(Option<f32>)` method. `None`
+    clears (wire sentinel `-1`); `Some(v)` requires
+    `v ∈ [0.0, 10.0]` (Plex's 0-to-5-stars × 2 scale).
+    Out-of-range values surface as `Error::Config` before any
+    HTTP traffic.
+  - Wire endpoint: `PUT /:/rate?key=<rating_key>&identifier=com.plexapp.plugins.library&rating=<value>`.
+  - Implemented on Movie / Show / Episode / Album / Track.
+    Season's rating field is rarely user-set on the wire so the
+    impl is intentionally omitted.
+  - `tests/m3_ratable.rs` — 3 wiremock integration tests covering
+    the happy path, the `None` clear, and client-side range
+    validation.
+
 - **M3.1 (Foundational traits + PlayedUnplayed)** — first mutation
   surface and the trait architecture it rides on:
   - `traits::PlexObject` — supertrait every capability trait

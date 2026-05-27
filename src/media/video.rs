@@ -11,7 +11,7 @@ use url::Url;
 use crate::HttpClient;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
-use crate::traits::{PlayedUnplayed, PlexObject};
+use crate::traits::{PlayedUnplayed, PlexObject, Ratable};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -800,6 +800,12 @@ impl PlayedUnplayed for Season {
         self.view_count
     }
 }
+
+impl Ratable for Movie {}
+impl Ratable for Show {}
+impl Ratable for Episode {}
+// Season ratings exist on the wire but are rarely user-set; leaving
+// the impl off for now and adding when we find a real use case.
 
 #[cfg(test)]
 mod tests {
