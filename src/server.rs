@@ -228,6 +228,24 @@ impl PlexServer {
         })
     }
 
+    /// Construct a [`PlexServer`] without performing the identity
+    /// probe. **Test-only** — `pub` (not `pub(crate)`) so integration
+    /// tests under `tests/` can call it, but `#[doc(hidden)]` so it
+    /// stays out of the public docs.
+    ///
+    /// Production callers must use [`Self::connect`] /
+    /// [`Self::connect_with_config`] / [`Self::from_http`] which
+    /// validate the connection.
+    #[doc(hidden)]
+    #[must_use]
+    pub const fn __test_new(base_url: Url, http: HttpClient, identity: ServerIdentity) -> Self {
+        Self {
+            base_url,
+            http,
+            identity,
+        }
+    }
+
     /// Borrow the cached [`ServerIdentity`].
     #[must_use]
     pub const fn identity(&self) -> &ServerIdentity {

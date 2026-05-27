@@ -250,7 +250,19 @@ Largest single trait-architecture investment.
   _4 unit tests + 10 wiremock integration tests (including the
   full play_media composition verified against a separate PMS
   mock)._
-- [ ] **4.5 `src/playback/transcode.rs`** — `/transcode/universal` URL builder + decision endpoint.
+- [x] **4.6 `src/playback/transcode.rs`** — universal transcoder URL
+  builder. `TranscodeOptions::new().protocol(Hls).max_video_bitrate(8000)
+  .video_resolution("1920x1080").build_for(&server, item_key)` produces
+  a token-bearing `/video|/audio/:/transcode/universal/start.{m3u8|mpd}`
+  URL. Supports HLS / DASH, video/audio stream kinds, fast seek, copy
+  timestamps, force-transcode / force-re-encode, max video bitrate
+  (clamped ≥ 64), video resolution (WxH validated client-side), quality
+  / subtitle-size / audio-boost (clamped to 100 / 200 / 200), LAN/WAN
+  location hint, platform override, session id override. PMS token
+  forwarded in the URL via `X-Plex-Token`. Decision endpoint deferred —
+  external players don't need it; they just hit the manifest URL.
+  _15 unit tests._ New `PlexServer::__test_new` doc-hidden constructor
+  bypasses the identity probe for test-only contexts.
 - [~] **4.6 `src/server/sessions.rs`** — `PlayingSession` + `SessionUser` +
   `SessionPlayer` + `TranscodeSession` + `PlayState` enum.
   `PlexServer::sessions()` + `PlayingSession::stop(reason)`. Transcode-only
