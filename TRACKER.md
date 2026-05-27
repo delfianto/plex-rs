@@ -148,7 +148,11 @@ Largest single trait-architecture investment.
   PUT `/:/rate?key=<rk>&identifier=com.plexapp.plugins.library&rating=<v>`.
   Client-side range validation (0..=10), `-1` sentinel for clear.
   Impl on Movie/Show/Episode/Album/Track. _3 wiremock integration tests._
-- [ ] **3.4 `src/traits/editable.rs`** — `EditField`, `EditTags`, field-specific traits (`EditTitle`, `EditSummary`, …).
+- [~] **3.4 `src/traits/edit_field.rs`** — `EditField` universal
+  primitive + `FieldValue` enum + `EditTitle` / `EditSummary`
+  field-specific traits. `PlexObject` extended with `section_ref()`
+  and `metadata_type_id()`. `EditTags` and the remaining ~30
+  field-specific traits follow. _3 unit tests + 3 wiremock integration tests._
 - [ ] **3.5 `src/traits/images.rs`** — `HasArtUrl`, `HasArt`, `HasPoster*`, `HasTheme`, `HasLogo`, `HasSquareArt`.
 - [ ] **3.6 `src/traits/search.rs`** — `Splittable`, `Matchable`, `Watchlistable`.
 - [ ] **3.7 `src/traits/capabilities.rs`** — `capabilities!` declarative macro that emits the impl matrix from analysis/08§2.
