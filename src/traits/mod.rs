@@ -15,6 +15,7 @@
 //! - `Ratable`, `Reload`, `EditField`, `EditTags`, image traits —
 //!   subsequent M3 sub-items.
 
+pub mod edit_batch;
 pub mod edit_field;
 pub mod edit_tags;
 pub mod images;
@@ -23,6 +24,7 @@ pub mod played_unplayed;
 pub mod ratable;
 pub mod reload;
 
+pub use edit_batch::{EditBatch, EditBatchExt};
 pub use edit_field::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
     EditTagline, EditTitle, EditYear, FieldValue,

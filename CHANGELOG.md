@@ -159,6 +159,24 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M3.8 (EditBatch transaction)** — single PUT for multi-field
+  edits, eliminating N round-trips for bulk library cleanup:
+  - `EditBatch::new(&item)` or `item.batch()` (via `EditBatchExt`)
+    starts a builder. Chain `.set_field/.lock_field/.replace_tags/
+    .remove_tags` (low-level) or convenience shortcuts
+    (`set_title`, `set_year`, `replace_genres`, `replace_directors`,
+    `replace_writers`, etc. mirroring the per-trait method names).
+  - `.execute().await` flushes the queued ops in one PUT. Wire
+    format combines the EditField (`<field>.value=v&<field>.locked=L`)
+    and EditTags (`<field>[N].tag.tag=v`, `<field>[].tag.tag-=csv`)
+    shapes into a single query string sharing the `id` / `type`
+    prefix.
+  - Empty batch is a no-op — short-circuits without an HTTP call.
+  - `EditBatchExt` auto-implements on every type with `EditField`,
+    so the `.batch()` method appears on Movie, Show, Season,
+    Episode, Artist, Album, Track, Collection without per-type
+    boilerplate.
+
 - **M5.6 (metadata_provider userState + scrobble)** — per-user
   state on Plex's cloud catalogue. Where the M3
   `PlayedUnplayed` trait marks items watched on a single PMS,

@@ -182,7 +182,17 @@ Largest single trait-architecture investment.
   `declare_edit_field_trait!` and `declare_tag_trait!` macros already
   handle the per-trait expansion without duplication. Adding a
   third macro layer would obscure the call sites with no payoff.
-- [ ] **3.8 `src/batch.rs`** — `EditBatch` transaction (analysis/08§3.1).
+- [x] **3.8 `src/traits/edit_batch.rs`** — `EditBatch` collects
+  field edits, lock toggles, tag replaces, and tag removes for one
+  item and flushes them as a single PUT. `EditBatchExt` adds
+  `.batch()` to every type implementing `EditField`. Builder API:
+  low-level `.set_field/lock_field/replace_tags/remove_tags` plus
+  ergonomic shortcuts (`set_title`, `set_year`, `replace_genres`,
+  `replace_directors`, etc.) mirroring the per-trait method names.
+  Empty batch short-circuits without an HTTP call. Wire format
+  combines `EditField` and `EditTags` patterns into one query
+  string with shared `id=<rk>&type=<n>` prefix. _11 unit tests +
+  4 wiremock integration tests._
 - [-] **3.9 `src/library/filters.rs`** — client-side `__` operator
   namespace. **OUT OF SCOPE.** This would duplicate the typed
   `FilterBuilder` API with python-style `genre__exact="Sci-Fi"`
