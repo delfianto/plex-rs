@@ -18,6 +18,7 @@
 pub mod edit_field;
 pub mod edit_tags;
 pub mod images;
+pub mod playable;
 pub mod played_unplayed;
 pub mod ratable;
 pub mod reload;
@@ -31,6 +32,7 @@ pub use edit_tags::{
     HasProducers, HasRoles, HasStyles, HasWriters,
 };
 pub use images::{HasArtLock, HasArtUrl, HasPosterLock, HasPosterUrl, HasThemeLock, HasThemeUrl};
+pub use playable::Playable;
 pub use played_unplayed::PlayedUnplayed;
 pub use ratable::Ratable;
 pub use reload::Reload;

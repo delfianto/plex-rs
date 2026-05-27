@@ -14,7 +14,8 @@ use crate::traits::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
     EditTagline, EditTags, EditTitle, EditYear, HasArtLock, HasArtUrl, HasCollections,
     HasCountries, HasDirectors, HasGenres, HasLabels, HasPosterLock, HasPosterUrl, HasProducers,
-    HasRoles, HasThemeLock, HasThemeUrl, HasWriters, PlayedUnplayed, PlexObject, Ratable, Reload,
+    HasRoles, HasThemeLock, HasThemeUrl, HasWriters, Playable, PlayedUnplayed, PlexObject, Ratable,
+    Reload,
 };
 use crate::util::ids::RatingKey;
 
@@ -935,6 +936,17 @@ impl Reload for Episode {
     async fn reload(self) -> Result<Self> {
         let dto = crate::traits::reload::fetch_metadata(&self).await?;
         dto.into_episode(self.section_ref.clone())
+    }
+}
+
+impl Playable for Movie {
+    fn first_part_key(&self) -> Option<&str> {
+        self.media.first()?.parts.first().map(|p| p.key.as_str())
+    }
+}
+impl Playable for Episode {
+    fn first_part_key(&self) -> Option<&str> {
+        self.media.first()?.parts.first().map(|p| p.key.as_str())
     }
 }
 
