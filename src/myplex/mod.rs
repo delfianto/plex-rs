@@ -24,10 +24,12 @@
 
 pub mod devices;
 pub mod resources;
+pub mod watchlist;
 pub mod webhooks;
 
 pub use devices::MyPlexDevice;
 pub use resources::{ConnectOptions, MyPlexResource, ResourceConnection};
+pub use watchlist::{WatchlistFilter, WatchlistItem, WatchlistKind, WatchlistOptions};
 
 use serde::de::DeserializeOwned;
 
@@ -40,6 +42,12 @@ use crate::util::ids::{ClientIdentifier, PlexToken};
 /// Default plex.tv base URL.
 const PLEX_TV_BASE: &str = "https://plex.tv";
 
+/// Default plex.tv Discover (cloud catalogue) base URL.
+const DISCOVER_BASE: &str = "https://discover.provider.plex.tv";
+
+/// Default plex.tv Metadata Provider (cloud item metadata) base URL.
+const METADATA_BASE: &str = "https://metadata.provider.plex.tv";
+
 /// Authenticated handle to plex.tv.
 ///
 /// All `MyPlex` API calls (resources, devices, friends, webhooks)
@@ -49,6 +57,8 @@ const PLEX_TV_BASE: &str = "https://plex.tv";
 pub struct MyPlexClient {
     http: HttpClient,
     base: String,
+    discover_base: String,
+    metadata_base: String,
 }
 
 impl MyPlexClient {
@@ -84,6 +94,8 @@ impl MyPlexClient {
         Self {
             http,
             base: PLEX_TV_BASE.to_owned(),
+            discover_base: DISCOVER_BASE.to_owned(),
+            metadata_base: METADATA_BASE.to_owned(),
         }
     }
 
@@ -91,11 +103,25 @@ impl MyPlexClient {
     /// verbatim and used as a prefix; trailing slashes are stripped.
     #[must_use]
     pub fn with_base(mut self, base: impl Into<String>) -> Self {
-        let mut s = base.into();
-        while s.ends_with('/') {
-            s.pop();
-        }
-        self.base = s;
+        self.base = strip_trailing_slash(base);
+        self
+    }
+
+    /// Override the Discover (cloud catalogue) base URL. Intended
+    /// for testing; the production default is
+    /// `https://discover.provider.plex.tv`.
+    #[must_use]
+    pub fn with_discover_base(mut self, base: impl Into<String>) -> Self {
+        self.discover_base = strip_trailing_slash(base);
+        self
+    }
+
+    /// Override the Metadata Provider base URL. Intended for
+    /// testing; the production default is
+    /// `https://metadata.provider.plex.tv`.
+    #[must_use]
+    pub fn with_metadata_base(mut self, base: impl Into<String>) -> Self {
+        self.metadata_base = strip_trailing_slash(base);
         self
     }
 
@@ -103,6 +129,18 @@ impl MyPlexClient {
     #[must_use]
     pub fn base(&self) -> &str {
         &self.base
+    }
+
+    /// Borrow the configured Discover base URL.
+    #[must_use]
+    pub fn discover_base(&self) -> &str {
+        &self.discover_base
+    }
+
+    /// Borrow the configured Metadata Provider base URL.
+    #[must_use]
+    pub fn metadata_base(&self) -> &str {
+        &self.metadata_base
     }
 
     /// Borrow the underlying [`HttpClient`]. Useful when a caller
@@ -154,6 +192,16 @@ impl MyPlexClient {
     async fn get_json<T: DeserializeOwned>(&self, url: &str) -> Result<T> {
         self.http.get_json(url).await
     }
+}
+
+/// Strip trailing slashes from `base` (so we can join with `/path`
+/// safely without producing `//`).
+fn strip_trailing_slash(base: impl Into<String>) -> String {
+    let mut s = base.into();
+    while s.ends_with('/') {
+        s.pop();
+    }
+    s
 }
 
 #[cfg(test)]
