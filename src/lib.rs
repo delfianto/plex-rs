@@ -94,7 +94,10 @@ pub use crate::media::{
     VideoStream,
 };
 pub use crate::pagination::PageRange;
-pub use crate::server::{PlexServer, ServerIdentity};
+pub use crate::server::{
+    PlayState, PlayingSession, PlexServer, ServerIdentity, SessionPlayer, SessionUser,
+    TranscodeSession,
+};
 pub use crate::traits::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
     EditTagline, EditTags, EditTitle, EditYear, FieldValue, HasArtLock, HasArtUrl, HasCollections,

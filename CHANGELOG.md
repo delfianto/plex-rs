@@ -43,6 +43,38 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M4.3 (Sessions — list + stop)** — current-playback surface:
+  - `server::sessions::PlayingSession` — one currently-playing
+    session. Carries the played `LibraryItem`, view offset, plus
+    nested `SessionUser`, `SessionPlayer`, and optional
+    `TranscodeSession`.
+  - `server::sessions::PlayState` — enum
+    `Playing | Paused | Buffering | Stopped | Other(String)`.
+  - `server::sessions::SessionUser` / `SessionPlayer` /
+    `TranscodeSession` — typed views of Plex's nested
+    `<User>` / `<Player>` / `<TranscodeSession>` children. Player
+    captures both LAN and remote-public addresses, device /
+    product / platform identifiers, and local + controllable
+    booleans (controllable means the server can issue
+    remote-control commands back to that player).
+  - `PlexServer::sessions()` — `GET /status/sessions` returns
+    `Vec<PlayingSession>`.
+  - `PlayingSession::stop(reason)` — `GET /status/sessions/terminate`
+    with `sessionId` + optional `reason` (Plex requires GET on
+    this mutation, same shape as `/:/scrobble` — preserved on the
+    wire).
+  - `MetadataDto`'s session-only fields (`sessionKey`,
+    `viewOffset`, nested `User`/`Player`/`TranscodeSession`) live
+    on a dedicated `SessionItemDto` that flattens the standard
+    metadata fields so the existing `into_library_item` dispatch
+    handles the item directly.
+  - Transcode-only listing (`GET /transcode/sessions`) and the
+    paginated history endpoint defer.
+  - `tests/m4_sessions.rs` — 3 wiremock integration tests
+    covering a mixed Movie + Track session list (with and
+    without transcode), session termination with reason, and
+    termination without reason.
+
 - **M4.2 (Collection — list, items, delete)** — section-attached
   named groupings:
   - `media::Collection` — section-scoped collection with rating
