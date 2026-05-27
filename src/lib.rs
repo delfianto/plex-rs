@@ -103,7 +103,9 @@ pub use crate::media::{
     Season, Show, Stream, StreamCommon, SubtitleStream, Tag, TagKind, Track, UnknownStream,
     VideoStream,
 };
-pub use crate::myplex::{ConnectOptions, MyPlexClient, MyPlexResource, ResourceConnection};
+pub use crate::myplex::{
+    ConnectOptions, MyPlexClient, MyPlexDevice, MyPlexResource, ResourceConnection,
+};
 pub use crate::pagination::PageRange;
 pub use crate::playback::{
     CreatePlayQueue, MediaType, PlayQueue, PlayQueueItem, PlexClient, RepeatMode,

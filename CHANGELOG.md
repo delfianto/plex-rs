@@ -159,6 +159,34 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.4 (MyPlex devices list + revoke)** — sibling to the
+  resource + webhooks surface:
+  - `MyPlexClient::devices()` fetches every device registered to
+    the signed-in account via `GET /devices.xml`. Returns
+    `Vec<MyPlexDevice>`; each device carries the plex.tv numeric
+    `id` needed for the delete path, plus friendly name, product,
+    platform, hardware class / model / vendor, capabilities,
+    `client_identifier`, per-device access token, public
+    address, screen resolution and density, and the registry
+    timestamps (`created_at`, `last_seen_at`).
+  - `MyPlexDevice::delete(&client)` hits
+    `DELETE /devices/<id>.xml`, revoking the per-device token
+    without touching other devices or the account token.
+  - `MyPlexDevice::is_server()` / `is_player()` are convenience
+    capability checks. `provides` is exposed as a `Vec<String>`
+    so other capabilities (`controller`, `sync-target`,
+    `pubsub-player`) can be matched directly.
+  - Per-device tokens are wrapped in [`PlexToken`] so `Debug`
+    redacts them (a hand-written `Debug` impl on `MyPlexDevice`
+    drops other potentially noisy fields and includes the token
+    via its own redacted formatter).
+  - XML-only endpoint — the v2 JSON resource endpoint
+    (`MyPlexResource` from M5.3) returns a different shape that
+    doesn't carry the integer `id` field. Parsed via `quick-xml`'s
+    serde adapter with `@attribute`-style renames.
+  - Timestamps arrive as epoch-seconds strings on this endpoint
+    (not ISO 8601); the parser handles both formats.
+
 - **M5.4 (webhook URL registration on plex.tv)** — the management
   half of the webhook story (M5.9 ships the receiver):
   - `MyPlexClient::webhooks()` lists the URLs currently registered
