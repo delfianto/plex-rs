@@ -296,7 +296,16 @@ Largest single trait-architecture investment.
   Per-resource access token honored on the winning probe.
   Endpoint overridable via `MyPlexClient::with_base(url)` for test
   replicas. _11 unit tests + 4 wiremock integration tests._
-- [ ] **5.4 `src/myplex/{devices,friends,home,webhooks,claim,sonos}.rs`** — long tail.
+- [~] **5.4 `src/myplex/webhooks.rs`** — webhook URL registration via
+  plex.tv. `MyPlexClient::webhooks()` lists, `add_webhook(url)`
+  appends (idempotent), `delete_webhook(url)` removes (NotFound if
+  absent), `set_webhooks(&urls)` full-list replace (empty slice
+  clears). Wire: `GET/POST https://plex.tv/api/v2/user/webhooks`
+  with form-encoded `urls[]=...` body. Response shape (JSON array,
+  wrapped envelope, or XML) all parsed via the same
+  `parse_webhook_list` helper. _7 unit tests + 6 wiremock
+  integration tests._ Devices / friends / home / claim / sonos
+  still deferred.
 - [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.
 - [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.
 - [x] **5.7 `src/alerts/`** — `Alerts::connect(&server)` opens a

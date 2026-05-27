@@ -159,6 +159,26 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.4 (webhook URL registration on plex.tv)** — the management
+  half of the webhook story (M5.9 ships the receiver):
+  - `MyPlexClient::webhooks()` lists the URLs currently registered
+    on the account. Plex's v2 endpoint returns either a top-level
+    JSON array, a wrapped `{"webhooks":[...]}` envelope, or XML
+    depending on Accept negotiation; the parser handles all three.
+  - `MyPlexClient::add_webhook(url)` appends a URL to the list and
+    POSTs the merged set. Idempotent — duplicates are no-ops.
+  - `MyPlexClient::delete_webhook(url)` removes a URL and POSTs
+    the filtered set. Returns `Error::NotFound` when the URL
+    isn't registered (so callers can tell "already gone" from
+    "successfully removed").
+  - `MyPlexClient::set_webhooks(&urls)` is the underlying full-list
+    replace. Passing an empty slice clears every webhook (matches
+    python-plexapi's empty-list semantics).
+  - Wire: `GET/POST https://plex.tv/api/v2/user/webhooks` with
+    `application/x-www-form-urlencoded` body `urls[]=u1&urls[]=u2`.
+    The POST bypasses HttpClient's standard JSON envelope (same
+    pattern as the password sign-in flow).
+
 - **M5.9 (Webhook ingest with axum extractor)** — completes the
   real-time inbound story alongside M5.7 alerts. Where alerts
   pulls events via a WebSocket the crate opens, webhooks receive
