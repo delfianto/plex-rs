@@ -15,9 +15,11 @@
 //! - `Ratable`, `Reload`, `EditField`, `EditTags`, image traits —
 //!   subsequent M3 sub-items.
 
+pub mod edit_field;
 pub mod played_unplayed;
 pub mod ratable;
 
+pub use edit_field::{EditField, EditSummary, EditTitle, FieldValue};
 pub use played_unplayed::PlayedUnplayed;
 pub use ratable::Ratable;
 
@@ -25,6 +27,7 @@ use url::Url;
 
 use crate::HttpClient;
 use crate::RatingKey;
+use crate::library::LibrarySectionRef;
 
 // -----------------------------------------------------------------------------
 // PlexObject — the supertrait every capability trait builds on.
@@ -40,12 +43,30 @@ use crate::RatingKey;
 /// `Track`, etc.) — each holds a [`crate::LibrarySectionRef`] from
 /// which the HTTP client and base URL are borrowed.
 pub trait PlexObject: Send + Sync {
-    /// Borrow the HTTP client this object's section is bound to.
-    fn http(&self) -> &HttpClient;
-
-    /// Borrow the base URL of the owning PMS.
-    fn base_url(&self) -> &Url;
+    /// Borrow the owning library-section back-reference. Edit traits
+    /// use this to construct
+    /// `PUT /library/sections/<section_id>/all?...` URLs — Plex
+    /// dispatches edits through the section, not the item itself
+    /// (analysis/11 §2.4).
+    fn section_ref(&self) -> &LibrarySectionRef;
 
     /// This object's primary [`RatingKey`].
     fn rating_key(&self) -> RatingKey;
+
+    /// Plex's wire-format metadata-type discriminator
+    /// (1 = movie, 2 = show, 4 = episode, 9 = album, 10 = track, …).
+    /// Used as `?type=<N>` on edit and search endpoints.
+    fn metadata_type_id(&self) -> u32;
+
+    /// Borrow the HTTP client. Default-derived from
+    /// [`Self::section_ref`].
+    fn http(&self) -> &HttpClient {
+        &self.section_ref().http
+    }
+
+    /// Borrow the base URL. Default-derived from
+    /// [`Self::section_ref`].
+    fn base_url(&self) -> &Url {
+        &self.section_ref().base_url
+    }
 }

@@ -12,11 +12,10 @@
 //! - [`Artist::albums()`] — `GET /library/metadata/<artist_rk>/children`.
 //! - [`Album::tracks()`] — `GET /library/metadata/<album_rk>/children`.
 
-use crate::HttpClient;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::media::video::MetadataDto;
-use crate::traits::{PlayedUnplayed, PlexObject, Ratable};
+use crate::traits::{EditField, EditSummary, EditTitle, PlayedUnplayed, PlexObject, Ratable};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -228,24 +227,24 @@ impl Track {
 }
 
 macro_rules! impl_plex_object_audio {
-    ($ty:ty) => {
+    ($ty:ty, $type_id:expr) => {
         impl PlexObject for $ty {
-            fn http(&self) -> &HttpClient {
-                &self.section_ref.http
-            }
-            fn base_url(&self) -> &url::Url {
-                &self.section_ref.base_url
+            fn section_ref(&self) -> &LibrarySectionRef {
+                &self.section_ref
             }
             fn rating_key(&self) -> RatingKey {
                 self.rating_key
+            }
+            fn metadata_type_id(&self) -> u32 {
+                $type_id
             }
         }
     };
 }
 
-impl_plex_object_audio!(Artist);
-impl_plex_object_audio!(Album);
-impl_plex_object_audio!(Track);
+impl_plex_object_audio!(Artist, 8);
+impl_plex_object_audio!(Album, 9);
+impl_plex_object_audio!(Track, 10);
 
 impl PlayedUnplayed for Track {
     fn view_count(&self) -> u32 {
@@ -265,6 +264,18 @@ impl PlayedUnplayed for Artist {
 
 impl Ratable for Album {}
 impl Ratable for Track {}
+
+impl EditField for Artist {}
+impl EditField for Album {}
+impl EditField for Track {}
+
+impl EditTitle for Artist {}
+impl EditTitle for Album {}
+impl EditTitle for Track {}
+
+impl EditSummary for Artist {}
+impl EditSummary for Album {}
+impl EditSummary for Track {}
 
 // -----------------------------------------------------------------------------
 // DTO conversions (on the shared MetadataDto from media::video).
