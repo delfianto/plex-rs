@@ -159,6 +159,32 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M3.10 (Smart filter URI parser)** — read-only parser for
+  Plex's smart-playlist / smart-collection filter URIs:
+  - `SmartFilter::from_uri(s)` accepts a bare query string
+    (`type=1&genre=2&year>=2000`), a bare path
+    (`/library/sections/<sid>/all?...`), a full `library://`
+    URI with the inner filter path percent-encoded under
+    `/directory/`, or any absolute URL whose query carries the
+    pairs.
+  - Output: `section_id` (extracted from
+    `/library/sections/<id>/all`), `libtype` (numeric `type=N`),
+    ordered list of `FilterClause` (field + `FilterOp` + values)
+    in source order, `group_markers` (Push/Pop/And/Or for
+    boolean grouping), combined `sort` string, and `extra` for
+    unrecognised keys.
+  - The wire format has operator suffixes that themselves
+    contain `=` (`==`, `!==`, `>>=`, `<<=`, `<=`, `>=`, `!=`,
+    `&=`). The `split_pair` helper walks each `key=value` pair
+    looking for the boundary `=` — the first `=` not immediately
+    followed by another `=`. `split_field_op` then strips the
+    longest matching suffix to recover field + op.
+  - `percent_decode_query` tolerates both `+`-as-space and
+    `%HH` escape conventions since Plex's storage layer has used
+    both.
+  - Read-only by design. Callers that want to mutate or build
+    new smart filters use [`FilterBuilder`].
+
 - **M4.6 (Transcoded streaming URL builder)** — complement to
   `Playable::direct_play_url()`. Use direct-play when the source
   media is compatible with the player; reach for the transcoder
