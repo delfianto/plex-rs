@@ -75,6 +75,7 @@ pub mod library;
 pub mod media;
 pub mod pagination;
 pub mod server;
+pub mod traits;
 pub mod uri;
 pub mod util;
 pub mod xml;
@@ -93,6 +94,7 @@ pub use crate::media::{
 };
 pub use crate::pagination::PageRange;
 pub use crate::server::{PlexServer, ServerIdentity};
+pub use crate::traits::{PlayedUnplayed, PlexObject};
 pub use crate::uri::PlexUri;
 pub use crate::util::{
     ClientIdentifier, MachineIdentifier, PlayQueueId, PlexToken, RatingKey, SearchType,

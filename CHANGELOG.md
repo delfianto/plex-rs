@@ -43,6 +43,32 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.1 (Foundational traits + PlayedUnplayed)** — first mutation
+  surface and the trait architecture it rides on:
+  - `traits::PlexObject` — supertrait every capability trait
+    builds on. Three accessors: `http()` → `&HttpClient`,
+    `base_url()` → `&Url`, `rating_key()` → `RatingKey`. Implemented
+    on Movie / Show / Season / Episode / Artist / Album / Track via
+    two small `impl_plex_object*!` macros.
+  - `traits::PlayedUnplayed` — `view_count()` reader plus default
+    bodies for `is_played()`, `mark_played()`, `mark_unplayed()`.
+    The two `mark_*` methods issue `GET /:/scrobble` and
+    `/:/unscrobble` respectively with
+    `key=<rating_key>&identifier=com.plexapp.plugins.library`. Plex
+    requires GET for these despite them being mutations; preserved
+    on the wire (analysis/11 §4.10) but exposed as `mark_*` verbs
+    on the public surface.
+  - Implemented on Movie / Episode / Show / Season / Album /
+    Artist / Track — every type that carries a `view_count` field
+    on the wire. The trait uses Rust 2024 AFIT (async fn in
+    traits) so callers don't need the `async_trait` macro.
+  - Inherent `is_played()` methods preserved on Movie/Episode/Track
+    alongside the trait so callers don't have to import the trait
+    just to read the boolean.
+  - `tests/m3_played_unplayed.rs` — 3 wiremock integration tests
+    covering the scrobble + unscrobble endpoint shapes plus the
+    inherent/trait `is_played` agreement.
+
 - **M2.9 (FilterBuilder)** — typed search expression builder for the
   section-listing surface:
   - `library::FilterBuilder` — fluent, named-op API:
