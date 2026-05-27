@@ -43,6 +43,31 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.5 (EditTags + HasGenres + HasCollections)** — tag-family
+  mutations:
+  - `traits::EditTags` — two low-level primitives:
+    - `replace_tags(field, items, locked)` — emits
+      `<field>[i].tag.tag=v` per item plus `<field>.locked=<0|1>`,
+      replacing the entire list.
+    - `remove_tags(field, items, locked)` — emits the magic
+      `<field>[].tag.tag-=csv` remove sigil (analysis/08 §3.4),
+      stripping the named tags.
+  - `traits::HasGenres` / `traits::HasCollections` — first
+    per-family ergonomic traits, default-bodied via `EditTags`
+    with the right field string baked in. The remaining tag
+    families (Director, Writer, Country, Producer, Role, Label,
+    Mood, Style) follow the same one-line pattern.
+  - Implementors: Movie / Show / Episode (Genre + Collection),
+    Album / Track / Artist (Genre + Collection where the wire
+    schema supports it).
+  - "Add" semantics (read-modify-write — fetch current list,
+    prepend new) deferred to the EditBatch transaction in a
+    future iteration. For now, callers can compose
+    `replace_tags(field, [&existing..., &new..], …)` themselves.
+  - `tests/m3_edit_tags.rs` — 3 wiremock integration tests
+    covering replace, remove (with the trailing `-` sigil), and
+    the collection-family alias.
+
 - **M3.4 (EditField + EditTitle + EditSummary)** — the universal
   metadata-edit primitive:
   - `traits::EditField` — single low-level `edit_field(field,
