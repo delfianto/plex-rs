@@ -207,7 +207,28 @@ Largest single trait-architecture investment.
   EditSummary / EditTags / HasGenres / HasCollections / HasLabels /
   art + poster URL + lock). Add/remove items, mode/sort tweaks,
   smart-collection mutation defer. _3 wiremock integration tests._
-- [ ] **4.4 `src/playback/client.rs`** — `PlexClient`, command protocol (14 nav + 19 playback + mirror).
+- [x] **4.4/4.5 `src/playback/client.rs`** — `PlexClient` remote
+  control. `PlexClient::connect(base_url, access_token,
+  machine_identifier, client_identifier)` builds a handle pointing
+  at a player's HTTP endpoint (typically port 32500). Commands hit
+  `/player/{controller}/{cmd}` with `X-Plex-Target-Client-Identifier`
+  header + monotonic `commandID` query param (sequenced via
+  `Arc<AtomicU64>` so cloned handles serialise correctly).
+  Navigation: `move_up/_down/_left/_right`, `select`, `back`,
+  `context_menu`, `go_to_home`, `go_to_music`, `page_up/_down`.
+  Playback: `play`, `pause`, `stop`, `skip_next`, `skip_previous`,
+  `seek_to(ms, mtype)`, `step_forward`, `step_back`,
+  `set_volume(0..=100, mtype)`, `set_repeat(mode, mtype)`,
+  `set_shuffle(bool, mtype)`. `MediaType` enum (Video/Music/Photo)
+  and `RepeatMode` enum (Off/One/All) with `.as_wire()` accessors.
+  Flagship: `play_media(&server, &queue, offset_ms)` composes
+  `providerIdentifier`/`machineIdentifier`/`protocol`/`address`/
+  `port`/`offset`/`key`/`type`/`containerKey`/`token` — derives
+  every value from the supplied `PlexServer` + `PlayQueue` so
+  callers don't have to hand-build the payload.
+  _4 unit tests + 10 wiremock integration tests (including the
+  full play_media composition verified against a separate PMS
+  mock)._
 - [ ] **4.5 `src/playback/transcode.rs`** — `/transcode/universal` URL builder + decision endpoint.
 - [~] **4.6 `src/server/sessions.rs`** — `PlayingSession` + `SessionUser` +
   `SessionPlayer` + `TranscodeSession` + `PlayState` enum.

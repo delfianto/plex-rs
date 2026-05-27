@@ -101,7 +101,9 @@ pub use crate::media::{
 };
 pub use crate::myplex::{ConnectOptions, MyPlexClient, MyPlexResource, ResourceConnection};
 pub use crate::pagination::PageRange;
-pub use crate::playback::{CreatePlayQueue, PlayQueue, PlayQueueItem};
+pub use crate::playback::{
+    CreatePlayQueue, MediaType, PlayQueue, PlayQueueItem, PlexClient, RepeatMode,
+};
 pub use crate::server::{
     HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,
     ServerIdentity, SessionPlayer, SessionUser, TranscodeSession,

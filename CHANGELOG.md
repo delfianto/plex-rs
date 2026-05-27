@@ -159,6 +159,44 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M4.5 (PlexClient remote control)** — the second half of the
+  playback story; completes the "create a queue, then tell a
+  player to consume it" flow that python-plexapi users expect:
+  - `playback::PlexClient` — handle pointing at a Plex player's
+    HTTP endpoint (typically port 32500). Built via
+    `connect(base_url, access_token, machine_identifier,
+    client_identifier)`; the `access_token` is the **player's**
+    per-resource token, not the account token.
+  - Navigation commands: `move_up`, `move_down`, `move_left`,
+    `move_right`, `select`, `back`, `context_menu`, `go_to_home`,
+    `go_to_music`, `page_up`, `page_down`. All hit
+    `/player/navigation/{cmd}`.
+  - Playback commands: `play`, `pause`, `stop`, `skip_next`,
+    `skip_previous`, `seek_to(position_ms, mtype)`,
+    `step_forward`, `step_back`, `set_volume(0..=100, mtype)`,
+    `set_repeat(RepeatMode, mtype)`,
+    `set_shuffle(bool, mtype)`. Each command requires a
+    `MediaType` (Video / Music / Photo) so a single player can
+    multiplex foreground video and background music.
+  - `MediaType` and `RepeatMode` enums with `.as_wire()`
+    accessors mapping to the spellings Plex expects.
+  - Flagship: `play_media(&server, &queue, offset_ms)` —
+    composes the gnarly playMedia payload (providerIdentifier,
+    machineIdentifier, protocol, address, port, offset, key,
+    type, containerKey, token) by deriving every value from the
+    supplied `PlexServer` and `PlayQueue`. Callers don't
+    hand-build the URL.
+  - Command-ID protocol: Plex requires `commandID` to increase
+    monotonically per caller; we sequence with an internal
+    `Arc<AtomicU64>` so cloned `PlexClient` handles serialise
+    correctly across threads.
+  - The `X-Plex-Target-Client-Identifier` header is set to the
+    player's machine identifier on every command.
+  - Test coverage includes the full play_media payload verified
+    against a separate PMS mock, command-ID monotonicity over a
+    sequence of three commands, and value clamping
+    (`set_volume(255)` → `volume=100`).
+
 - **M4.4 (PlayQueue create/get/mutate)** — server-side playback
   queues, the unit Plex players consume:
   - `PlexServer::create_play_queue()` returns a `CreatePlayQueue`
