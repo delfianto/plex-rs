@@ -43,6 +43,42 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.4 (EditField + EditTitle + EditSummary)** — the universal
+  metadata-edit primitive:
+  - `traits::EditField` — single low-level `edit_field(field,
+    value, locked)` method that emits the wire-format URL Plex
+    actually expects:
+    `PUT /library/sections/<section_id>/all?id=<rating_key>&type=<N>&<field>.value=<v>&<field>.locked=<0|1>`.
+    The endpoint is on the *section*, not the metadata item, even
+    though the item is what's being edited — see analysis/11 §2.4.
+    The `LibrarySectionRef` back-link on every leaf carries the
+    `section_id` and (via the `metadata_type_id()` accessor added
+    in this commit) the `type` discriminator.
+  - `traits::FieldValue` — typed enum (`Str | Int | Float |
+    Bool`) with `From` impls for `&str`, `String`, `i64`, `i32`,
+    `u32`, `u16`, `f32`, `bool`. Display renders the wire form
+    (e.g. `Bool(true)` → `"1"`).
+  - `traits::EditTitle` / `traits::EditSummary` — first
+    field-specific traits, default-bodied via `EditField`.
+    `impl EditTitle for Movie {}` is all a leaf type needs. The
+    remaining ~30 field-specific traits (`EditTagline`,
+    `EditContentRating`, `EditStudio`, `EditYear`, …) follow the
+    same one-line pattern; they land in a follow-up iteration.
+  - `PlexObject` gains `section_ref()` (returning
+    `&LibrarySectionRef`) and `metadata_type_id()` (returning the
+    `?type=N` integer) as required methods; `http()` and
+    `base_url()` become default-derived. Every leaf type's
+    `impl_plex_object*!` macro invocation now also threads the
+    type discriminator.
+  - Implementors of `EditField` / `EditTitle` / `EditSummary`:
+    Movie / Show / Season / Episode / Artist / Album / Track.
+    Photoalbum and Photo are excluded for now — their edit
+    surface differs slightly and lands with the photo-specific
+    traits.
+  - `tests/m3_edit_field.rs` — 3 wiremock integration tests
+    proving the section-keyed wire shape, the lock-flag round-trip,
+    and percent-encoding of special characters.
+
 - **M3.3 (Ratable trait)** — set / clear the user's personal rating
   on an item:
   - `traits::Ratable` — single `rate(Option<f32>)` method. `None`

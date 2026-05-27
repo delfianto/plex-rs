@@ -8,10 +8,9 @@
 use serde::Deserialize;
 use url::Url;
 
-use crate::HttpClient;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
-use crate::traits::{PlayedUnplayed, PlexObject, Ratable};
+use crate::traits::{EditField, EditSummary, EditTitle, PlayedUnplayed, PlexObject, Ratable};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -760,25 +759,25 @@ impl MetadataDto {
 // -----------------------------------------------------------------------------
 
 macro_rules! impl_plex_object {
-    ($ty:ty) => {
+    ($ty:ty, $type_id:expr) => {
         impl PlexObject for $ty {
-            fn http(&self) -> &HttpClient {
-                &self.section_ref.http
-            }
-            fn base_url(&self) -> &url::Url {
-                &self.section_ref.base_url
+            fn section_ref(&self) -> &LibrarySectionRef {
+                &self.section_ref
             }
             fn rating_key(&self) -> RatingKey {
                 self.rating_key
+            }
+            fn metadata_type_id(&self) -> u32 {
+                $type_id
             }
         }
     };
 }
 
-impl_plex_object!(Movie);
-impl_plex_object!(Show);
-impl_plex_object!(Season);
-impl_plex_object!(Episode);
+impl_plex_object!(Movie, 1);
+impl_plex_object!(Show, 2);
+impl_plex_object!(Season, 3);
+impl_plex_object!(Episode, 4);
 
 impl PlayedUnplayed for Movie {
     fn view_count(&self) -> u32 {
@@ -806,6 +805,21 @@ impl Ratable for Show {}
 impl Ratable for Episode {}
 // Season ratings exist on the wire but are rarely user-set; leaving
 // the impl off for now and adding when we find a real use case.
+
+impl EditField for Movie {}
+impl EditField for Show {}
+impl EditField for Season {}
+impl EditField for Episode {}
+
+impl EditTitle for Movie {}
+impl EditTitle for Show {}
+impl EditTitle for Season {}
+impl EditTitle for Episode {}
+
+impl EditSummary for Movie {}
+impl EditSummary for Show {}
+impl EditSummary for Season {}
+impl EditSummary for Episode {}
 
 #[cfg(test)]
 mod tests {

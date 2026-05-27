@@ -94,7 +94,9 @@ pub use crate::media::{
 };
 pub use crate::pagination::PageRange;
 pub use crate::server::{PlexServer, ServerIdentity};
-pub use crate::traits::{PlayedUnplayed, PlexObject, Ratable};
+pub use crate::traits::{
+    EditField, EditSummary, EditTitle, FieldValue, PlayedUnplayed, PlexObject, Ratable,
+};
 pub use crate::uri::PlexUri;
 pub use crate::util::{
     ClientIdentifier, MachineIdentifier, PlayQueueId, PlexToken, RatingKey, SearchType,
