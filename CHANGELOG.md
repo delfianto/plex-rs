@@ -43,6 +43,31 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M2.9 (FilterBuilder)** — typed search expression builder for the
+  section-listing surface:
+  - `library::FilterBuilder` — fluent, named-op API:
+    `.equal()` / `.not_equal()` / `.exact()` / `.not_exact()` /
+    `.starts_with()` / `.ends_with()` / `.gt()` / `.lt()` /
+    `.and_values()` / `.clause(field, FilterOp, value)`. Plus
+    `.sort_by()` / `.sort_by_desc()` / `.limit()` / `.offset()` /
+    `.page_size()` / `.libtype()`.
+  - `library::FilterOp` enum maps every named op to the canonical
+    Plex wire suffix per python-plexapi `library.py:1442-1460`
+    (`=`, `!=`, `==`, `!==`, `<=`, `>=`, `>>=`, `<<=`, `&=`).
+  - `library::SortDirection` (`Asc | Desc`) renders as
+    `field:asc` / `field:desc`.
+  - `FilterBuilder::build_query()` emits the URL query string
+    suffix with RFC 3986 percent-encoding.
+  - `LibrarySection::filter(&builder)` executes the filter
+    against `GET /library/sections/<id>/all?<query>` and parses
+    the response as `Vec<LibraryItem>`.
+  - `src/library.rs` → `src/library/mod.rs`; `filters` is the
+    first sub-module.
+  - Client-side `__icontains`/`__gte` Python-style suffixes
+    deferred to M3.
+  - `tests/m2_filter.rs` — 2 wiremock integration tests covering
+    the full chain wire form and the empty-builder fallback.
+
 - **M2.8 (LibraryItem + mixed-content listings)** — search and
   curated-list surfaces:
   - `media::LibraryItem` — sum type discriminating on Plex's wire
