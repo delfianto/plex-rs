@@ -328,7 +328,24 @@ Largest single trait-architecture investment.
   `GdmEntry::base_url()` builds the PMS URL. Gated on `discovery`
   feature; `tokio/net` only pulled in when the feature is on.
   _5 unit tests._
-- [ ] **5.9 `src/webhook/`** — payload deser + Axum extractor (feature-gated).
+- [x] **5.9 `src/webhook/`** — inbound Plex webhook handling.
+  `WebhookPayload::from_json(raw)` decodes the JSON document Plex
+  sends as the `payload` form field. `WebhookEvent` enum covers
+  all 12 documented events (media.play/pause/resume/stop/scrobble/rate,
+  library.on.deck/new, admin.database.backup/corrupted, device.new,
+  playback.started) plus `Unknown(String)` for forward-compat.
+  Sub-payloads: `WebhookAccount`, `WebhookServer`, `WebhookPlayer`,
+  `WebhookMetadata` (minimal projection with `raw: serde_json::Value`
+  flattened in for fields beyond the projection). For axum users,
+  `impl FromRequest<S> for WebhookPayload` provides the extractor:
+  parses multipart/form-data, finds the `payload` field, decodes
+  the JSON, and captures any `thumb` attachment as `Bytes`. Typed
+  `WebhookRejection` enum maps to 400 Bad Request via
+  `IntoResponse`. Gated behind the `webhook-axum` Cargo feature
+  (axum with multipart + http1 + json + tokio features).
+  _9 unit tests + 6 wiremock/axum integration tests (full
+  end-to-end with axum::serve listener, real multipart bodies sent
+  via reqwest, all three rejection paths, thumb capture)._
 - [ ] **5.10 `src/playback/sync.rs`** — legacy mobile sync (best-effort).
 
 ---

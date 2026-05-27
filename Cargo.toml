@@ -45,7 +45,7 @@ http         = "1"
 regex        = { version = "1", default-features = false, features = ["std", "perf"] }
 
 # Optional feature deps
-axum         = { version = "0.7", optional = true, default-features = false, features = ["json", "tokio"] }
+axum         = { version = "0.7", optional = true, default-features = false, features = ["json", "tokio", "multipart", "http1"] }
 tokio-tungstenite = { version = "0.24", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
 # Note: GDM is NOT mDNS — see analysis/09-realtime-and-discovery.md.
 # Discovery is implemented with raw `tokio::net::UdpSocket` + HTTP/1.0 M-SEARCH;
