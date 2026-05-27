@@ -159,6 +159,32 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M4.9 (server admin / monitoring endpoints)** — read-only
+  surfaces for monitoring dashboards and local LLM agents that
+  want a snapshot of PMS internal state:
+  - `PlexServer::activities()` — currently-running scans,
+    optimizes, refreshes. `Activity` carries uuid, kind, title,
+    subtitle, progress (0..=100), cancellable.
+  - `PlexServer::butler_tasks()` — scheduled background tasks
+    (database backups, metadata refreshes). `ButlerTask` carries
+    name, title, description, enabled, `interval_days`,
+    `schedule_randomized`.
+  - `PlexServer::updater_status()` — current PMS version +
+    any pending updates. `UpdateRelease` carries download_key,
+    version, added/fixed notes, download_url, state.
+  - `PlexServer::bandwidth_stats(&opts)` — bandwidth samples
+    grouped by account/device/time. `BandwidthOptions` builder
+    filters by account, time range (epoch), and aggregation
+    window (`1=months`, `2=weeks`, `3=days`, `4=hours`,
+    `6=seconds`).
+  - `PlexServer::resource_stats()` — CPU and memory utilization
+    samples. Both host (whole machine) and process (PMS only)
+    splits exposed as `host_cpu_pct` / `host_memory_pct` /
+    `process_cpu_pct` / `process_memory_pct`.
+  - Mutation (running butler tasks on demand, applying
+    updates) intentionally NOT shipped — monitoring agents
+    typically don't need to drive PMS, just observe.
+
 - **M5.4 (MyPlex friends + home)** — the sharing / family
   surfaces alongside the previously-landed webhooks + devices:
   - `MyPlexClient::friends()` lists every plex.tv account the

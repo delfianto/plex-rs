@@ -310,7 +310,25 @@ Largest single trait-architecture investment.
   cover the read surface. _12 unit tests + 7 wiremock integration
   tests (load, single set, batched set_many, all three client-side
   validation paths, empty set_many)._
-- [ ] **4.9 `src/server/{butler,activities,updater,statistics,transcode,browse}.rs`** — long tail.
+- [x] **4.9 `src/server/admin.rs`** — server-admin / monitoring
+  read surfaces useful for monitoring agents and dashboards:
+  - `activities()` — currently-running activities (scans,
+    optimizes, refreshes) with uuid, kind, title, subtitle,
+    progress, cancellable.
+  - `butler_tasks()` — scheduled background tasks with name,
+    title, description, enabled, interval_days, schedule_randomized.
+  - `updater_status()` — current PMS version + pending releases
+    (download_key, version, added/fixed notes, download_url, state).
+  - `bandwidth_stats(opts)` — bandwidth samples filterable by
+    account / time range / aggregation window via
+    `BandwidthOptions` builder.
+  - `resource_stats()` — CPU + memory utilization samples
+    (host + process).
+  Mutation paths (running butler tasks, applying updates) defer —
+  monitoring agents typically don't need to drive these. Browse
+  (filesystem browser for adding library paths) also defers —
+  setup-flow tooling, not monitoring.
+  _7 unit tests + 5 wiremock integration tests._
 
 ## M5 — Real-time / discovery / cloud catalogue / webhooks
 

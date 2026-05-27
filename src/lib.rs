@@ -115,9 +115,10 @@ pub use crate::playback::{
     StreamKind, TranscodeOptions, TranscodeProtocol,
 };
 pub use crate::server::{
-    EnumValues, HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,
-    ServerIdentity, SessionPlayer, SessionUser, Setting, SettingKind, SettingValue, Settings,
-    TranscodeSession,
+    Activity, BandwidthOptions, BandwidthStat, ButlerTask, EnumValues, HistoryEntry, HistoryQuery,
+    HistoryStream, PlayState, PlayingSession, PlexServer, ResourceStat, ServerIdentity,
+    SessionPlayer, SessionUser, Setting, SettingKind, SettingValue, Settings, TranscodeSession,
+    UpdateRelease, UpdaterStatus,
 };
 pub use crate::traits::{
     EditBatch, EditBatchExt, EditContentRating, EditField, EditOriginalTitle, EditSortTitle,

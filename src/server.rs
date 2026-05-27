@@ -9,9 +9,14 @@
 //! See [`analysis/04-plexserver.md`](../analysis/04-plexserver.md) for
 //! the full set of endpoints this surface is expected to grow into.
 
+pub mod admin;
 pub mod history;
 pub mod sessions;
 pub mod settings;
+pub use admin::{
+    Activity, BandwidthOptions, BandwidthStat, ButlerTask, ResourceStat, UpdateRelease,
+    UpdaterStatus,
+};
 pub use history::{HistoryEntry, HistoryQuery, HistoryStream};
 pub use sessions::{PlayState, PlayingSession, SessionPlayer, SessionUser, TranscodeSession};
 pub use settings::{EnumValues, Setting, SettingKind, SettingValue, Settings};
