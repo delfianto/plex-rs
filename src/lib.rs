@@ -85,6 +85,8 @@ pub mod server;
 pub mod traits;
 pub mod uri;
 pub mod util;
+#[cfg(feature = "webhook-axum")]
+pub mod webhook;
 pub mod xml;
 
 pub use crate::auth::{MyPlexPasswordLogin, MyPlexPinLogin};

@@ -159,6 +159,33 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.9 (Webhook ingest with axum extractor)** — completes the
+  real-time inbound story alongside M5.7 alerts. Where alerts
+  pulls events via a WebSocket the crate opens, webhooks receive
+  events as HTTP POSTs to a user-run endpoint.
+  - `WebhookEvent` enum covers all 12 documented events
+    (`media.play`/`pause`/`resume`/`stop`/`scrobble`/`rate`,
+    `library.on.deck`/`new`, `admin.database.backup`/`corrupted`,
+    `device.new`, `playback.started`) plus an `Unknown(String)`
+    variant for forward compatibility.
+  - `WebhookPayload` carries the parsed event plus account / server
+    / player / metadata sub-payloads. `WebhookMetadata` is a
+    minimal projection (rating_key, key, type, title,
+    grandparentTitle, librarySectionType, etc.) with the full
+    payload flattened into `raw: serde_json::Value` for callers
+    that need fields beyond the projection.
+  - `WebhookPayload::from_json(raw)` — decode just the JSON
+    portion. Use this when the receiver is not an axum handler.
+  - `impl FromRequest<S> for WebhookPayload` — the axum
+    extractor. Parses Plex's `multipart/form-data` POST, finds the
+    `payload` text field, decodes the JSON, and captures any
+    `thumb` binary attachment as `Bytes`.
+  - `WebhookRejection` is a typed error → 400 Bad Request with
+    a useful diagnostic body (not multipart, missing payload,
+    invalid JSON, multipart I/O error).
+  - Gated behind the `webhook-axum` Cargo feature, which pulls
+    in `axum` with `multipart` + `http1` + `json` + `tokio`.
+
 - **M4.8 (PlexServer Settings)** — read and write server preferences:
   - `PlexServer::settings()` returns a `Settings` snapshot fetched
     from `GET /:/prefs`. Each preference becomes a typed `Setting`
