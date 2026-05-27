@@ -24,6 +24,8 @@
 
 pub mod devices;
 pub mod discover;
+pub mod friends;
+pub mod home;
 pub mod metadata_provider;
 pub mod resources;
 pub mod watchlist;
@@ -31,6 +33,8 @@ pub mod webhooks;
 
 pub use devices::MyPlexDevice;
 pub use discover::{DiscoverItem, DiscoverKind, DiscoverOptions};
+pub use friends::MyPlexUser;
+pub use home::MyPlexHomeUser;
 pub use metadata_provider::UserState;
 pub use resources::{ConnectOptions, MyPlexResource, ResourceConnection};
 pub use watchlist::{WatchlistFilter, WatchlistItem, WatchlistKind, WatchlistOptions};

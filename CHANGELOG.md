@@ -159,6 +159,26 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.4 (MyPlex friends + home)** — the sharing / family
+  surfaces alongside the previously-landed webhooks + devices:
+  - `MyPlexClient::friends()` lists every plex.tv account the
+    signed-in user has shared a server with. Each `MyPlexUser`
+    carries id, username, title, email, thumb, capability
+    booleans (allow_sync / allow_channels / allow_camera_upload),
+    home / restricted flags, and a per-share access token
+    (Debug-redacted via `PlexToken`).
+  - `MyPlexClient::remove_friend(id)` revokes sharing at
+    `DELETE /api/friends/<id>`.
+  - `MyPlexClient::home_users()` lists Plex Home sub-accounts
+    (family profiles, kid accounts). Each `MyPlexHomeUser`
+    carries id, title, username, email, thumb, plus admin /
+    protected / restricted / guest flags.
+  - Mutation paths for home (add user, remove user, restrict /
+    unrestrict) are intentionally NOT shipped — admin-UI
+    workflows that need careful UX around PIN entry and 2FA.
+    The read surface is what the "report my account state"
+    use cases (local LLM agents, dashboards) need.
+
 - **M5.5b (Discover catalogue search)** — full-text search against
   Plex's global cloud catalogue, sibling to `watchlist`:
   - `MyPlexClient::discover_search(query, &opts)` hits
