@@ -172,8 +172,11 @@ Largest single trait-architecture investment.
 
 ## M4 — Playback / playlists / collections / queues / sessions / history
 
-- [ ] **4.1 `src/playback/mod.rs`** — `PlayQueue` create/get/mutate.
-- [ ] **4.2 `src/media/playlist.rs`** — regular + smart + M3U creation, mutations.
+- [~] **4.1 `src/media/playlist.rs`** — Playlist read surface + delete.
+  PlaylistKind enum. PlexServer::playlists() + Playlist::items() +
+  Playlist::delete(). Create/rename/add/remove/move items defer
+  (need `?uri=` server-URI construction). _3 wiremock integration tests._
+- [ ] **4.2 `src/playback/mod.rs`** — `PlayQueue` create/get/mutate.
 - [ ] **4.3 `src/media/collection.rs`** — regular + smart, mutations, `ManagedHub` visibility (read).
 - [ ] **4.4 `src/playback/client.rs`** — `PlexClient`, command protocol (14 nav + 19 playback + mirror).
 - [ ] **4.5 `src/playback/transcode.rs`** — `/transcode/universal` URL builder + decision endpoint.

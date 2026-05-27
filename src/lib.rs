@@ -89,8 +89,8 @@ pub use crate::library::{
 };
 pub use crate::media::{
     Album, Artist, AudioStream, Chapter, Episode, LibraryItem, LyricStream, Marker, MarkerKind,
-    Media, MediaPart, Movie, Photo, PhotoEntry, Photoalbum, Season, Show, Stream, StreamCommon,
-    SubtitleStream, Tag, TagKind, Track, UnknownStream, VideoStream,
+    Media, MediaPart, Movie, Photo, PhotoEntry, Photoalbum, Playlist, PlaylistKind, Season, Show,
+    Stream, StreamCommon, SubtitleStream, Tag, TagKind, Track, UnknownStream, VideoStream,
 };
 pub use crate::pagination::PageRange;
 pub use crate::server::{PlexServer, ServerIdentity};
