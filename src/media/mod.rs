@@ -102,6 +102,34 @@ impl LibraryItem {
             Self::Photo(p) => p.rating_key,
         }
     }
+
+    /// Borrow the item's wire key (`/library/metadata/<rating-key>`).
+    #[must_use]
+    pub fn key(&self) -> &str {
+        match self {
+            Self::Movie(m) => &m.key,
+            Self::Show(s) => &s.key,
+            Self::Season(s) => &s.key,
+            Self::Episode(e) => &e.key,
+            Self::Artist(a) => &a.key,
+            Self::Album(a) => &a.key,
+            Self::Track(t) => &t.key,
+            Self::Photoalbum(p) => &p.key,
+            Self::Photo(p) => &p.key,
+        }
+    }
+
+    /// The Plex "list type" used as the `type=` query parameter when
+    /// creating a `PlayQueue`. `"video"` for movies / TV; `"audio"`
+    /// for music; `"photo"` for photos.
+    #[must_use]
+    pub const fn list_type(&self) -> &'static str {
+        match self {
+            Self::Movie(_) | Self::Show(_) | Self::Season(_) | Self::Episode(_) => "video",
+            Self::Artist(_) | Self::Album(_) | Self::Track(_) => "audio",
+            Self::Photoalbum(_) | Self::Photo(_) => "photo",
+        }
+    }
 }
 
 impl MetadataDto {

@@ -199,6 +199,18 @@ impl HttpClient {
         serde_json::from_slice(&bytes).map_err(Error::from)
     }
 
+    /// Send `method url` with no body, returning the raw response
+    /// body on success. Used by mutation paths whose responses
+    /// (e.g. `/playQueues` PUT/DELETE) carry a parsed payload that
+    /// the caller wants to inspect rather than discard.
+    pub(crate) async fn get_bytes_for_method(
+        &self,
+        method: reqwest::Method,
+        url: &str,
+    ) -> Result<bytes::Bytes> {
+        self.send_with_retry(method, url, None, &[]).await
+    }
+
     /// Core send loop with retry. Builds a fresh request per attempt
     /// because [`reqwest::RequestBuilder`] is not clonable post-build.
     async fn send_with_retry(
