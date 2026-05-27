@@ -78,6 +78,7 @@ pub mod library;
 pub mod media;
 pub mod myplex;
 pub mod pagination;
+pub mod playback;
 pub mod server;
 pub mod traits;
 pub mod uri;
@@ -100,6 +101,7 @@ pub use crate::media::{
 };
 pub use crate::myplex::{ConnectOptions, MyPlexClient, MyPlexResource, ResourceConnection};
 pub use crate::pagination::PageRange;
+pub use crate::playback::{CreatePlayQueue, PlayQueue, PlayQueueItem};
 pub use crate::server::{
     HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,
     ServerIdentity, SessionPlayer, SessionUser, TranscodeSession,

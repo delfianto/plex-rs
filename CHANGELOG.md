@@ -159,6 +159,48 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M4.4 (PlayQueue create/get/mutate)** — server-side playback
+  queues, the unit Plex players consume:
+  - `PlexServer::create_play_queue()` returns a `CreatePlayQueue`
+    builder. Source methods: `.from_item(&item)`,
+    `.from_items(&[&item, ...])`, `.from_playlist(&playlist)`.
+    Flag setters: `.shuffle(bool)`, `.repeat(bool)`,
+    `.continuous(bool)`, `.include_chapters(bool)`,
+    `.include_related(bool)`, `.start_at(key)`. Terminate with
+    `.execute().await`.
+  - `PlexServer::play_queue(id)` fetches an existing queue.
+  - `PlayQueue` carries `id`, `version`, `total_count`,
+    `selected_item_id/_offset/_metadata_item_id`, `shuffled`,
+    `source_uri`, `identifier`, and the `items: Vec<PlayQueueItem>`.
+    Each `PlayQueueItem` exposes its `play_queue_item_id` plus the
+    standard `LibraryItem` metadata via serde `flatten` on
+    `MetadataDto` (same trick `PlayingSession` and `HistoryEntry`
+    use).
+  - Mutation methods consume `self` and return refreshed snapshots
+    after the server response: `refresh()` (re-GET),
+    `add_item(&item, play_next: bool)` (PUT to `/{id}` with `uri=`
+    and optional `next=1`), `move_item(item_id, after_id)` (PUT
+    `/items/{iid}/move?after=...`), `remove_item(item_id)` (DELETE
+    `/items/{iid}`), `clear()` (DELETE `/items`).
+  - Wire spellings: `playQueueID`, `playQueueItemID`,
+    `playQueueSourceURI`, etc. all carry an explicit
+    `#[serde(rename)]` because Plex preserves the `ID`/`URI`
+    capitalization that `camelCase` auto-conversion mangles.
+  - Source URI construction is the trickiest part: a single item
+    becomes `server://<MID>/com.plexapp.plugins.library<key>`; a
+    list becomes
+    `library:///directory/<percent-encoded(/library/metadata/RK1,RK2,...)>`
+    using a hand-rolled RFC 3986-strict percent-encoder (the
+    `form_urlencoded` `+`-for-space convention would be wrong
+    here); a playlist passes `playlistID=<rk>` instead of `uri`.
+  - `LibraryItem` gains two new accessors used by the URI
+    construction: `key()` (returns the wire `/library/metadata/<rk>`
+    path) and `list_type()` (returns `"video"` / `"audio"` /
+    `"photo"` based on the variant).
+  - `HttpClient::get_bytes_for_method(method, url)` —
+    crate-private method-parametric primitive used by PlayQueue's
+    PUT/DELETE mutations. Reuses the standard retry envelope.
+
 - **M4.7 (Playback history with pagination)** — first paginated
   endpoint in the crate; exercises the previously-shipped
   `PageRange` machinery end-to-end:

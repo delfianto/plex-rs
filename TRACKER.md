@@ -186,7 +186,22 @@ Largest single trait-architecture investment.
   PlaylistKind enum. PlexServer::playlists() + Playlist::items() +
   Playlist::delete(). Create/rename/add/remove/move items defer
   (need `?uri=` server-URI construction). _3 wiremock integration tests._
-- [ ] **4.2 `src/playback/mod.rs`** — `PlayQueue` create/get/mutate.
+- [x] **4.2/4.4 `src/playback/play_queue.rs`** — `PlayQueue` and
+  `PlayQueueItem`. `PlexServer::create_play_queue()` returns a
+  `CreatePlayQueue` builder with `.from_item(&item)`, `.from_items(&[&item])`,
+  `.from_playlist(&pl)`, plus toggles for shuffle, repeat, continuous,
+  includeChapters, includeRelated, and start_at(key). `PlexServer::play_queue(id)`
+  fetches an existing queue. Queue mutation methods are self-consuming
+  and return refreshed snapshots: `refresh()`, `add_item(item, play_next)`,
+  `move_item(item_id, after_id)`, `remove_item(item_id)`, `clear()`.
+  URI construction: `server://<MID>/com.plexapp.plugins.library<key>` for
+  single items, `library:///directory/<pct(/library/metadata/RK1,RK2,...)>`
+  for lists, `playlistID=<rk>` for playlists. Wire-spelling exceptions
+  (`playQueueID`, `playQueueItemID`, `playQueueSourceURI`) are handled
+  via explicit `#[serde(rename)]` rather than camelCase auto-conversion.
+  `HttpClient::get_bytes_for_method` is the new method-parametric
+  primitive supporting the PUT/DELETE mutation paths.
+  _7 unit tests + 9 wiremock integration tests._
 - [~] **4.3 `src/media/collection.rs`** — Collection read surface +
   delete + full M3 edit-trait composition (Ratable / EditTitle /
   EditSummary / EditTags / HasGenres / HasCollections / HasLabels /
