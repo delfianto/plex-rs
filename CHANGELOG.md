@@ -43,6 +43,33 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M4.1 (Playlist — list, items, delete)** — first piece of the
+  playback layer:
+  - `media::Playlist` — server-level (not section-attached) ordered
+    item collection. Holds the `HttpClient` and base URL directly
+    so it can hit `/playlists/<rk>` endpoints. Carries the rating
+    key, title, kind, smart flag, content URI (for smart
+    playlists), duration, leaf counts, composite image,
+    timestamps, GUID.
+  - `media::PlaylistKind` enum (`Audio | Video | Photo | Other`)
+    discriminating on Plex's `playlistType` wire field.
+  - `PlexServer::playlists()` — `GET /playlists` listing all
+    playlists on the server.
+  - `Playlist::items()` — `GET /playlists/<rk>/items` returning
+    `Vec<LibraryItem>` (mixed kinds dispatched on wire `type`).
+    The `librarySectionID` Plex emits on each playlist item is
+    wired into the per-item `LibrarySectionRef` so future edits
+    can route through the right section.
+  - `Playlist::delete()` — `DELETE /playlists/<rk>`, consumes
+    `self`.
+  - Smart playlist creation/mutation, item add/remove/move, and
+    rename defer to follow-up iterations — they need
+    server-URI construction for the `?uri=` parameter and the
+    `playlistItemID` shadow keys (analysis/07 §4).
+  - `tests/m4_playlists.rs` — 3 wiremock integration tests
+    covering list (mixed static + smart), item walk with section
+    back-link, and the DELETE endpoint shape.
+
 - **M3.4/M3.5 expansion (macro-driven trait suite)** — fills out
   the field- and tag-family ergonomic-trait surface using two
   small declarative macros:

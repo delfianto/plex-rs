@@ -265,6 +265,27 @@ impl PlexServer {
         let env: Env = self.http.get_json(url.as_str()).await?;
         Ok(env.container)
     }
+
+    /// List every playlist on the server.
+    ///
+    /// Calls `GET /playlists` and parses the `<Playlist>` children.
+    /// Use [`crate::Playlist::items`] on each returned playlist to
+    /// fetch its items, [`crate::Playlist::delete`] to remove it.
+    ///
+    /// # Errors
+    /// Any transport [`Error`] variant.
+    pub async fn playlists(&self) -> Result<Vec<crate::Playlist>> {
+        let url = join_path(&self.base_url, "/playlists")?;
+        let body = self.http.get_bytes(url.as_str()).await?;
+        let body_str = std::str::from_utf8(&body)
+            .map_err(|e| Error::Config(format!("/playlists body not utf-8: {e}")))?;
+        let mc: crate::xml::MediaContainer<crate::media::playlist::PlaylistDto> =
+            crate::xml::MediaContainer::from_json(body_str, "Metadata")?;
+        mc.items
+            .into_iter()
+            .map(|dto| dto.into_domain(self.http.clone(), self.base_url.clone()))
+            .collect()
+    }
 }
 
 impl fmt::Debug for PlexServer {

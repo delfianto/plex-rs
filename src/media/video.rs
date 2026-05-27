@@ -547,6 +547,18 @@ pub(crate) struct MetadataDto {
     /// Embedded chapter index.
     #[serde(default, rename = "Chapter")]
     pub(crate) chapters: Vec<super::markers::ChapterDto>,
+    /// `librarySectionID` carried on every playlist item — used by
+    /// [`super::playlist::Playlist::items`] to construct the right
+    /// section back-reference for each returned leaf.
+    #[serde(default, rename = "librarySectionID")]
+    pub(crate) library_section_id: Option<u32>,
+}
+
+impl MetadataDto {
+    /// Accessor for crate-private use by [`super::playlist`].
+    pub(crate) const fn library_section_id_for_playlist(&self) -> Option<u32> {
+        self.library_section_id
+    }
 }
 
 impl MetadataDto {
