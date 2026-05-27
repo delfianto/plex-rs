@@ -159,6 +159,41 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M4.8 (PlexServer Settings)** — read and write server preferences:
+  - `PlexServer::settings()` returns a `Settings` snapshot fetched
+    from `GET /:/prefs`. Each preference becomes a typed `Setting`
+    with id, label, summary, group, current and default values,
+    hidden/advanced/secure flags, and (for enum-typed settings) a
+    list of valid options.
+  - `SettingKind` enum: `Text`, `Int`, `Double`, `Bool`, `Enum`,
+    `Other(String)` (forward-compat for undocumented kinds Plex
+    might add).
+  - `SettingValue` enum: `Text(String)`, `Int(i64)`, `Double(f64)`,
+    `Bool(bool)`. Plex emits everything as strings on the wire;
+    `SettingValue::parse(&kind, raw)` does the type-driven
+    conversion. `.to_wire()` produces the spelling Plex expects on
+    write (e.g. `Bool(true)` → `"true"`).
+  - `EnumValues` enum: `List(Vec<String>)` for plain
+    `low|medium|high`, `Mapping(Vec<(String, String)>)` for
+    `0:Off|1:On`-style key:label pairs. Parsed automatically based
+    on whether the wire string contains `:`.
+  - Mutation: `Settings::set(server, id, value).await` writes one
+    preference (PUT `/:/prefs?id=value`) and reloads; or
+    `set_many(server, updates).await` batches multiple writes into
+    one PUT. Both consume `self` and return a refreshed snapshot.
+  - Client-side validation: unknown id → `Error::NotFound`;
+    wrong-kind value → `Error::Config`; out-of-enum value →
+    `Error::Config`. All happen before any network call, so the
+    caller never sees a PMS-side rejection for these cases.
+  - Read accessors: `all()`, `get(id)`, `group(name)`,
+    `group_names()`, `len()`, `is_empty()`. Settings are sorted by
+    id (BTreeMap-backed).
+  - Two-phase staging commit (python-plexapi's `_setValue`
+    pattern, where `setting.set(v)` stages and `settings.save()`
+    commits) is intentionally NOT replicated — explicit
+    `set`/`set_many` composes more cleanly with Rust's
+    `await`-based ergonomics and avoids hidden mutable state.
+
 - **M5.7 (Alerts WebSocket)** — real-time monitoring of PMS events:
   - `alerts::Alerts::connect(&server)` opens a WebSocket to
     `/:/websockets/notifications`. Authentication is via the
