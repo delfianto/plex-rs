@@ -325,7 +325,17 @@ Largest single trait-architecture investment.
   `with_metadata_base` overrides on MyPlexClient for testing.
   _9 unit tests + 6 wiremock integration tests._
   JSON Discover search + availability metadata deferred.
-- [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.
+- [x] **5.6 `src/myplex/metadata_provider.rs`** —
+  `MyPlexClient::user_state(rk)` reads cloud per-user state
+  (view_count, view_offset_ms, view_state_complete, last_viewed_at,
+  watchlisted_at) from `metadata.provider.plex.tv/library/metadata/<rk>/userState`.
+  `scrobble(rk)` / `unscrobble(rk)` mark watched / unwatched on the
+  cloud catalogue (which then propagates to subscribed PMS). Wire
+  endpoints are HTTP GET despite being mutations — quirk preserved.
+  `is_played()` / `is_on_watchlist()` convenience helpers on
+  UserState. Permissive timestamp parser accepts epoch-number,
+  epoch-string, and ISO-8601 shapes.
+  _9 unit tests + 4 wiremock integration tests._
 - [x] **5.7 `src/alerts/`** — `Alerts::connect(&server)` opens a
   WebSocket to `/:/websockets/notifications` (with `X-Plex-Token`
   via query param — Plex's WS endpoint doesn't accept standard
