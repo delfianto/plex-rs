@@ -83,7 +83,9 @@ pub use crate::client::HttpClient;
 pub use crate::config::{ClientConfig, ClientConfigBuilder};
 pub use crate::error::{Error, Result};
 pub use crate::headers::PlexIdentity;
-pub use crate::library::{Library, LibrarySection, LibrarySectionRef, SectionKind};
+pub use crate::library::{
+    FilterBuilder, FilterOp, Library, LibrarySection, LibrarySectionRef, SectionKind, SortDirection,
+};
 pub use crate::media::{
     Album, Artist, AudioStream, Chapter, Episode, LibraryItem, LyricStream, Marker, MarkerKind,
     Media, MediaPart, Movie, Photo, PhotoEntry, Photoalbum, Season, Show, Stream, StreamCommon,

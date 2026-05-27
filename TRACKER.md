@@ -120,7 +120,16 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   dispatches on the wire `type` discriminator. `LibraryItem::title()` /
   `rating_key()` accessors hide the variant. Hub search (universal,
   cross-section) deferred to a follow-up. _4 wiremock integration tests._
-- [ ] **2.9 `src/library/filters.rs`** — `FilterBuilder` (analysis/11§7), server-side namespace only.
+- [x] **2.9 `src/library/filters.rs`** — `FilterBuilder` with typed
+  named ops mapping to Plex's wire suffixes per python-plexapi
+  `library.py:1442-1460`. `FilterOp` enum (`Default | Not | Exact |
+  NotExact | StartsWith | EndsWith | GreaterThan | LessThan |
+  AndValues`). Sort + limit + offset + page-size + libtype.
+  `LibrarySection::filter(&builder)` executes returning
+  `Vec<LibraryItem>`. _16 unit tests + 2 wiremock integration tests._
+- [-] Client-side `__icontains`/`__gte`/etc. namespace deferred to M3
+  alongside the trait architecture per analysis/11 §7.4 (smart-filter
+  round-trip is out of scope for v1).
 - [ ] **2.10 Parser snapshot tests via insta** — every leaf has at least one fixture-driven snapshot test.
 
 ## M3 — Edit / tag / lock traits

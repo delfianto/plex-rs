@@ -9,6 +9,10 @@
 //! See [`analysis/05-library-and-search.md`](../analysis/05-library-and-search.md)
 //! for the python-plexapi parity baseline.
 
+pub mod filters;
+
+pub use filters::{FilterBuilder, FilterOp, SortDirection};
+
 use std::fmt;
 
 use serde::Deserialize;
@@ -302,6 +306,26 @@ impl LibrarySection {
     /// Any transport [`Error`].
     pub async fn unwatched(&self) -> Result<Vec<LibraryItem>> {
         self.list_mixed("/unwatched").await
+    }
+
+    /// Execute a [`FilterBuilder`] against this section.
+    ///
+    /// Builds `GET /library/sections/<id>/all?<filter-query>` from the
+    /// supplied builder and parses the response as a mixed
+    /// `Vec<LibraryItem>`. Set [`FilterBuilder::libtype`] to constrain
+    /// the result to a specific metadata kind (most callers want this
+    /// — without it Plex returns whatever default the section emits).
+    ///
+    /// # Errors
+    /// Any transport [`Error`].
+    pub async fn filter(&self, builder: &FilterBuilder) -> Result<Vec<LibraryItem>> {
+        let q = builder.build_query();
+        let suffix = if q.is_empty() {
+            "/all".to_owned()
+        } else {
+            format!("/all?{q}")
+        };
+        self.list_mixed(&suffix).await
     }
 
     /// Generic helper for the mixed-content listing endpoints. Fetches
