@@ -16,7 +16,7 @@ use crate::HttpClient;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::media::video::MetadataDto;
-use crate::traits::{PlayedUnplayed, PlexObject};
+use crate::traits::{PlayedUnplayed, PlexObject, Ratable};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -262,6 +262,9 @@ impl PlayedUnplayed for Artist {
         self.view_count
     }
 }
+
+impl Ratable for Album {}
+impl Ratable for Track {}
 
 // -----------------------------------------------------------------------------
 // DTO conversions (on the shared MetadataDto from media::video).
