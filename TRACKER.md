@@ -198,7 +198,20 @@ Largest single trait-architecture investment.
   `SessionPlayer` + `TranscodeSession` + `PlayState` enum.
   `PlexServer::sessions()` + `PlayingSession::stop(reason)`. Transcode-only
   listing and history endpoint defer. _3 wiremock integration tests._
-- [ ] **4.7 `src/server/history.rs`** — `history()` with operator-suffix DSL.
+- [x] **4.7 `src/server/history.rs`** — `PlexServer::history()` returns
+  a `HistoryQuery` builder with `.account(id)`, `.library_section(id)`,
+  `.rating_key(rk)`, `.mindate(dt)`, `.max_results(n)`, `.page_size(n)`.
+  Default sort `viewedAt:desc` (matches python-plexapi). Terminate with
+  `.collect().await` (eager `Vec`) or `.stream()` (lazy
+  `futures::Stream<Item=Result<HistoryEntry>>`). Pagination via the
+  `X-Plex-Container-Start/-Size` request headers through the new
+  `HttpClient::get_bytes_with_headers` primitive; `PageRange::advance_with`
+  drives the loop. `HistoryEntry` carries `account_id`, `device_id`,
+  `history_key`, `viewed_at`, and the full `LibraryItem` (via
+  `MetadataDto::into_library_item`). `HistoryEntry::delete(http, base)`
+  hits `DELETE <history_key>`. _9 unit tests + 6 wiremock integration
+  tests (incl. cross-page pagination with header assertions, max_results
+  cap, streaming, DELETE)._
 - [ ] **4.8 `src/server/settings.rs`** — `Settings` + `Setting`, two-phase commit via staging slot.
 - [ ] **4.9 `src/server/{butler,activities,updater,statistics,transcode,browse}.rs`** — long tail.
 
