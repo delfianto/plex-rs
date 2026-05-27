@@ -43,6 +43,34 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.6 (Image URL + lock traits)** — six new traits across three
+  image families:
+  - `HasArtUrl` / `HasArtLock` — background-art (`art` wire field).
+  - `HasPosterUrl` / `HasPosterLock` — poster (`thumb` wire field —
+    Plex's confusing wire name for the full poster).
+  - `HasThemeUrl` / `HasThemeLock` — theme song (`theme` wire field,
+    Show-only).
+  - `*Url` traits expose `*_url() -> Result<Option<Url>>` builders
+    that resolve against the server base URL.
+  - `*Lock` traits add `lock_*()` / `unlock_*()`. These emit just
+    `<field>.locked=<0|1>` (no `.value` pair) — Plex's lock-toggle
+    wire path differs from regular value edits. Implemented by a
+    new `EditField::lock_field(field, locked)` primitive added to
+    the foundational edit trait.
+  - Implementors:
+    - Movie / Show / Season / Episode: art + poster + (Show-only) theme.
+    - Artist / Album: art + poster.
+    - Track: poster only (Tracks inherit album art on the wire).
+  - Full `HasArt` / `HasPoster` CRUD (`set_*` / `upload_*` /
+    `delete_*`) needs Plex's `POST /library/metadata/<rk>/<kind>`
+    endpoints + `post_bytes()` on the HTTP client; deferred to a
+    follow-up iteration.
+  - `tests/m3_images.rs` — 4 wiremock integration tests covering
+    URL resolution for art + poster and the lock/unlock toggles
+    on art. The lock test exposed (and the fix corrected) the
+    distinction between value-edit (`<field>.value=` + `<field>.locked=`)
+    and lock-only (`<field>.locked=`) wire forms.
+
 - **M3.5 (EditTags + HasGenres + HasCollections)** — tag-family
   mutations:
   - `traits::EditTags` — two low-level primitives:

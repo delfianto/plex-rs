@@ -16,8 +16,8 @@ use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::media::video::MetadataDto;
 use crate::traits::{
-    EditField, EditSummary, EditTags, EditTitle, HasCollections, HasGenres, PlayedUnplayed,
-    PlexObject, Ratable,
+    EditField, EditSummary, EditTags, EditTitle, HasArtLock, HasArtUrl, HasCollections, HasGenres,
+    HasPosterLock, HasPosterUrl, PlayedUnplayed, PlexObject, Ratable,
 };
 use crate::util::ids::RatingKey;
 
@@ -290,6 +290,35 @@ impl HasGenres for Artist {}
 impl HasCollections for Album {}
 impl HasCollections for Artist {}
 impl HasCollections for Track {}
+
+macro_rules! impl_has_art_audio {
+    ($ty:ty) => {
+        impl HasArtUrl for $ty {
+            fn art_path(&self) -> Option<&str> {
+                self.art.as_deref()
+            }
+        }
+        impl HasArtLock for $ty {}
+        impl HasPosterUrl for $ty {
+            fn thumb_path(&self) -> Option<&str> {
+                self.thumb.as_deref()
+            }
+        }
+        impl HasPosterLock for $ty {}
+    };
+}
+
+impl_has_art_audio!(Artist);
+impl_has_art_audio!(Album);
+// Track doesn't normally surface its own `art` (it inherits from
+// the album); only the poster path is meaningful. Implement the
+// poster pair manually.
+impl HasPosterUrl for Track {
+    fn thumb_path(&self) -> Option<&str> {
+        self.thumb.as_deref()
+    }
+}
+impl HasPosterLock for Track {}
 
 // -----------------------------------------------------------------------------
 // DTO conversions (on the shared MetadataDto from media::video).
