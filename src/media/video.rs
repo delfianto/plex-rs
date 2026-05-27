@@ -11,8 +11,8 @@ use url::Url;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::traits::{
-    EditField, EditSummary, EditTags, EditTitle, HasCollections, HasGenres, PlayedUnplayed,
-    PlexObject, Ratable,
+    EditField, EditSummary, EditTags, EditTitle, HasArtLock, HasArtUrl, HasCollections, HasGenres,
+    HasPosterLock, HasPosterUrl, HasThemeLock, HasThemeUrl, PlayedUnplayed, PlexObject, Ratable,
 };
 use crate::util::ids::RatingKey;
 
@@ -835,6 +835,35 @@ impl HasGenres for Episode {}
 impl HasCollections for Movie {}
 impl HasCollections for Show {}
 impl HasCollections for Episode {}
+
+macro_rules! impl_has_art {
+    ($ty:ty) => {
+        impl HasArtUrl for $ty {
+            fn art_path(&self) -> Option<&str> {
+                self.art.as_deref()
+            }
+        }
+        impl HasArtLock for $ty {}
+        impl HasPosterUrl for $ty {
+            fn thumb_path(&self) -> Option<&str> {
+                self.thumb.as_deref()
+            }
+        }
+        impl HasPosterLock for $ty {}
+    };
+}
+
+impl_has_art!(Movie);
+impl_has_art!(Show);
+impl_has_art!(Season);
+impl_has_art!(Episode);
+
+impl HasThemeUrl for Show {
+    fn theme_path(&self) -> Option<&str> {
+        self.theme.as_deref()
+    }
+}
+impl HasThemeLock for Show {}
 
 #[cfg(test)]
 mod tests {

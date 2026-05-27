@@ -143,6 +143,39 @@ pub trait EditField: PlexObject {
             self.http().put_no_body(url.as_str()).await
         }
     }
+
+    /// Toggle just the lock flag on `field` without setting its
+    /// value. Wire form:
+    /// `PUT /library/sections/<sid>/all?id=<rk>&type=<n>&<field>.locked=<0|1>`.
+    ///
+    /// Used by the image lock traits (`HasArtLock::lock_art`,
+    /// `HasPosterLock::lock_poster`, …) — Plex's lock-only path
+    /// omits the `.value` pair entirely.
+    ///
+    /// # Errors
+    /// Any transport [`crate::Error`].
+    fn lock_field(
+        &self,
+        field: &str,
+        locked: bool,
+    ) -> impl std::future::Future<Output = Result<()>> + Send
+    where
+        Self: Sync,
+    {
+        let field_owned = field.to_owned();
+        async move {
+            let path = format!(
+                "/library/sections/{section}/all?id={rk}&type={ty}&{f}.locked={lock}",
+                section = self.section_ref().id,
+                rk = self.rating_key(),
+                ty = self.metadata_type_id(),
+                f = pct(&field_owned),
+                lock = u8::from(locked),
+            );
+            let url = self.base_url().join(&path)?;
+            self.http().put_no_body(url.as_str()).await
+        }
+    }
 }
 
 /// RFC 3986 percent-encoder for query-string values. Crate-private

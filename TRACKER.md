@@ -158,7 +158,12 @@ Largest single trait-architecture investment.
   Remove sigil `<field>[].tag.tag-=csv` matched per analysis/08 §3.4.
   Add semantics defer to EditBatch (need read-modify-write of current
   list). _3 wiremock integration tests._
-- [ ] **3.5 `src/traits/images.rs`** — `HasArtUrl`, `HasArt`, `HasPoster*`, `HasTheme`, `HasLogo`, `HasSquareArt`.
+- [~] **3.6 `src/traits/images.rs`** — `HasArtUrl` + `HasArtLock`,
+  `HasPosterUrl` + `HasPosterLock`, `HasThemeUrl` + `HasThemeLock`.
+  URL builders + lock toggles via new `EditField::lock_field()`
+  primitive. Full HasArt CRUD (upload/replace/delete) defers — needs
+  multipart POST on HttpClient. `HasLogo` / `HasSquareArt` defer
+  similarly. _4 wiremock integration tests._
 - [ ] **3.6 `src/traits/search.rs`** — `Splittable`, `Matchable`, `Watchlistable`.
 - [ ] **3.7 `src/traits/capabilities.rs`** — `capabilities!` declarative macro that emits the impl matrix from analysis/08§2.
 - [ ] **3.8 `src/batch.rs`** — `EditBatch` transaction (analysis/08§3.1).
