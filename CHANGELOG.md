@@ -159,6 +159,26 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.6 (metadata_provider userState + scrobble)** — per-user
+  state on Plex's cloud catalogue. Where the M3
+  `PlayedUnplayed` trait marks items watched on a single PMS,
+  the metadata provider tracks watched-state on the global
+  Discover catalogue and propagates it to every subscribed PMS:
+  - `MyPlexClient::user_state(rating_key)` reads
+    `view_count`, `view_offset_ms`, `view_state_complete`,
+    `viewed_leaf_count`, `last_viewed_at`, `watchlisted_at` from
+    `metadata.provider.plex.tv/library/metadata/<rk>/userState`.
+    `UserState::is_played()` / `is_on_watchlist()` are
+    convenience helpers.
+  - `MyPlexClient::scrobble(rk)` / `unscrobble(rk)` mark
+    watched / unwatched on the cloud catalogue. Wire endpoints
+    are plain `GET` (despite being mutations) — Plex quirk
+    preserved verbatim.
+  - Permissive timestamp parser accepts epoch-number,
+    epoch-string, and ISO-8601 shapes, since the
+    metadata_provider endpoint has shipped each at different
+    points.
+
 - **M5.5 (plex.tv Watchlist)** — the user-level "to watch" list
   on the Plex cloud catalogue (distinct from any single PMS
   library):
