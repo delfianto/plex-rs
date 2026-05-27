@@ -159,6 +159,34 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.5 (plex.tv Watchlist)** — the user-level "to watch" list
+  on the Plex cloud catalogue (distinct from any single PMS
+  library):
+  - `MyPlexClient::watchlist()` returns the full list with
+    default options. `watchlist_with(&opts)` accepts a
+    `WatchlistOptions` builder with `.with_filter(...)` (All /
+    Available / Released — the path segment), `.with_kind(...)`
+    (Movie / Show — serialized to `?type=1`/`?type=2`),
+    `.with_sort("field:dir")`, and `.with_max_results(n)`.
+  - `MyPlexClient::add_to_watchlist(rating_key)` /
+    `remove_from_watchlist(rating_key)` mutate by hex rating key.
+    The rating key is the trailing segment of a `plex://kind/<hex>`
+    GUID; `WatchlistItem::rating_key` is pre-extracted for callers
+    that already have an item in hand.
+  - `WatchlistItem` is intentionally a separate type from
+    `LibraryItem`. Watchlist entries refer to the global Plex
+    cloud catalogue, not a specific PMS section, so the
+    section-attached trait machinery doesn't apply. The full raw
+    JSON payload is flattened into `raw: serde_json::Value` for
+    callers that need fields beyond the projection (genres, cast,
+    etc.).
+  - `MyPlexClient` gains `with_discover_base(url)` and
+    `with_metadata_base(url)` overrides alongside the existing
+    `with_base(url)` so tests can point at wiremock replicas of
+    the three distinct plex.tv endpoints
+    (`https://plex.tv`, `https://discover.provider.plex.tv`,
+    `https://metadata.provider.plex.tv`).
+
 - **M5.4 (MyPlex devices list + revoke)** — sibling to the
   resource + webhooks surface:
   - `MyPlexClient::devices()` fetches every device registered to

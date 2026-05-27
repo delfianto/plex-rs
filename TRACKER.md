@@ -313,7 +313,18 @@ Largest single trait-architecture investment.
     the XML parsing with `@attribute`-style renames. _9 unit
     tests + 3 wiremock integration tests._
   - friends / home / claim / sonos still deferred.
-- [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.
+- [~] **5.5 `src/myplex/watchlist.rs`** — Discover watchlist.
+  `MyPlexClient::watchlist()` / `watchlist_with(&opts)` lists,
+  `add_to_watchlist(rk)` / `remove_from_watchlist(rk)` mutate.
+  `WatchlistOptions` builder with `filter` (All/Available/Released),
+  `kind` (Movie/Show via numeric SearchType), `sort` (string
+  `field:dir`), `max_results`. `WatchlistItem` is a minimal
+  projection (rating_key extracted from `plex://kind/<hex>` guid,
+  title, year, summary, thumb, art, ratings, watchlisted_at) with
+  full raw payload flattened in. New `with_discover_base` /
+  `with_metadata_base` overrides on MyPlexClient for testing.
+  _9 unit tests + 6 wiremock integration tests._
+  JSON Discover search + availability metadata deferred.
 - [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.
 - [x] **5.7 `src/alerts/`** — `Alerts::connect(&server)` opens a
   WebSocket to `/:/websockets/notifications` (with `X-Plex-Token`
