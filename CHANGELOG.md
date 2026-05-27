@@ -137,6 +137,28 @@ each breaking change is listed under **Breaking** in its release entry.
     `with_endpoint(base)` knob for test override. Unit tests
     cover DTO parsing of both create and claimed responses.
 
+- **M5.2 (password + 2FA sign-in)** — second plex.tv auth flow:
+  - `auth::MyPlexPasswordLogin` — username/password (and optional
+    OTP) sign-in. Built via `new(client_identifier, identity)` or
+    `with_client(http)`; `with_endpoint(url)` overrides the
+    plex.tv endpoint for test-replica use.
+  - `sign_in(login, password)` — happy path; returns the minted
+    `PlexToken`. On 2FA-protected accounts surfaces
+    `Error::TwoFactorRequired` so the caller can prompt for the
+    code and retry.
+  - `sign_in_with_code(login, password, verification_code)` —
+    same flow with the OTP appended.
+  - Wire: `POST https://plex.tv/api/v2/users/signin` with
+    `application/x-www-form-urlencoded` body
+    (`login`/`password`/`rememberMe`/`verificationCode`). 2FA is
+    detected by inspecting the JSON error envelope for
+    `code: 1029` (with a `"verification code"` substring
+    fallback for legacy responses).
+  - `HttpClient::inner()` is now `pub(crate)` so the auth module
+    can drive the POST with its own status mapping — the only
+    place in the crate that bypasses the standard JSON-with-retry
+    envelope.
+
 - **M4.3 (Sessions — list + stop)** — current-playback surface:
   - `server::sessions::PlayingSession` — one currently-playing
     session. Carries the played `LibraryItem`, view offset, plus
