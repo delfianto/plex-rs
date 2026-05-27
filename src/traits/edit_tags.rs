@@ -189,3 +189,65 @@ pub trait HasCollections: EditTags {
         self.remove_tags("collection", items, locked)
     }
 }
+
+/// Declare a tag-family ergonomic trait — emits
+/// `replace_<plural>()` / `remove_<plural>()` methods bound to a
+/// wire field name.
+///
+/// Usage: `declare_tag_trait!(HasDirectors, replace_directors, remove_directors, "director");`
+#[macro_export]
+macro_rules! declare_tag_trait {
+    ($trait_name:ident, $replace_fn:ident, $remove_fn:ident, $wire_field:expr) => {
+        #[doc = concat!("Replace / remove `<", $wire_field, ">` tags on an item.")]
+        pub trait $trait_name: $crate::traits::EditTags {
+            #[doc = concat!("Replace the `", $wire_field, "` list with `items`.")]
+            #[doc = ""]
+            #[doc = "# Errors"]
+            #[doc = "Any transport [`crate::Error`] variant."]
+            fn $replace_fn(
+                &self,
+                items: &[&str],
+                locked: bool,
+            ) -> impl ::std::future::Future<Output = $crate::error::Result<()>> + Send
+            where
+                Self: Sync,
+            {
+                self.replace_tags($wire_field, items, locked)
+            }
+
+            #[doc = concat!("Remove the named `", $wire_field, "` tags.")]
+            #[doc = ""]
+            #[doc = "# Errors"]
+            #[doc = "Any transport [`crate::Error`] variant."]
+            fn $remove_fn(
+                &self,
+                items: &[&str],
+                locked: bool,
+            ) -> impl ::std::future::Future<Output = $crate::error::Result<()>> + Send
+            where
+                Self: Sync,
+            {
+                self.remove_tags($wire_field, items, locked)
+            }
+        }
+    };
+}
+
+declare_tag_trait!(
+    HasDirectors,
+    replace_directors,
+    remove_directors,
+    "director"
+);
+declare_tag_trait!(HasWriters, replace_writers, remove_writers, "writer");
+declare_tag_trait!(HasCountries, replace_countries, remove_countries, "country");
+declare_tag_trait!(
+    HasProducers,
+    replace_producers,
+    remove_producers,
+    "producer"
+);
+declare_tag_trait!(HasRoles, replace_roles, remove_roles, "role");
+declare_tag_trait!(HasLabels, replace_labels, remove_labels, "label");
+declare_tag_trait!(HasMoods, replace_moods, remove_moods, "mood");
+declare_tag_trait!(HasStyles, replace_styles, remove_styles, "style");

@@ -21,8 +21,14 @@ pub mod images;
 pub mod played_unplayed;
 pub mod ratable;
 
-pub use edit_field::{EditField, EditSummary, EditTitle, FieldValue};
-pub use edit_tags::{EditTags, HasCollections, HasGenres};
+pub use edit_field::{
+    EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
+    EditTagline, EditTitle, EditYear, FieldValue,
+};
+pub use edit_tags::{
+    EditTags, HasCollections, HasCountries, HasDirectors, HasGenres, HasLabels, HasMoods,
+    HasProducers, HasRoles, HasStyles, HasWriters,
+};
 pub use images::{HasArtLock, HasArtUrl, HasPosterLock, HasPosterUrl, HasThemeLock, HasThemeUrl};
 pub use played_unplayed::PlayedUnplayed;
 pub use ratable::Ratable;

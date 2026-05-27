@@ -43,6 +43,39 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.4/M3.5 expansion (macro-driven trait suite)** — fills out
+  the field- and tag-family ergonomic-trait surface using two
+  small declarative macros:
+  - `declare_edit_field_trait!(TraitName, method_name, wire_field)`
+    emits a `trait TraitName: EditField` with a single
+    string-typed `method_name(value, locked)` method bound to the
+    given wire field name. Used to land `EditTagline`,
+    `EditStudio`, `EditContentRating`, `EditSortTitle` (wire form
+    `titleSort` — Plex schema inconsistency preserved),
+    `EditOriginalTitle`.
+  - `EditYear` — hand-written numeric variant (the macro is
+    string-only).
+  - `declare_tag_trait!(TraitName, replace_fn, remove_fn, wire_field)`
+    emits a `trait TraitName: EditTags` with `replace_*` /
+    `remove_*` method pair. Used to land `HasDirectors`,
+    `HasWriters`, `HasCountries`, `HasProducers`, `HasRoles`,
+    `HasLabels`, `HasMoods`, `HasStyles`.
+  - Both macros are `#[macro_export]` so downstream crates and
+    examples can declare additional traits the same way.
+  - Implementor coverage per leaf is now extensive:
+    - Movie/Show/Episode: Tagline, Studio, ContentRating,
+      SortTitle, OriginalTitle, Year, plus all 8 tag families
+      (Genre, Collection, Director, Writer, Country, Producer,
+      Role, Label).
+    - Album: SortTitle, Studio, Year, Genre, Collection, Label,
+      Mood, Style.
+    - Artist: SortTitle, Genre, Collection, Label, Mood, Style.
+    - Track: SortTitle, OriginalTitle, Genre, Collection.
+    - Season: SortTitle only (limited edit surface on the wire).
+  - No new tests — the wire-form correctness is already proven
+    by `m3_edit_field.rs` and `m3_edit_tags.rs`; macro expansion
+    just multiplies the surface.
+
 - **M3.6 (Image URL + lock traits)** — six new traits across three
   image families:
   - `HasArtUrl` / `HasArtLock` — background-art (`art` wire field).

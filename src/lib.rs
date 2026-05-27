@@ -95,9 +95,11 @@ pub use crate::media::{
 pub use crate::pagination::PageRange;
 pub use crate::server::{PlexServer, ServerIdentity};
 pub use crate::traits::{
-    EditField, EditSummary, EditTags, EditTitle, FieldValue, HasArtLock, HasArtUrl, HasCollections,
-    HasGenres, HasPosterLock, HasPosterUrl, HasThemeLock, HasThemeUrl, PlayedUnplayed, PlexObject,
-    Ratable,
+    EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
+    EditTagline, EditTags, EditTitle, EditYear, FieldValue, HasArtLock, HasArtUrl, HasCollections,
+    HasCountries, HasDirectors, HasGenres, HasLabels, HasMoods, HasPosterLock, HasPosterUrl,
+    HasProducers, HasRoles, HasStyles, HasThemeLock, HasThemeUrl, HasWriters, PlayedUnplayed,
+    PlexObject, Ratable,
 };
 pub use crate::uri::PlexUri;
 pub use crate::util::{

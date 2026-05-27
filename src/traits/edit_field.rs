@@ -256,6 +256,69 @@ pub trait EditSummary: EditField {
     }
 }
 
+/// Declare a string-valued field-specific edit trait.
+///
+/// Usage: `declare_edit_field_trait!(EditTagline, edit_tagline, "tagline");`
+/// emits `pub trait EditTagline: EditField { fn edit_tagline(...) }`
+/// that internally calls `edit_field("tagline", ...)`.
+///
+/// The wire field name (third argument) may differ from the Rust
+/// method name when Plex's schema is inconsistent (e.g.
+/// `EditSortTitle` edits `titleSort`, not `sortTitle`).
+#[macro_export]
+macro_rules! declare_edit_field_trait {
+    ($trait_name:ident, $method_name:ident, $wire_field:expr) => {
+        #[doc = concat!("Edit the item's `", $wire_field, "` field.")]
+        pub trait $trait_name: $crate::traits::EditField {
+            #[doc = concat!("Set the wire-format `", $wire_field, "` value.")]
+            #[doc = ""]
+            #[doc = "# Errors"]
+            #[doc = "Any [`crate::Error`] variant."]
+            fn $method_name(
+                &self,
+                value: &str,
+                locked: bool,
+            ) -> impl ::std::future::Future<Output = $crate::error::Result<()>> + Send
+            where
+                Self: Sync,
+            {
+                self.edit_field($wire_field, value, locked)
+            }
+        }
+    };
+}
+
+declare_edit_field_trait!(EditTagline, edit_tagline, "tagline");
+declare_edit_field_trait!(EditStudio, edit_studio, "studio");
+declare_edit_field_trait!(EditContentRating, edit_content_rating, "contentRating");
+// `titleSort` and `originalTitle` are intentional wire-format choices
+// — Plex's edit endpoint uses these names regardless of how the field
+// is exposed on the read side.
+declare_edit_field_trait!(EditSortTitle, edit_sort_title, "titleSort");
+declare_edit_field_trait!(EditOriginalTitle, edit_original_title, "originalTitle");
+
+/// Edit the item's release `year`. Wire form is integer.
+///
+/// Provided as a hand-written trait rather than via
+/// [`declare_edit_field_trait`] because the value is numeric and the
+/// macro is string-oriented.
+pub trait EditYear: EditField {
+    /// Set the year.
+    ///
+    /// # Errors
+    /// Any [`crate::Error`] variant.
+    fn edit_year(
+        &self,
+        value: u16,
+        locked: bool,
+    ) -> impl std::future::Future<Output = Result<()>> + Send
+    where
+        Self: Sync,
+    {
+        self.edit_field("year", value, locked)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

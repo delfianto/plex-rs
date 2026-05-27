@@ -11,8 +11,10 @@ use url::Url;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::traits::{
-    EditField, EditSummary, EditTags, EditTitle, HasArtLock, HasArtUrl, HasCollections, HasGenres,
-    HasPosterLock, HasPosterUrl, HasThemeLock, HasThemeUrl, PlayedUnplayed, PlexObject, Ratable,
+    EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
+    EditTagline, EditTags, EditTitle, EditYear, HasArtLock, HasArtUrl, HasCollections,
+    HasCountries, HasDirectors, HasGenres, HasLabels, HasPosterLock, HasPosterUrl, HasProducers,
+    HasRoles, HasThemeLock, HasThemeUrl, HasWriters, PlayedUnplayed, PlexObject, Ratable,
 };
 use crate::util::ids::RatingKey;
 
@@ -824,17 +826,43 @@ impl EditSummary for Show {}
 impl EditSummary for Season {}
 impl EditSummary for Episode {}
 
+// Field-specific edit traits — the macro-emitted family.
+macro_rules! impl_video_field_traits {
+    ($ty:ty) => {
+        impl EditTagline for $ty {}
+        impl EditStudio for $ty {}
+        impl EditContentRating for $ty {}
+        impl EditSortTitle for $ty {}
+        impl EditOriginalTitle for $ty {}
+        impl EditYear for $ty {}
+    };
+}
+impl_video_field_traits!(Movie);
+impl_video_field_traits!(Show);
+impl_video_field_traits!(Episode);
+// Season carries fewer fields; only the universally-applicable ones.
+impl EditSortTitle for Season {}
+
 impl EditTags for Movie {}
 impl EditTags for Show {}
 impl EditTags for Episode {}
 
-impl HasGenres for Movie {}
-impl HasGenres for Show {}
-impl HasGenres for Episode {}
-
-impl HasCollections for Movie {}
-impl HasCollections for Show {}
-impl HasCollections for Episode {}
+// All tag-family ergonomic traits.
+macro_rules! impl_video_tag_traits {
+    ($ty:ty) => {
+        impl HasGenres for $ty {}
+        impl HasCollections for $ty {}
+        impl HasDirectors for $ty {}
+        impl HasWriters for $ty {}
+        impl HasCountries for $ty {}
+        impl HasProducers for $ty {}
+        impl HasRoles for $ty {}
+        impl HasLabels for $ty {}
+    };
+}
+impl_video_tag_traits!(Movie);
+impl_video_tag_traits!(Show);
+impl_video_tag_traits!(Episode);
 
 macro_rules! impl_has_art {
     ($ty:ty) => {
