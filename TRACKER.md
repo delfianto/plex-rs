@@ -184,7 +184,10 @@ Largest single trait-architecture investment.
   smart-collection mutation defer. _3 wiremock integration tests._
 - [ ] **4.4 `src/playback/client.rs`** — `PlexClient`, command protocol (14 nav + 19 playback + mirror).
 - [ ] **4.5 `src/playback/transcode.rs`** — `/transcode/universal` URL builder + decision endpoint.
-- [ ] **4.6 `src/server/sessions.rs`** — `sessions()`, `transcode_sessions()`, `PlexSession::stop()`.
+- [~] **4.6 `src/server/sessions.rs`** — `PlayingSession` + `SessionUser` +
+  `SessionPlayer` + `TranscodeSession` + `PlayState` enum.
+  `PlexServer::sessions()` + `PlayingSession::stop(reason)`. Transcode-only
+  listing and history endpoint defer. _3 wiremock integration tests._
 - [ ] **4.7 `src/server/history.rs`** — `history()` with operator-suffix DSL.
 - [ ] **4.8 `src/server/settings.rs`** — `Settings` + `Setting`, two-phase commit via staging slot.
 - [ ] **4.9 `src/server/{butler,activities,updater,statistics,transcode,browse}.rs`** — long tail.
