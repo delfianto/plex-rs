@@ -16,8 +16,9 @@ use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::media::video::MetadataDto;
 use crate::traits::{
-    EditField, EditSummary, EditTags, EditTitle, HasArtLock, HasArtUrl, HasCollections, HasGenres,
-    HasPosterLock, HasPosterUrl, PlayedUnplayed, PlexObject, Ratable,
+    EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary, EditTags, EditTitle,
+    EditYear, HasArtLock, HasArtUrl, HasCollections, HasGenres, HasLabels, HasMoods, HasPosterLock,
+    HasPosterUrl, HasStyles, PlayedUnplayed, PlexObject, Ratable,
 };
 use crate::util::ids::RatingKey;
 
@@ -280,15 +281,33 @@ impl EditSummary for Artist {}
 impl EditSummary for Album {}
 impl EditSummary for Track {}
 
+// Field-specific edit traits applicable to audio leaves.
+impl EditSortTitle for Artist {}
+impl EditSortTitle for Album {}
+impl EditSortTitle for Track {}
+impl EditOriginalTitle for Track {}
+impl EditStudio for Album {}
+impl EditYear for Album {}
+
 impl EditTags for Album {}
 impl EditTags for Track {}
 impl EditTags for Artist {}
 
-impl HasGenres for Album {}
-impl HasGenres for Artist {}
-
-impl HasCollections for Album {}
-impl HasCollections for Artist {}
+// Tag-family ergonomic traits — audio leaves only emit the families
+// they carry on the wire (no Director/Writer/Country/Producer/Role).
+macro_rules! impl_audio_tag_traits {
+    ($ty:ty) => {
+        impl HasGenres for $ty {}
+        impl HasCollections for $ty {}
+        impl HasMoods for $ty {}
+        impl HasStyles for $ty {}
+        impl HasLabels for $ty {}
+    };
+}
+impl_audio_tag_traits!(Album);
+impl_audio_tag_traits!(Artist);
+// Tracks carry fewer tag families; only the ones the wire emits.
+impl HasGenres for Track {}
 impl HasCollections for Track {}
 
 macro_rules! impl_has_art_audio {
