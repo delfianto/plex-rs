@@ -14,7 +14,7 @@ use crate::traits::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
     EditTagline, EditTags, EditTitle, EditYear, HasArtLock, HasArtUrl, HasCollections,
     HasCountries, HasDirectors, HasGenres, HasLabels, HasPosterLock, HasPosterUrl, HasProducers,
-    HasRoles, HasThemeLock, HasThemeUrl, HasWriters, PlayedUnplayed, PlexObject, Ratable,
+    HasRoles, HasThemeLock, HasThemeUrl, HasWriters, PlayedUnplayed, PlexObject, Ratable, Reload,
 };
 use crate::util::ids::RatingKey;
 
@@ -904,6 +904,39 @@ impl HasThemeUrl for Show {
     }
 }
 impl HasThemeLock for Show {}
+
+// Reload impls — each leaf re-fetches the full metadata record via
+// `GET /library/metadata/<rk>` and re-parses with its specific
+// into_* method. The crate-private `fetch_metadata` helper handles
+// the wire shape; this just wires up the per-type conversion.
+impl Reload for Movie {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_movie(self.section_ref.clone())
+    }
+}
+impl Reload for Show {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_show(self.section_ref.clone())
+    }
+}
+impl Reload for Season {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_season(self.section_ref.clone())
+    }
+}
+impl Reload for Episode {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_episode(self.section_ref.clone())
+    }
+}
 
 #[cfg(test)]
 mod tests {
