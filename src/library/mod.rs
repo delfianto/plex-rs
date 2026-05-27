@@ -10,8 +10,10 @@
 //! for the python-plexapi parity baseline.
 
 pub mod filters;
+pub mod smart_filter;
 
 pub use filters::{FilterBuilder, FilterOp, SortDirection};
+pub use smart_filter::{FilterClause, GroupMarker, SmartFilter, SmartToken};
 
 use std::fmt;
 

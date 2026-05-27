@@ -95,7 +95,8 @@ pub use crate::config::{ClientConfig, ClientConfigBuilder};
 pub use crate::error::{Error, Result};
 pub use crate::headers::PlexIdentity;
 pub use crate::library::{
-    FilterBuilder, FilterOp, Library, LibrarySection, LibrarySectionRef, SectionKind, SortDirection,
+    FilterBuilder, FilterClause, FilterOp, GroupMarker, Library, LibrarySection, LibrarySectionRef,
+    SectionKind, SmartFilter, SmartToken, SortDirection,
 };
 pub use crate::media::{
     Album, Artist, AudioStream, Chapter, Collection, Episode, LibraryItem, LyricStream, Marker,

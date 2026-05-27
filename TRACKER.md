@@ -199,7 +199,18 @@ Largest single trait-architecture investment.
   string sugar. Only useful as a porting aid for users translating
   python-plexapi scripts line-by-line — Rust callers reach for the
   typed builder. Keeping one canonical filter surface.
-- [ ] **3.10 `src/library/smart_filter.rs`** — `push/pop/and/or` URI parser (read-only).
+- [x] **3.10 `src/library/smart_filter.rs`** — read-only parser for
+  Plex smart-playlist / smart-collection filter URIs.
+  `SmartFilter::from_uri(s)` accepts a bare query string, a bare
+  `/library/sections/<sid>/all?...` path, a full `library://` URI
+  with the inner path percent-encoded under `/directory/`, or any
+  other absolute URL. Produces typed breakdown: section_id, libtype,
+  ordered FilterClause list (field + FilterOp + values), group
+  markers (Push/Pop/And/Or), combined sort, and `extra` for
+  unrecognised keys. `split_pair` handles the boundary `=` correctly
+  for compound operators (`==`, `!==`, `>>=`, `<<=`, `<=`, `>=`,
+  `!=`, `&=`). Permissive percent decoder handles both `+`-as-space
+  and `%HH` escapes. _20 unit tests._
 
 ## M4 — Playback / playlists / collections / queues / sessions / history
 
