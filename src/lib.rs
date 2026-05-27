@@ -117,11 +117,11 @@ pub use crate::server::{
     TranscodeSession,
 };
 pub use crate::traits::{
-    EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
-    EditTagline, EditTags, EditTitle, EditYear, FieldValue, HasArtLock, HasArtUrl, HasCollections,
-    HasCountries, HasDirectors, HasGenres, HasLabels, HasMoods, HasPosterLock, HasPosterUrl,
-    HasProducers, HasRoles, HasStyles, HasThemeLock, HasThemeUrl, HasWriters, Playable,
-    PlayedUnplayed, PlexObject, Ratable, Reload,
+    EditBatch, EditBatchExt, EditContentRating, EditField, EditOriginalTitle, EditSortTitle,
+    EditStudio, EditSummary, EditTagline, EditTags, EditTitle, EditYear, FieldValue, HasArtLock,
+    HasArtUrl, HasCollections, HasCountries, HasDirectors, HasGenres, HasLabels, HasMoods,
+    HasPosterLock, HasPosterUrl, HasProducers, HasRoles, HasStyles, HasThemeLock, HasThemeUrl,
+    HasWriters, Playable, PlayedUnplayed, PlexObject, Ratable, Reload,
 };
 pub use crate::uri::PlexUri;
 pub use crate::util::{
