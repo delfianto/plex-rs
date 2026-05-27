@@ -296,16 +296,23 @@ Largest single trait-architecture investment.
   Per-resource access token honored on the winning probe.
   Endpoint overridable via `MyPlexClient::with_base(url)` for test
   replicas. _11 unit tests + 4 wiremock integration tests._
-- [~] **5.4 `src/myplex/webhooks.rs`** — webhook URL registration via
-  plex.tv. `MyPlexClient::webhooks()` lists, `add_webhook(url)`
-  appends (idempotent), `delete_webhook(url)` removes (NotFound if
-  absent), `set_webhooks(&urls)` full-list replace (empty slice
-  clears). Wire: `GET/POST https://plex.tv/api/v2/user/webhooks`
-  with form-encoded `urls[]=...` body. Response shape (JSON array,
-  wrapped envelope, or XML) all parsed via the same
-  `parse_webhook_list` helper. _7 unit tests + 6 wiremock
-  integration tests._ Devices / friends / home / claim / sonos
-  still deferred.
+- [~] **5.4 `src/myplex/{webhooks,devices}.rs`** —
+  - **webhooks**: `MyPlexClient::webhooks()`, `add_webhook(url)`
+    (idempotent), `delete_webhook(url)` (NotFound if absent),
+    `set_webhooks(&urls)` (empty slice clears). Form-encoded POST
+    to `/api/v2/user/webhooks`; parser handles JSON-array, wrapped
+    envelope, AND XML responses. _7 unit tests + 6 wiremock._
+  - **devices**: `MyPlexClient::devices()` lists every device
+    registered to the account via `GET /devices.xml` (XML-only on
+    Plex's side); each `MyPlexDevice` carries id, name, product,
+    platform, client_identifier, per-device token (Debug-redacted),
+    public_address, screen_resolution/density, created_at,
+    last_seen_at, and connection URIs. `is_server()` / `is_player()`
+    helpers. `MyPlexDevice::delete(&client)` revokes the token via
+    `DELETE /devices/<id>.xml`. quick-xml's serde adapter drives
+    the XML parsing with `@attribute`-style renames. _9 unit
+    tests + 3 wiremock integration tests._
+  - friends / home / claim / sonos still deferred.
 - [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.
 - [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.
 - [x] **5.7 `src/alerts/`** — `Alerts::connect(&server)` opens a

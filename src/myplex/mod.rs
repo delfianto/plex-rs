@@ -22,9 +22,11 @@
 //! [`MyPlexClient::with_base`] so integration tests can point the
 //! client at a wiremock replica.
 
+pub mod devices;
 pub mod resources;
 pub mod webhooks;
 
+pub use devices::MyPlexDevice;
 pub use resources::{ConnectOptions, MyPlexResource, ResourceConnection};
 
 use serde::de::DeserializeOwned;
