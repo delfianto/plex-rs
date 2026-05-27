@@ -67,6 +67,8 @@
 // the features that need them. See `CLAUDE.md` §3.
 // -----------------------------------------------------------------------------
 
+#[cfg(feature = "alerts")]
+pub mod alerts;
 pub mod auth;
 pub mod client;
 pub mod config;
