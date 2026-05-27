@@ -209,7 +209,15 @@ Largest single trait-architecture investment.
   states map cleanly to `Result<Option<PlexToken>>` from `poll()`).
   Wiremock integration tests deferred pending a `with_endpoint(base)`
   override for the plex.tv URL. _2 DTO unit tests._
-- [ ] **5.2 `src/auth/password.rs`** — password + 2FA state machine.
+- [x] **5.2 `src/auth/password.rs`** — `MyPlexPasswordLogin` with
+  `sign_in()` and `sign_in_with_code()`. Form-urlencoded POST to
+  `plex.tv/api/v2/users/signin`. Inspects the response body on 401
+  for the `code: 1029` envelope (with a `"verification code"`
+  substring fallback) and surfaces it as `Error::TwoFactorRequired`
+  distinct from `Error::Unauthorized`. Test endpoint override via
+  `with_endpoint()`. Crate-private `HttpClient::inner()` accessor
+  lets the auth module drive the POST with custom status mapping.
+  _8 unit tests + 4 wiremock integration tests._
 - [ ] **5.3 `src/myplex/resources.rs`** — `MyPlexResource`, parallel connect race with TLS error surfacing.
 - [ ] **5.4 `src/myplex/{devices,friends,home,webhooks,claim,sonos}.rs`** — long tail.
 - [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.

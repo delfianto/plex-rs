@@ -83,7 +83,7 @@ pub mod uri;
 pub mod util;
 pub mod xml;
 
-pub use crate::auth::MyPlexPinLogin;
+pub use crate::auth::{MyPlexPasswordLogin, MyPlexPinLogin};
 pub use crate::client::HttpClient;
 pub use crate::config::{ClientConfig, ClientConfigBuilder};
 pub use crate::error::{Error, Result};

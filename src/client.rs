@@ -84,6 +84,16 @@ impl HttpClient {
         &self.config
     }
 
+    /// Borrow the underlying `reqwest::Client`.
+    ///
+    /// Crate-private escape hatch for modules that need to bypass the
+    /// standard JSON-with-retry envelope — e.g. the password sign-in
+    /// flow inspects the response body to distinguish a generic
+    /// `401 Unauthorized` from a 2FA-required gate.
+    pub(crate) const fn inner(&self) -> &reqwest::Client {
+        &self.inner
+    }
+
     /// GET the URL and deserialise the JSON body as `T`.
     ///
     /// Retries are applied transparently per the policy in
