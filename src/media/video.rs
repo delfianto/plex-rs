@@ -8,8 +8,10 @@
 use serde::Deserialize;
 use url::Url;
 
+use crate::HttpClient;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
+use crate::traits::{PlayedUnplayed, PlexObject};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -107,7 +109,11 @@ impl Movie {
         }
     }
 
-    /// Has this movie ever been played?
+    /// Whether this movie has ever been played.
+    ///
+    /// Equivalent to [`crate::PlayedUnplayed::is_played`] but
+    /// available without importing the trait, matching the parity
+    /// expectation set by python-plexapi.
     #[must_use]
     pub const fn is_played(&self) -> bool {
         self.view_count > 0
@@ -359,7 +365,10 @@ pub struct Episode {
 }
 
 impl Episode {
-    /// Has this episode ever been played?
+    /// Whether this episode has ever been played.
+    ///
+    /// Equivalent to [`crate::PlayedUnplayed::is_played`] but
+    /// available without importing the trait.
     #[must_use]
     pub const fn is_played(&self) -> bool {
         self.view_count > 0
@@ -743,6 +752,52 @@ impl MetadataDto {
             chapters,
             section_ref,
         })
+    }
+}
+
+// -----------------------------------------------------------------------------
+// Trait impls — PlexObject + PlayedUnplayed for the playable leaves.
+// -----------------------------------------------------------------------------
+
+macro_rules! impl_plex_object {
+    ($ty:ty) => {
+        impl PlexObject for $ty {
+            fn http(&self) -> &HttpClient {
+                &self.section_ref.http
+            }
+            fn base_url(&self) -> &url::Url {
+                &self.section_ref.base_url
+            }
+            fn rating_key(&self) -> RatingKey {
+                self.rating_key
+            }
+        }
+    };
+}
+
+impl_plex_object!(Movie);
+impl_plex_object!(Show);
+impl_plex_object!(Season);
+impl_plex_object!(Episode);
+
+impl PlayedUnplayed for Movie {
+    fn view_count(&self) -> u32 {
+        self.view_count
+    }
+}
+impl PlayedUnplayed for Episode {
+    fn view_count(&self) -> u32 {
+        self.view_count
+    }
+}
+impl PlayedUnplayed for Show {
+    fn view_count(&self) -> u32 {
+        self.view_count
+    }
+}
+impl PlayedUnplayed for Season {
+    fn view_count(&self) -> u32 {
+        self.view_count
     }
 }
 

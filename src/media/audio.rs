@@ -12,9 +12,11 @@
 //! - [`Artist::albums()`] — `GET /library/metadata/<artist_rk>/children`.
 //! - [`Album::tracks()`] — `GET /library/metadata/<album_rk>/children`.
 
+use crate::HttpClient;
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::media::video::MetadataDto;
+use crate::traits::{PlayedUnplayed, PlexObject};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -215,10 +217,49 @@ pub struct Track {
 }
 
 impl Track {
-    /// Has this track ever been played?
+    /// Whether this track has ever been played.
+    ///
+    /// Equivalent to [`crate::PlayedUnplayed::is_played`] but
+    /// available without importing the trait.
     #[must_use]
     pub const fn is_played(&self) -> bool {
         self.view_count > 0
+    }
+}
+
+macro_rules! impl_plex_object_audio {
+    ($ty:ty) => {
+        impl PlexObject for $ty {
+            fn http(&self) -> &HttpClient {
+                &self.section_ref.http
+            }
+            fn base_url(&self) -> &url::Url {
+                &self.section_ref.base_url
+            }
+            fn rating_key(&self) -> RatingKey {
+                self.rating_key
+            }
+        }
+    };
+}
+
+impl_plex_object_audio!(Artist);
+impl_plex_object_audio!(Album);
+impl_plex_object_audio!(Track);
+
+impl PlayedUnplayed for Track {
+    fn view_count(&self) -> u32 {
+        self.view_count
+    }
+}
+impl PlayedUnplayed for Album {
+    fn view_count(&self) -> u32 {
+        self.view_count
+    }
+}
+impl PlayedUnplayed for Artist {
+    fn view_count(&self) -> u32 {
+        self.view_count
     }
 }
 
