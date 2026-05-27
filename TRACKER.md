@@ -136,8 +136,14 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
 
 Largest single trait-architecture investment.
 
-- [ ] **3.1 `src/traits/mod.rs`** — `PlexObject`, `Reload`.
-- [ ] **3.2 `src/traits/playable.rs`** — `Playable`, `PlayedUnplayed`.
+- [x] **3.1 `src/traits/mod.rs`** — `PlexObject` supertrait (http /
+  base_url / rating_key accessors). Two macros `impl_plex_object*!`
+  install it on Movie/Show/Season/Episode/Artist/Album/Track.
+- [~] **3.2 `src/traits/played_unplayed.rs`** — `PlayedUnplayed` with
+  mark_played/mark_unplayed via GET `/:/scrobble` + `/:/unscrobble`.
+  Implemented on Movie/Show/Season/Episode/Artist/Album/Track.
+  `Playable` (full play-control surface) defers to M4 alongside
+  PlayQueue + PlexClient. _3 wiremock integration tests._
 - [ ] **3.3 `src/traits/ratable.rs`** — `Ratable`.
 - [ ] **3.4 `src/traits/editable.rs`** — `EditField`, `EditTags`, field-specific traits (`EditTitle`, `EditSummary`, …).
 - [ ] **3.5 `src/traits/images.rs`** — `HasArtUrl`, `HasArt`, `HasPoster*`, `HasTheme`, `HasLogo`, `HasSquareArt`.
