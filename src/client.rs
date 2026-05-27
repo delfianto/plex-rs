@@ -107,7 +107,27 @@ impl HttpClient {
         T: DeserializeOwned,
     {
         let bytes = self
-            .send_with_retry(reqwest::Method::GET, url, None)
+            .send_with_retry(reqwest::Method::GET, url, None, &[])
+            .await?;
+        serde_json::from_slice(&bytes).map_err(Error::from)
+    }
+
+    /// GET with additional per-request headers and deserialise the
+    /// JSON body as `T`.
+    ///
+    /// Used by paginated listings to attach
+    /// `X-Plex-Container-Start` / `-Size`. Header values are taken
+    /// verbatim; the caller is responsible for ASCII validity.
+    ///
+    /// # Errors
+    /// As for [`Self::get_json`], plus [`Error::InvalidHeader`] if
+    /// any header name/value cannot be encoded.
+    pub async fn get_json_with_headers<T>(&self, url: &str, headers: &[(&str, &str)]) -> Result<T>
+    where
+        T: DeserializeOwned,
+    {
+        let bytes = self
+            .send_with_retry(reqwest::Method::GET, url, None, headers)
             .await?;
         serde_json::from_slice(&bytes).map_err(Error::from)
     }
@@ -119,7 +139,24 @@ impl HttpClient {
     /// # Errors
     /// See [`Self::get_json`].
     pub async fn get_bytes(&self, url: &str) -> Result<bytes::Bytes> {
-        self.send_with_retry(reqwest::Method::GET, url, None).await
+        self.send_with_retry(reqwest::Method::GET, url, None, &[])
+            .await
+    }
+
+    /// GET the URL with additional per-request headers and return the
+    /// raw response body as bytes. Pairs with
+    /// [`Self::get_json_with_headers`] when the caller wants to parse
+    /// the body manually (e.g. through [`crate::MediaContainer`]).
+    ///
+    /// # Errors
+    /// See [`Self::get_json`].
+    pub async fn get_bytes_with_headers(
+        &self,
+        url: &str,
+        headers: &[(&str, &str)],
+    ) -> Result<bytes::Bytes> {
+        self.send_with_retry(reqwest::Method::GET, url, None, headers)
+            .await
     }
 
     /// PUT with a `&[u8]` body and no JSON deserialisation, for the
@@ -129,7 +166,7 @@ impl HttpClient {
     /// See [`Self::get_json`].
     pub async fn put_no_body(&self, url: &str) -> Result<()> {
         let _ = self
-            .send_with_retry(reqwest::Method::PUT, url, None)
+            .send_with_retry(reqwest::Method::PUT, url, None, &[])
             .await?;
         Ok(())
     }
@@ -140,7 +177,7 @@ impl HttpClient {
     /// See [`Self::get_json`].
     pub async fn delete(&self, url: &str) -> Result<()> {
         let _ = self
-            .send_with_retry(reqwest::Method::DELETE, url, None)
+            .send_with_retry(reqwest::Method::DELETE, url, None, &[])
             .await?;
         Ok(())
     }
@@ -157,7 +194,7 @@ impl HttpClient {
     {
         let body_bytes = serde_json::to_vec(body)?;
         let bytes = self
-            .send_with_retry(reqwest::Method::POST, url, Some(body_bytes))
+            .send_with_retry(reqwest::Method::POST, url, Some(body_bytes), &[])
             .await?;
         serde_json::from_slice(&bytes).map_err(Error::from)
     }
@@ -169,6 +206,7 @@ impl HttpClient {
         method: reqwest::Method,
         url: &str,
         body: Option<Vec<u8>>,
+        extra_headers: &[(&str, &str)],
     ) -> Result<bytes::Bytes> {
         let max_attempts = self.config.max_retries.saturating_add(1);
         let mut last: Option<Error> = None;
@@ -187,7 +225,10 @@ impl HttpClient {
                 );
                 tokio::time::sleep(delay).await;
             }
-            match self.try_once(&method, url, body.as_deref()).await {
+            match self
+                .try_once(&method, url, body.as_deref(), extra_headers)
+                .await
+            {
                 Ok(bytes) => return Ok(bytes),
                 Err(e) if e.is_retryable() && attempt + 1 < max_attempts => {
                     warn!(
@@ -210,12 +251,20 @@ impl HttpClient {
         method: &reqwest::Method,
         url: &str,
         body: Option<&[u8]>,
+        extra_headers: &[(&str, &str)],
     ) -> Result<bytes::Bytes> {
         let mut rb = self.inner.request(method.clone(), url);
         if let Some(body) = body {
             rb = rb
                 .header(http::header::CONTENT_TYPE, "application/json")
                 .body(body.to_vec());
+        }
+        for (name, value) in extra_headers {
+            let header_name = http::HeaderName::try_from(*name)
+                .map_err(|e| Error::InvalidHeader(format!("header name {name:?}: {e}")))?;
+            let header_value = http::HeaderValue::try_from(*value)
+                .map_err(|e| Error::InvalidHeader(format!("header value {value:?}: {e}")))?;
+            rb = rb.header(header_name, header_value);
         }
         let resp = rb.send().await?;
         let status = resp.status();

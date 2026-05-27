@@ -101,8 +101,8 @@ pub use crate::media::{
 pub use crate::myplex::{ConnectOptions, MyPlexClient, MyPlexResource, ResourceConnection};
 pub use crate::pagination::PageRange;
 pub use crate::server::{
-    PlayState, PlayingSession, PlexServer, ServerIdentity, SessionPlayer, SessionUser,
-    TranscodeSession,
+    HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,
+    ServerIdentity, SessionPlayer, SessionUser, TranscodeSession,
 };
 pub use crate::traits::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,

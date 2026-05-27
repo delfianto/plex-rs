@@ -159,6 +159,34 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M4.7 (Playback history with pagination)** — first paginated
+  endpoint in the crate; exercises the previously-shipped
+  `PageRange` machinery end-to-end:
+  - `PlexServer::history()` returns a `HistoryQuery` builder.
+    Filter methods: `.account(id)`, `.library_section(id)`,
+    `.rating_key(rk)`, `.mindate(DateTime<Utc>)` /
+    `.mindate_epoch_secs(secs)`, `.max_results(n)`, `.page_size(n)`.
+    Default sort is `viewedAt:desc` (matches python-plexapi).
+  - Wire: `GET /status/sessions/history/all` with filter query
+    params and `X-Plex-Container-Start` / `-Size` request headers
+    for pagination. The 1.40-era PMS quirk where `mindate` is
+    sent as `viewedAt>=` is preserved verbatim.
+  - Terminate with `.collect()` for an eager `Vec<HistoryEntry>`,
+    or `.stream()` for a lazy `futures::Stream` that fetches
+    pages on demand and honors `.max_results` across page
+    boundaries. The stream is `Send` and drops its in-flight
+    fetch cleanly on cancellation.
+  - `HistoryEntry` carries the standard `LibraryItem` (via serde
+    `flatten` over `MetadataDto`, same trick sessions uses) plus
+    the history-only fields `account_id`, `device_id`,
+    `history_key`, `viewed_at`. Calling `.delete(http, base)` on
+    an entry issues `DELETE <history_key>`.
+  - `HttpClient::get_bytes_with_headers` and
+    `get_json_with_headers` — new primitives that thread
+    per-request headers through the standard retry envelope.
+    First consumer is history; future paginated endpoints
+    (e.g. `/library/sections/<id>/all`) will reuse them.
+
 - **M5.3 (MyPlexResource + parallel connect race)** — `MyPlex`
   resource discovery and the canonical "find a server, then go":
   - `myplex::MyPlexClient` — authenticated handle to plex.tv.

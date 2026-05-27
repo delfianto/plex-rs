@@ -9,7 +9,9 @@
 //! See [`analysis/04-plexserver.md`](../analysis/04-plexserver.md) for
 //! the full set of endpoints this surface is expected to grow into.
 
+pub mod history;
 pub mod sessions;
+pub use history::{HistoryEntry, HistoryQuery, HistoryStream};
 pub use sessions::{PlayState, PlayingSession, SessionPlayer, SessionUser, TranscodeSession};
 
 use std::fmt;
