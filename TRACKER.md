@@ -218,7 +218,18 @@ Largest single trait-architecture investment.
   `with_endpoint()`. Crate-private `HttpClient::inner()` accessor
   lets the auth module drive the POST with custom status mapping.
   _8 unit tests + 4 wiremock integration tests._
-- [ ] **5.3 `src/myplex/resources.rs`** — `MyPlexResource`, parallel connect race with TLS error surfacing.
+- [x] **5.3 `src/myplex/{mod,resources}.rs`** — `MyPlexClient` +
+  `MyPlexResource` + `ResourceConnection`. `MyPlexClient::resources()`
+  fetches `GET /api/v2/resources?includeHttps=1&includeRelay=1`,
+  `resource(name)` finds case-insensitively. `MyPlexResource::connect`
+  uses `FuturesUnordered` to race concurrent probes across every
+  preferred connection URI (local→remote→relay, https→http;
+  shared resources skip the local set) and returns the first
+  `PlexServer` that answers `GET /`. `ConnectOptions` exposes ssl
+  filter, per-attempt timeout, identifier, and identity overrides.
+  Per-resource access token honored on the winning probe.
+  Endpoint overridable via `MyPlexClient::with_base(url)` for test
+  replicas. _11 unit tests + 4 wiremock integration tests._
 - [ ] **5.4 `src/myplex/{devices,friends,home,webhooks,claim,sonos}.rs`** — long tail.
 - [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.
 - [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.

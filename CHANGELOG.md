@@ -159,6 +159,39 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.3 (MyPlexResource + parallel connect race)** — `MyPlex`
+  resource discovery and the canonical "find a server, then go":
+  - `myplex::MyPlexClient` — authenticated handle to plex.tv.
+    Built via `new(token, client_identifier, identity)` or
+    `with_client(http)`; `with_base(url)` overrides the plex.tv
+    base URL for test replicas.
+  - `MyPlexClient::resources()` — fetch every server and player
+    visible to the signed-in account.
+    `GET /api/v2/resources?includeHttps=1&includeRelay=1` returns
+    a JSON array; the response yields a `Vec<MyPlexResource>`.
+  - `MyPlexClient::resource(name)` — convenience case-insensitive
+    name lookup.
+  - `MyPlexResource` — name, product, platform, client_identifier
+    (typed as `MachineIdentifier`), provides (CSV split into
+    `Vec<String>`), owned/presence/relay/etc. flags, per-resource
+    access token (redacted in `Debug`), and the connection list.
+  - `MyPlexResource::preferred_connections(ssl)` — sorted list of
+    candidate URIs. Ordering: location outer (local → remote →
+    relay) then scheme inner (https → http). Local URIs are
+    skipped when `owned == false` (shared resources).
+  - `MyPlexResource::connect()` / `connect_with_options(opts)` —
+    flagship method. Races every preferred connection URI in
+    parallel using `FuturesUnordered` and returns the first
+    `PlexServer` to answer `GET /`. Each probe uses the
+    per-resource access token, not the account token. Dropping
+    losing probes cancels their in-flight requests.
+  - `ConnectOptions` — `ssl` filter, `per_attempt_timeout`
+    (default 8s), `client_identifier`, and `identity` overrides.
+    All builder-style setters.
+  - `ResourceConnection` — `protocol`, `address`, `port`, `uri`,
+    `local`, `relay`, `ipv6` (PascalCase `IPv6` on the wire,
+    handled by an explicit `#[serde(rename)]`).
+
 - **M4.3 (Sessions — list + stop)** — current-playback surface:
   - `server::sessions::PlayingSession` — one currently-playing
     session. Carries the played `LibraryItem`, view offset, plus

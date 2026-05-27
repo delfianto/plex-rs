@@ -76,6 +76,7 @@ pub mod error;
 pub mod headers;
 pub mod library;
 pub mod media;
+pub mod myplex;
 pub mod pagination;
 pub mod server;
 pub mod traits;
@@ -97,6 +98,7 @@ pub use crate::media::{
     Season, Show, Stream, StreamCommon, SubtitleStream, Tag, TagKind, Track, UnknownStream,
     VideoStream,
 };
+pub use crate::myplex::{ConnectOptions, MyPlexClient, MyPlexResource, ResourceConnection};
 pub use crate::pagination::PageRange;
 pub use crate::server::{
     PlayState, PlayingSession, PlexServer, ServerIdentity, SessionPlayer, SessionUser,
