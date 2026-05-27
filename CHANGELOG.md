@@ -43,6 +43,30 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M5.8 (GDM local discovery)** — zero-config PMS discovery on the
+  LAN. Behind the `discovery` Cargo feature.
+  - `discover_gdm::GdmEntry` — one discovered server. Carries
+    source `SocketAddr`, machine identifier, friendly name, port,
+    version, content type, last-updated epoch, and a `headers`
+    map of all returned key/value pairs (case-insensitive).
+  - `GdmEntry::base_url()` — convenience helper that builds an
+    `http://<source-ip>:<port>/` URL for handing to
+    `PlexServer::connect`.
+  - `discover_gdm::discover_local_servers(timeout)` — sends an
+    HTTP/1.0 `M-SEARCH * HTTP/1.0\r\n\r\n` payload to multicast
+    `239.0.0.250:32414` and collects replies for `timeout`,
+    deduping by `Resource-Identifier`. Replies with no
+    machine-identifier (rare; pre-1.0 PMS builds) are returned at
+    the end of the list.
+  - Implementation note: this is **raw UDP, not mDNS** — Plex's
+    GDM protocol predates and is incompatible with multicast-DNS
+    despite occasional confusion. `tokio::net::UdpSocket` (gated
+    on the new `tokio/net` feature, also pulled in by the
+    `discovery` Cargo feature) drives the send and the recv loop.
+  - `tests`: 5 unit tests covering header parsing, non-HTTP
+    tolerance, unknown-header preservation, base URL
+    construction, and the no-port case.
+
 - **M5.1 (PIN sign-in)** — first plex.tv authentication flow:
   - `auth::MyPlexPinLogin` — in-progress PIN sign-in. Built via
     `start(client_identifier, identity)` (or

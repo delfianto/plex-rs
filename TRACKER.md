@@ -205,7 +205,12 @@ Largest single trait-architecture investment.
 - [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.
 - [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.
 - [ ] **5.7 `src/alerts/`** — WebSocket stream + reconnect with backoff + typed events (analysis/11§8).
-- [ ] **5.8 `src/discover_gdm/`** — raw-UDP GDM scan.
+- [x] **5.8 `src/discover_gdm/`** — `GdmEntry` + `discover_local_servers`
+  via raw `tokio::net::UdpSocket` multicast to 239.0.0.250:32414
+  with HTTP/1.0 `M-SEARCH` payload. Dedup by Resource-Identifier.
+  `GdmEntry::base_url()` builds the PMS URL. Gated on `discovery`
+  feature; `tokio/net` only pulled in when the feature is on.
+  _5 unit tests._
 - [ ] **5.9 `src/webhook/`** — payload deser + Axum extractor (feature-gated).
 - [ ] **5.10 `src/playback/sync.rs`** — legacy mobile sync (best-effort).
 

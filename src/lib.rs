@@ -70,6 +70,8 @@
 pub mod auth;
 pub mod client;
 pub mod config;
+#[cfg(feature = "discovery")]
+pub mod discover_gdm;
 pub mod error;
 pub mod headers;
 pub mod library;
