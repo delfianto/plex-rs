@@ -4,28 +4,28 @@
 //! [Plex Media Server](https://www.plex.tv/) HTTP API and `plex.tv` (`MyPlex`)
 //! cloud services.
 //!
-//! See [`CLAUDE.md`](https://github.com/justdewey/plex-rs/blob/main/CLAUDE.md)
-//! for the project charter and contributor guide, and the `analysis/`
-//! directory for a deep dive on the Python reference implementation
-//! ([`python-plexapi`](https://github.com/pkkid/python-plexapi)) that this
-//! crate aims to reach parity with.
+//! See [`CLAUDE.md`](https://github.com/delfianto/plex-rs/blob/main/CLAUDE.md)
+//! for the project charter and contributor guide, and the
+//! [`docs/`](https://github.com/delfianto/plex-rs/tree/main/docs)
+//! directory for the design, per-module reference, and API-coverage
+//! documentation. The crate targets feature parity with
+//! [`python-plexapi`](https://github.com/pkkid/python-plexapi).
 //!
 //! ## Status
 //!
 //! This crate is **pre-1.0** and the public surface is unstable. The
-//! parity checklist lives in `docs/parity.md` and the `analysis/` notes.
+//! parity status lives in `TRACKER.md`.
 //!
-//! ## Quick tour (planned)
+//! ## Quick tour
 //!
 //! 1. Build a `ClientConfig` describing the client identity.
 //! 2. Authenticate against `plex.tv` (token, password, or PIN/OAuth) to
-//!    obtain a `MyPlexAccount`.
+//!    obtain a `PlexToken`.
 //! 3. Discover a `PlexServer` resource and connect to it.
 //! 4. Browse `Library` sections, search, fetch media, control playback.
 //!
-//! Intra-doc links to the types above will be wired up as each module
-//! lands. See `analysis/11-rust-mapping-recommendations.md` for the
-//! milestone order.
+//! See [`docs/api-coverage.md`](https://github.com/delfianto/plex-rs/blob/main/docs/api-coverage.md)
+//! for the full implemented surface.
 //!
 //! ## Cargo features
 //!

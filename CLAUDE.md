@@ -70,7 +70,7 @@ plex-rs/
 ├── LICENSE                   # MIT
 ├── deny.toml                 # cargo-deny config (licenses, advisories)
 ├── rust-toolchain.toml       # pinned toolchain, see §4
-├── .github/workflows/ci.yml  # fmt + clippy + test + deny + doc
+├──.github/workflows/ci.yml  # fmt + clippy + test + deny + doc
 ├── src/
 │   ├── lib.rs                # crate root: re-exports + crate docs
 │   ├── client.rs             # HttpClient: reqwest wrapper, auth headers, retries
@@ -247,8 +247,8 @@ Rules:
 - Snake_case for fields/methods (Rust); the XML serde mapping handles the
   `camelCase`/`PascalCase` Plex uses on the wire (`#[serde(rename = "...")]`
   or `#[serde(rename_all = "camelCase")]`).
-- Avoid `get_` prefixes on methods. `server.sessions()` not
-  `server.get_sessions()`.
+- Avoid `get_` prefixes on methods. `server.sessions` not
+  `server.get_sessions`.
 
 ### 6.2 Async
 - All I/O methods are `async fn` returning `Result<T, Error>`.
@@ -257,7 +257,7 @@ Rules:
   the API is genuinely not meant to be object-safe.
 - Cancellation safety: never hold a `Mutex` across `.await`.
 - Stream paginated endpoints with `impl Stream<Item = Result<T>>` rather
-  than collecting into a `Vec`. Provide a `.try_collect().await` example
+  than collecting into a `Vec`. Provide a `.try_collect.await` example
   in docs.
 
 ### 6.3 Newtypes for IDs
@@ -280,8 +280,8 @@ auth header constructed from it.
 
 ### 6.4 Builders
 Filter/search composition uses the typestate builder pattern so that
-`.execute()` is only callable once required fields are set. See
-`library/filters.rs`. Don't expose `Default::default()` on builders that
+`.execute` is only callable once required fields are set. See
+`library/filters.rs`. Don't expose `Default::default` on builders that
 have required fields.
 
 ### 6.5 Errors
@@ -364,7 +364,7 @@ Support all three flows python-plexapi supports:
    `verification_code` on retry.
 3. **PIN / OAuth flow** — `POST /api/v2/pins`, poll until claimed, then
    the response yields an auth token. Provide both a blocking-friendly
-   helper (`account.pin_login().await?.wait_for_token().await?`) and a
+   helper (`account.pin_login.await?.wait_for_token.await?`) and a
    manual one (`poll_pin(id).await?`).
 
 Every request — authenticated or not — must include the standard
@@ -373,7 +373,7 @@ Every request — authenticated or not — must include the standard
 `ClientConfig`; never hardcode them in the request layer.
 
 `ClientIdentifier` must be **stable per install**. Provide
-`ClientConfig::generated()` for ephemeral use and document that callers
+`ClientConfig::generated` for ephemeral use and document that callers
 running long-lived agents should persist their own UUID.
 
 ---
@@ -448,7 +448,7 @@ true` to silence a flaky job — fix the flake.
 - Every doc comment for an async function whose cancellation has
   side-effects has a `# Cancel safety` section.
 - Use runnable doc examples wherever possible; gate them with
-  `# tokio_test::block_on(async { ... })` so they execute under
+  `# tokio_test::block_on(async {... })` so they execute under
   `cargo test --doc` without requiring a real server. Mark examples
   needing a live server as `no_run`.
 - Crate-level `lib.rs` opens with a short tour: auth → server → library
@@ -488,7 +488,7 @@ broad surface areas, in roughly the order they should be implemented:
 - [ ] `ShowSection`: shows/seasons/episodes hierarchy + traversal
 - [ ] `MusicSection`: artists/albums/tracks
 - [ ] `PhotoSection`: albums/photos
-- [ ] Universal `search()` + `searchV2` hubs
+- [ ] Universal `search` + `searchV2` hubs
 - [ ] Filter builder (advanced filters, sorts, field discovery)
 - [ ] Media metadata edit (title, summary, poster upload, artwork)
 - [ ] Mark watched / unwatched, set view offset, rate
@@ -519,9 +519,9 @@ guidance Claude already has.
    gzip, redirects, cookie jars — configure them, don't recreate them.
 3. **Parser DTOs are crate-private.** Public domain types never expose
    raw `quick_xml` or `serde_json` types in their signatures.
-4. **No `.unwrap()` / `.expect()` in library code** outside of `const`
+4. **No `.unwrap` / `.expect` in library code** outside of `const`
    contexts or genuinely-infallible situations with a `// SAFETY:`-style
-   comment explaining why. `unwrap()` in tests is fine.
+   comment explaining why. `unwrap` in tests is fine.
 5. **No `println!` / `eprintln!` in library code.** Use `tracing`.
 6. **No `tokio::spawn` in library code** unless the API explicitly
    returns a handle. Callers own their runtime.

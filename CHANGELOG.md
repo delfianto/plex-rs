@@ -13,8 +13,8 @@ each breaking change is listed under **Breaking** in its release entry.
 - Project bootstrap: `Cargo.toml`, `rust-toolchain.toml`, `deny.toml`, CI
   workflow, lint baseline in `src/lib.rs`.
 - `CLAUDE.md` — contributor guide and project charter.
-- `analysis/` — deep-dive notes on the `python-plexapi` reference
-  implementation that this crate targets for feature parity.
+- `docs/` — design, architecture, per-module reference, API
+  coverage, out-of-scope rationale, testing, and contributing docs.
 - `TRACKER.md` — milestone-by-milestone implementation tracker.
 - **M0 (Foundations)** — full HTTP transport layer plus shared primitives:
   - `error` — `Error` enum, `Result` alias, status-to-error mapping,
@@ -34,7 +34,7 @@ each breaking change is listed under **Breaking** in its release entry.
     round-trip-stable.
   - `xml` — `MediaContainer<T>` generic envelope collapsing the 12
     `mediaContainerWith*` schemas.
-  - `pagination` — `PageRange` + `advance_with()` using the header-based
+  - `pagination` — `PageRange` + `advance_with` using the header-based
     `X-Plex-Container-Start/-Size` pagination.
   - `headers` — `PlexIdentity` builder emitting the 10 `X-Plex-*`
     headers + `Accept: application/json`, with strict ASCII validation.
@@ -45,7 +45,7 @@ each breaking change is listed under **Breaking** in its release entry.
     `Debug`.
 - **Playable trait — direct-play URL builder.** First piece of
   external-player integration:
-  - `traits::Playable` — single `direct_play_url() -> Option<Url>`
+  - `traits::Playable` — single `direct_play_url -> Option<Url>`
     method that returns the absolute URL of the first
     [`MediaPart`]'s wire key, with `X-Plex-Token` embedded as a
     query parameter so external players (VLC, mpv, browser
@@ -53,7 +53,7 @@ each breaking change is listed under **Breaking** in its release entry.
     headers themselves.
   - Returns `None` when either (a) the item's `Vec<Media>` is
     empty (typically because the metadata came from a listing
-    endpoint that omits `Media[]` — call `Reload::reload()`
+    endpoint that omits `Media[]` — call `Reload::reload`
     first), or (b) the bound HTTP client has no token configured.
   - Implementors: Movie / Episode / Track. Photo and Photoalbum
     intentionally not — Plex serves images from a different path
@@ -85,7 +85,7 @@ each breaking change is listed under **Breaking** in its release entry.
     preserved.
   - Listing endpoints (`/library/sections/<id>/all`, search,
     recentlyAdded, …) return partial metadata; for tag/media/
-    marker access callers can now `.reload().await` to upgrade.
+    marker access callers can now `.reload.await` to upgrade.
   - `tests/m3_reload.rs` — 2 wiremock integration tests covering
     partial→full upgrade and 404 → `Error::NotFound` propagation.
 
@@ -95,7 +95,7 @@ each breaking change is listed under **Breaking** in its release entry.
     source `SocketAddr`, machine identifier, friendly name, port,
     version, content type, last-updated epoch, and a `headers`
     map of all returned key/value pairs (case-insensitive).
-  - `GdmEntry::base_url()` — convenience helper that builds an
+  - `GdmEntry::base_url` — convenience helper that builds an
     `http://<source-ip>:<port>/` URL for handing to
     `PlexServer::connect`.
   - `discover_gdm::discover_local_servers(timeout)` — sends an
@@ -119,9 +119,9 @@ each breaking change is listed under **Breaking** in its release entry.
     `start_with_client(http)` for callers who already have a
     configured `HttpClient`). Holds the PIN id, the 4-char code
     to show the user, and the expiry time.
-  - `MyPlexPinLogin::code()` — the code the user types at
+  - `MyPlexPinLogin::code` — the code the user types at
     `https://plex.tv/link`.
-  - `MyPlexPinLogin::poll()` — `Ok(Some(token))` once the user
+  - `MyPlexPinLogin::poll` — `Ok(Some(token))` once the user
     has claimed the PIN, `Ok(None)` while still pending,
     `Err(Error::Auth)` if the PIN expires before being claimed.
   - `MyPlexPinLogin::wait(timeout, interval)` — convenience
@@ -154,7 +154,7 @@ each breaking change is listed under **Breaking** in its release entry.
     detected by inspecting the JSON error envelope for
     `code: 1029` (with a `"verification code"` substring
     fallback for legacy responses).
-  - `HttpClient::inner()` is now `pub(crate)` so the auth module
+  - `HttpClient::inner` is now `pub(crate)` so the auth module
     can drive the POST with its own status mapping — the only
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
@@ -162,14 +162,14 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M4.9 (server admin / monitoring endpoints)** — read-only
   surfaces for monitoring dashboards and local LLM agents that
   want a snapshot of PMS internal state:
-  - `PlexServer::activities()` — currently-running scans,
+  - `PlexServer::activities` — currently-running scans,
     optimizes, refreshes. `Activity` carries uuid, kind, title,
     subtitle, progress (0..=100), cancellable.
-  - `PlexServer::butler_tasks()` — scheduled background tasks
+  - `PlexServer::butler_tasks` — scheduled background tasks
     (database backups, metadata refreshes). `ButlerTask` carries
     name, title, description, enabled, `interval_days`,
     `schedule_randomized`.
-  - `PlexServer::updater_status()` — current PMS version +
+  - `PlexServer::updater_status` — current PMS version +
     any pending updates. `UpdateRelease` carries download_key,
     version, added/fixed notes, download_url, state.
   - `PlexServer::bandwidth_stats(&opts)` — bandwidth samples
@@ -177,7 +177,7 @@ each breaking change is listed under **Breaking** in its release entry.
     filters by account, time range (epoch), and aggregation
     window (`1=months`, `2=weeks`, `3=days`, `4=hours`,
     `6=seconds`).
-  - `PlexServer::resource_stats()` — CPU and memory utilization
+  - `PlexServer::resource_stats` — CPU and memory utilization
     samples. Both host (whole machine) and process (PMS only)
     splits exposed as `host_cpu_pct` / `host_memory_pct` /
     `process_cpu_pct` / `process_memory_pct`.
@@ -187,7 +187,7 @@ each breaking change is listed under **Breaking** in its release entry.
 
 - **M5.4 (MyPlex friends + home)** — the sharing / family
   surfaces alongside the previously-landed webhooks + devices:
-  - `MyPlexClient::friends()` lists every plex.tv account the
+  - `MyPlexClient::friends` lists every plex.tv account the
     signed-in user has shared a server with. Each `MyPlexUser`
     carries id, username, title, email, thumb, capability
     booleans (allow_sync / allow_channels / allow_camera_upload),
@@ -195,7 +195,7 @@ each breaking change is listed under **Breaking** in its release entry.
     (Debug-redacted via `PlexToken`).
   - `MyPlexClient::remove_friend(id)` revokes sharing at
     `DELETE /api/friends/<id>`.
-  - `MyPlexClient::home_users()` lists Plex Home sub-accounts
+  - `MyPlexClient::home_users` lists Plex Home sub-accounts
     (family profiles, kid accounts). Each `MyPlexHomeUser`
     carries id, title, username, email, thumb, plus admin /
     protected / restricted / guest flags.
@@ -252,12 +252,12 @@ each breaking change is listed under **Breaking** in its release entry.
     new smart filters use [`FilterBuilder`].
 
 - **M4.6 (Transcoded streaming URL builder)** — complement to
-  `Playable::direct_play_url()`. Use direct-play when the source
+  `Playable::direct_play_url`. Use direct-play when the source
   media is compatible with the player; reach for the transcoder
   when you need bandwidth caps, resolution downscaling, or format
   conversion for legacy players:
-  - `TranscodeOptions::new().protocol(Hls).max_video_bitrate(8000)
-    .video_resolution("1920x1080").build_for(&server, item_key)`
+  - `TranscodeOptions::new.protocol(Hls).max_video_bitrate(8000)
+   .video_resolution("1920x1080").build_for(&server, item_key)`
     builds a token-bearing
     `/<video|audio>/:/transcode/universal/start.<m3u8|mpd>` URL.
   - Builder methods: `protocol` (HLS / DASH), `stream_kind`
@@ -282,19 +282,19 @@ each breaking change is listed under **Breaking** in its release entry.
 
 - **M3.8 (EditBatch transaction)** — single PUT for multi-field
   edits, eliminating N round-trips for bulk library cleanup:
-  - `EditBatch::new(&item)` or `item.batch()` (via `EditBatchExt`)
+  - `EditBatch::new(&item)` or `item.batch` (via `EditBatchExt`)
     starts a builder. Chain `.set_field/.lock_field/.replace_tags/
-    .remove_tags` (low-level) or convenience shortcuts
+   .remove_tags` (low-level) or convenience shortcuts
     (`set_title`, `set_year`, `replace_genres`, `replace_directors`,
     `replace_writers`, etc. mirroring the per-trait method names).
-  - `.execute().await` flushes the queued ops in one PUT. Wire
+  - `.execute.await` flushes the queued ops in one PUT. Wire
     format combines the EditField (`<field>.value=v&<field>.locked=L`)
     and EditTags (`<field>[N].tag.tag=v`, `<field>[].tag.tag-=csv`)
     shapes into a single query string sharing the `id` / `type`
     prefix.
   - Empty batch is a no-op — short-circuits without an HTTP call.
   - `EditBatchExt` auto-implements on every type with `EditField`,
-    so the `.batch()` method appears on Movie, Show, Season,
+    so the `.batch` method appears on Movie, Show, Season,
     Episode, Artist, Album, Track, Collection without per-type
     boilerplate.
 
@@ -307,7 +307,7 @@ each breaking change is listed under **Breaking** in its release entry.
     `view_count`, `view_offset_ms`, `view_state_complete`,
     `viewed_leaf_count`, `last_viewed_at`, `watchlisted_at` from
     `metadata.provider.plex.tv/library/metadata/<rk>/userState`.
-    `UserState::is_played()` / `is_on_watchlist()` are
+    `UserState::is_played` / `is_on_watchlist` are
     convenience helpers.
   - `MyPlexClient::scrobble(rk)` / `unscrobble(rk)` mark
     watched / unwatched on the cloud catalogue. Wire endpoints
@@ -321,7 +321,7 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M5.5 (plex.tv Watchlist)** — the user-level "to watch" list
   on the Plex cloud catalogue (distinct from any single PMS
   library):
-  - `MyPlexClient::watchlist()` returns the full list with
+  - `MyPlexClient::watchlist` returns the full list with
     default options. `watchlist_with(&opts)` accepts a
     `WatchlistOptions` builder with `.with_filter(...)` (All /
     Available / Released — the path segment), `.with_kind(...)`
@@ -348,7 +348,7 @@ each breaking change is listed under **Breaking** in its release entry.
 
 - **M5.4 (MyPlex devices list + revoke)** — sibling to the
   resource + webhooks surface:
-  - `MyPlexClient::devices()` fetches every device registered to
+  - `MyPlexClient::devices` fetches every device registered to
     the signed-in account via `GET /devices.xml`. Returns
     `Vec<MyPlexDevice>`; each device carries the plex.tv numeric
     `id` needed for the delete path, plus friendly name, product,
@@ -359,7 +359,7 @@ each breaking change is listed under **Breaking** in its release entry.
   - `MyPlexDevice::delete(&client)` hits
     `DELETE /devices/<id>.xml`, revoking the per-device token
     without touching other devices or the account token.
-  - `MyPlexDevice::is_server()` / `is_player()` are convenience
+  - `MyPlexDevice::is_server` / `is_player` are convenience
     capability checks. `provides` is exposed as a `Vec<String>`
     so other capabilities (`controller`, `sync-target`,
     `pubsub-player`) can be matched directly.
@@ -376,7 +376,7 @@ each breaking change is listed under **Breaking** in its release entry.
 
 - **M5.4 (webhook URL registration on plex.tv)** — the management
   half of the webhook story (M5.9 ships the receiver):
-  - `MyPlexClient::webhooks()` lists the URLs currently registered
+  - `MyPlexClient::webhooks` lists the URLs currently registered
     on the account. Plex's v2 endpoint returns either a top-level
     JSON array, a wrapped `{"webhooks":[...]}` envelope, or XML
     depending on Accept negotiation; the parser handles all three.
@@ -422,7 +422,7 @@ each breaking change is listed under **Breaking** in its release entry.
     in `axum` with `multipart` + `http1` + `json` + `tokio`.
 
 - **M4.8 (PlexServer Settings)** — read and write server preferences:
-  - `PlexServer::settings()` returns a `Settings` snapshot fetched
+  - `PlexServer::settings` returns a `Settings` snapshot fetched
     from `GET /:/prefs`. Each preference becomes a typed `Setting`
     with id, label, summary, group, current and default values,
     hidden/advanced/secure flags, and (for enum-typed settings) a
@@ -433,7 +433,7 @@ each breaking change is listed under **Breaking** in its release entry.
   - `SettingValue` enum: `Text(String)`, `Int(i64)`, `Double(f64)`,
     `Bool(bool)`. Plex emits everything as strings on the wire;
     `SettingValue::parse(&kind, raw)` does the type-driven
-    conversion. `.to_wire()` produces the spelling Plex expects on
+    conversion. `.to_wire` produces the spelling Plex expects on
     write (e.g. `Bool(true)` → `"true"`).
   - `EnumValues` enum: `List(Vec<String>)` for plain
     `low|medium|high`, `Mapping(Vec<(String, String)>)` for
@@ -447,11 +447,11 @@ each breaking change is listed under **Breaking** in its release entry.
     wrong-kind value → `Error::Config`; out-of-enum value →
     `Error::Config`. All happen before any network call, so the
     caller never sees a PMS-side rejection for these cases.
-  - Read accessors: `all()`, `get(id)`, `group(name)`,
-    `group_names()`, `len()`, `is_empty()`. Settings are sorted by
+  - Read accessors: `all`, `get(id)`, `group(name)`,
+    `group_names`, `len`, `is_empty`. Settings are sorted by
     id (BTreeMap-backed).
   - Two-phase staging commit (python-plexapi's `_setValue`
-    pattern, where `setting.set(v)` stages and `settings.save()`
+    pattern, where `setting.set(v)` stages and `settings.save`
     commits) is intentionally NOT replicated — explicit
     `set`/`set_many` composes more cleanly with Rust's
     `await`-based ergonomics and avoids hidden mutable state.
@@ -464,7 +464,7 @@ each breaking change is listed under **Breaking** in its release entry.
     `HttpClient` doesn't apply here.
   - `Alerts` implements `futures::Stream<Item=Result<AlertEvent>>`.
     Frames that carry multiple inner notifications flatten so each
-    `.next().await` returns exactly one event.
+    `.next.await` returns exactly one event.
   - `AlertEvent` enum: `Playing`, `Timeline`, `Activity`,
     `TranscodeSession` (with `TranscodeLifecycle::{Start, Update,
     End}` discriminator), `Status`, `Reachability`, `Setting`,
@@ -512,7 +512,7 @@ each breaking change is listed under **Breaking** in its release entry.
     `set_shuffle(bool, mtype)`. Each command requires a
     `MediaType` (Video / Music / Photo) so a single player can
     multiplex foreground video and background music.
-  - `MediaType` and `RepeatMode` enums with `.as_wire()`
+  - `MediaType` and `RepeatMode` enums with `.as_wire`
     accessors mapping to the spellings Plex expects.
   - Flagship: `play_media(&server, &queue, offset_ms)` —
     composes the gnarly playMedia payload (providerIdentifier,
@@ -533,13 +533,13 @@ each breaking change is listed under **Breaking** in its release entry.
 
 - **M4.4 (PlayQueue create/get/mutate)** — server-side playback
   queues, the unit Plex players consume:
-  - `PlexServer::create_play_queue()` returns a `CreatePlayQueue`
+  - `PlexServer::create_play_queue` returns a `CreatePlayQueue`
     builder. Source methods: `.from_item(&item)`,
-    `.from_items(&[&item, ...])`, `.from_playlist(&playlist)`.
+    `.from_items(&[&item,...])`, `.from_playlist(&playlist)`.
     Flag setters: `.shuffle(bool)`, `.repeat(bool)`,
     `.continuous(bool)`, `.include_chapters(bool)`,
     `.include_related(bool)`, `.start_at(key)`. Terminate with
-    `.execute().await`.
+    `.execute.await`.
   - `PlexServer::play_queue(id)` fetches an existing queue.
   - `PlayQueue` carries `id`, `version`, `total_count`,
     `selected_item_id/_offset/_metadata_item_id`, `shuffled`,
@@ -549,11 +549,11 @@ each breaking change is listed under **Breaking** in its release entry.
     `MetadataDto` (same trick `PlayingSession` and `HistoryEntry`
     use).
   - Mutation methods consume `self` and return refreshed snapshots
-    after the server response: `refresh()` (re-GET),
+    after the server response: `refresh` (re-GET),
     `add_item(&item, play_next: bool)` (PUT to `/{id}` with `uri=`
     and optional `next=1`), `move_item(item_id, after_id)` (PUT
     `/items/{iid}/move?after=...`), `remove_item(item_id)` (DELETE
-    `/items/{iid}`), `clear()` (DELETE `/items`).
+    `/items/{iid}`), `clear` (DELETE `/items`).
   - Wire spellings: `playQueueID`, `playQueueItemID`,
     `playQueueSourceURI`, etc. all carry an explicit
     `#[serde(rename)]` because Plex preserves the `ID`/`URI`
@@ -566,8 +566,8 @@ each breaking change is listed under **Breaking** in its release entry.
     `form_urlencoded` `+`-for-space convention would be wrong
     here); a playlist passes `playlistID=<rk>` instead of `uri`.
   - `LibraryItem` gains two new accessors used by the URI
-    construction: `key()` (returns the wire `/library/metadata/<rk>`
-    path) and `list_type()` (returns `"video"` / `"audio"` /
+    construction: `key` (returns the wire `/library/metadata/<rk>`
+    path) and `list_type` (returns `"video"` / `"audio"` /
     `"photo"` based on the variant).
   - `HttpClient::get_bytes_for_method(method, url)` —
     crate-private method-parametric primitive used by PlayQueue's
@@ -576,7 +576,7 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M4.7 (Playback history with pagination)** — first paginated
   endpoint in the crate; exercises the previously-shipped
   `PageRange` machinery end-to-end:
-  - `PlexServer::history()` returns a `HistoryQuery` builder.
+  - `PlexServer::history` returns a `HistoryQuery` builder.
     Filter methods: `.account(id)`, `.library_section(id)`,
     `.rating_key(rk)`, `.mindate(DateTime<Utc>)` /
     `.mindate_epoch_secs(secs)`, `.max_results(n)`, `.page_size(n)`.
@@ -585,8 +585,8 @@ each breaking change is listed under **Breaking** in its release entry.
     params and `X-Plex-Container-Start` / `-Size` request headers
     for pagination. The 1.40-era PMS quirk where `mindate` is
     sent as `viewedAt>=` is preserved verbatim.
-  - Terminate with `.collect()` for an eager `Vec<HistoryEntry>`,
-    or `.stream()` for a lazy `futures::Stream` that fetches
+  - Terminate with `.collect` for an eager `Vec<HistoryEntry>`,
+    or `.stream` for a lazy `futures::Stream` that fetches
     pages on demand and honors `.max_results` across page
     boundaries. The stream is `Send` and drops its in-flight
     fetch cleanly on cancellation.
@@ -607,7 +607,7 @@ each breaking change is listed under **Breaking** in its release entry.
     Built via `new(token, client_identifier, identity)` or
     `with_client(http)`; `with_base(url)` overrides the plex.tv
     base URL for test replicas.
-  - `MyPlexClient::resources()` — fetch every server and player
+  - `MyPlexClient::resources` — fetch every server and player
     visible to the signed-in account.
     `GET /api/v2/resources?includeHttps=1&includeRelay=1` returns
     a JSON array; the response yields a `Vec<MyPlexResource>`.
@@ -621,7 +621,7 @@ each breaking change is listed under **Breaking** in its release entry.
     candidate URIs. Ordering: location outer (local → remote →
     relay) then scheme inner (https → http). Local URIs are
     skipped when `owned == false` (shared resources).
-  - `MyPlexResource::connect()` / `connect_with_options(opts)` —
+  - `MyPlexResource::connect` / `connect_with_options(opts)` —
     flagship method. Races every preferred connection URI in
     parallel using `FuturesUnordered` and returns the first
     `PlexServer` to answer `GET /`. Each probe uses the
@@ -648,7 +648,7 @@ each breaking change is listed under **Breaking** in its release entry.
     product / platform identifiers, and local + controllable
     booleans (controllable means the server can issue
     remote-control commands back to that player).
-  - `PlexServer::sessions()` — `GET /status/sessions` returns
+  - `PlexServer::sessions` — `GET /status/sessions` returns
     `Vec<PlayingSession>`.
   - `PlayingSession::stop(reason)` — `GET /status/sessions/terminate`
     with `sessionId` + optional `reason` (Plex requires GET on
@@ -680,11 +680,11 @@ each breaking change is listed under **Breaking** in its release entry.
     `HasCollections`, `HasLabels`, `HasArtUrl` + `HasArtLock`,
     `HasPosterUrl` + `HasPosterLock` — all the editing surface
     inherited from the foundational traits.
-  - `LibrarySection::collections()` — `GET /library/sections/<id>/collections`
+  - `LibrarySection::collections` — `GET /library/sections/<id>/collections`
     returning `Vec<Collection>`.
-  - `Collection::items()` — `GET /library/collections/<rk>/children`
+  - `Collection::items` — `GET /library/collections/<rk>/children`
     returning `Vec<LibraryItem>`.
-  - `Collection::delete()` — `DELETE /library/collections/<rk>`.
+  - `Collection::delete` — `DELETE /library/collections/<rk>`.
   - Add / remove items, mode / sort tweaks, smart-collection
     mutation defer to follow-up iterations.
   - `tests/m4_collections.rs` — 3 wiremock integration tests
@@ -700,19 +700,19 @@ each breaking change is listed under **Breaking** in its release entry.
     timestamps, GUID.
   - `media::PlaylistKind` enum (`Audio | Video | Photo | Other`)
     discriminating on Plex's `playlistType` wire field.
-  - `PlexServer::playlists()` — `GET /playlists` listing all
+  - `PlexServer::playlists` — `GET /playlists` listing all
     playlists on the server.
-  - `Playlist::items()` — `GET /playlists/<rk>/items` returning
+  - `Playlist::items` — `GET /playlists/<rk>/items` returning
     `Vec<LibraryItem>` (mixed kinds dispatched on wire `type`).
     The `librarySectionID` Plex emits on each playlist item is
     wired into the per-item `LibrarySectionRef` so future edits
     can route through the right section.
-  - `Playlist::delete()` — `DELETE /playlists/<rk>`, consumes
+  - `Playlist::delete` — `DELETE /playlists/<rk>`, consumes
     `self`.
   - Smart playlist creation/mutation, item add/remove/move, and
     rename defer to follow-up iterations — they need
     server-URI construction for the `?uri=` parameter and the
-    `playlistItemID` shadow keys (analysis/07 §4).
+    `playlistItemID` shadow keys.
   - `tests/m4_playlists.rs` — 3 wiremock integration tests
     covering list (mixed static + smart), item walk with section
     back-link, and the DELETE endpoint shape.
@@ -757,9 +757,9 @@ each breaking change is listed under **Breaking** in its release entry.
     Plex's confusing wire name for the full poster).
   - `HasThemeUrl` / `HasThemeLock` — theme song (`theme` wire field,
     Show-only).
-  - `*Url` traits expose `*_url() -> Result<Option<Url>>` builders
+  - `*Url` traits expose `*_url -> Result<Option<Url>>` builders
     that resolve against the server base URL.
-  - `*Lock` traits add `lock_*()` / `unlock_*()`. These emit just
+  - `*Lock` traits add `lock_*` / `unlock_*`. These emit just
     `<field>.locked=<0|1>` (no `.value` pair) — Plex's lock-toggle
     wire path differs from regular value edits. Implemented by a
     new `EditField::lock_field(field, locked)` primitive added to
@@ -770,7 +770,7 @@ each breaking change is listed under **Breaking** in its release entry.
     - Track: poster only (Tracks inherit album art on the wire).
   - Full `HasArt` / `HasPoster` CRUD (`set_*` / `upload_*` /
     `delete_*`) needs Plex's `POST /library/metadata/<rk>/<kind>`
-    endpoints + `post_bytes()` on the HTTP client; deferred to a
+    endpoints + `post_bytes` on the HTTP client; deferred to a
     follow-up iteration.
   - `tests/m3_images.rs` — 4 wiremock integration tests covering
     URL resolution for art + poster and the lock/unlock toggles
@@ -785,7 +785,7 @@ each breaking change is listed under **Breaking** in its release entry.
       `<field>[i].tag.tag=v` per item plus `<field>.locked=<0|1>`,
       replacing the entire list.
     - `remove_tags(field, items, locked)` — emits the magic
-      `<field>[].tag.tag-=csv` remove sigil (analysis/08 §3.4),
+      `<field>[].tag.tag-=csv` remove sigil,
       stripping the named tags.
   - `traits::HasGenres` / `traits::HasCollections` — first
     per-family ergonomic traits, default-bodied via `EditTags`
@@ -810,9 +810,9 @@ each breaking change is listed under **Breaking** in its release entry.
     actually expects:
     `PUT /library/sections/<section_id>/all?id=<rating_key>&type=<N>&<field>.value=<v>&<field>.locked=<0|1>`.
     The endpoint is on the *section*, not the metadata item, even
-    though the item is what's being edited — see analysis/11 §2.4.
+    though the item is what's being edited —
     The `LibrarySectionRef` back-link on every leaf carries the
-    `section_id` and (via the `metadata_type_id()` accessor added
+    `section_id` and (via the `metadata_type_id` accessor added
     in this commit) the `type` discriminator.
   - `traits::FieldValue` — typed enum (`Str | Int | Float |
     Bool`) with `From` impls for `&str`, `String`, `i64`, `i32`,
@@ -824,10 +824,10 @@ each breaking change is listed under **Breaking** in its release entry.
     remaining ~30 field-specific traits (`EditTagline`,
     `EditContentRating`, `EditStudio`, `EditYear`, …) follow the
     same one-line pattern; they land in a follow-up iteration.
-  - `PlexObject` gains `section_ref()` (returning
-    `&LibrarySectionRef`) and `metadata_type_id()` (returning the
-    `?type=N` integer) as required methods; `http()` and
-    `base_url()` become default-derived. Every leaf type's
+  - `PlexObject` gains `section_ref` (returning
+    `&LibrarySectionRef`) and `metadata_type_id` (returning the
+    `?type=N` integer) as required methods; `http` and
+    `base_url` become default-derived. Every leaf type's
     `impl_plex_object*!` macro invocation now also threads the
     type discriminator.
   - Implementors of `EditField` / `EditTitle` / `EditSummary`:
@@ -857,23 +857,23 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M3.1 (Foundational traits + PlayedUnplayed)** — first mutation
   surface and the trait architecture it rides on:
   - `traits::PlexObject` — supertrait every capability trait
-    builds on. Three accessors: `http()` → `&HttpClient`,
-    `base_url()` → `&Url`, `rating_key()` → `RatingKey`. Implemented
+    builds on. Three accessors: `http` → `&HttpClient`,
+    `base_url` → `&Url`, `rating_key` → `RatingKey`. Implemented
     on Movie / Show / Season / Episode / Artist / Album / Track via
     two small `impl_plex_object*!` macros.
-  - `traits::PlayedUnplayed` — `view_count()` reader plus default
-    bodies for `is_played()`, `mark_played()`, `mark_unplayed()`.
+  - `traits::PlayedUnplayed` — `view_count` reader plus default
+    bodies for `is_played`, `mark_played`, `mark_unplayed`.
     The two `mark_*` methods issue `GET /:/scrobble` and
     `/:/unscrobble` respectively with
     `key=<rating_key>&identifier=com.plexapp.plugins.library`. Plex
     requires GET for these despite them being mutations; preserved
-    on the wire (analysis/11 §4.10) but exposed as `mark_*` verbs
+    on the wire but exposed as `mark_*` verbs
     on the public surface.
   - Implemented on Movie / Episode / Show / Season / Album /
     Artist / Track — every type that carries a `view_count` field
     on the wire. The trait uses Rust 2024 AFIT (async fn in
     traits) so callers don't need the `async_trait` macro.
-  - Inherent `is_played()` methods preserved on Movie/Episode/Track
+  - Inherent `is_played` methods preserved on Movie/Episode/Track
     alongside the trait so callers don't have to import the trait
     just to read the boolean.
   - `tests/m3_played_unplayed.rs` — 3 wiremock integration tests
@@ -883,17 +883,17 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M2.9 (FilterBuilder)** — typed search expression builder for the
   section-listing surface:
   - `library::FilterBuilder` — fluent, named-op API:
-    `.equal()` / `.not_equal()` / `.exact()` / `.not_exact()` /
-    `.starts_with()` / `.ends_with()` / `.gt()` / `.lt()` /
-    `.and_values()` / `.clause(field, FilterOp, value)`. Plus
-    `.sort_by()` / `.sort_by_desc()` / `.limit()` / `.offset()` /
-    `.page_size()` / `.libtype()`.
+    `.equal` / `.not_equal` / `.exact` / `.not_exact` /
+    `.starts_with` / `.ends_with` / `.gt` / `.lt` /
+    `.and_values` / `.clause(field, FilterOp, value)`. Plus
+    `.sort_by` / `.sort_by_desc` / `.limit` / `.offset` /
+    `.page_size` / `.libtype`.
   - `library::FilterOp` enum maps every named op to the canonical
     Plex wire suffix per python-plexapi `library.py:1442-1460`
     (`=`, `!=`, `==`, `!==`, `<=`, `>=`, `>>=`, `<<=`, `&=`).
   - `library::SortDirection` (`Asc | Desc`) renders as
     `field:asc` / `field:desc`.
-  - `FilterBuilder::build_query()` emits the URL query string
+  - `FilterBuilder::build_query` emits the URL query string
     suffix with RFC 3986 percent-encoding.
   - `LibrarySection::filter(&builder)` executes the filter
     against `GET /library/sections/<id>/all?<query>` and parses
@@ -910,17 +910,17 @@ each breaking change is listed under **Breaking** in its release entry.
   - `media::LibraryItem` — sum type discriminating on Plex's wire
     `type` field. Nine variants: Movie / Show / Season / Episode /
     Artist / Album / Track / Photoalbum / Photo.
-    `LibraryItem::title()` / `rating_key()` hide the variant.
-  - `MetadataDto::into_library_item()` performs the dispatch;
+    `LibraryItem::title` / `rating_key` hide the variant.
+  - `MetadataDto::into_library_item` performs the dispatch;
     unknown `type` values surface as `Error::Config`.
   - `LibrarySection::search(title)` — `GET /library/sections/<id>/all?title=<q>`
     using a hand-written RFC 3986 percent-encoder (no `url`-crate
     dependency for query construction).
-  - `LibrarySection::recently_added()` —
+  - `LibrarySection::recently_added` —
     `GET /library/sections/<id>/recentlyAdded`.
-  - `LibrarySection::on_deck()` —
+  - `LibrarySection::on_deck` —
     `GET /library/sections/<id>/onDeck`.
-  - `LibrarySection::unwatched()` —
+  - `LibrarySection::unwatched` —
     `GET /library/sections/<id>/unwatched`.
   - All four return `Vec<LibraryItem>` so callers can pattern-match
     on the variant.
@@ -933,7 +933,7 @@ each breaking change is listed under **Breaking** in its release entry.
   - `media::Marker` — auto-detected intro/credits/commercial range
     with `start_ms`, `end_ms`, and a `final_credits` flag for the
     end-of-show credits (Plex's post-credits-scene detection).
-    `Marker::duration_ms()` and `Marker::contains(time_ms)`
+    `Marker::duration_ms` and `Marker::contains(time_ms)`
     convenience helpers.
   - `media::MarkerKind` enum (`Intro | Credits | Commercial |
     Other(String)`) — `Other` preserves wire-format strings Plex
@@ -954,7 +954,7 @@ each breaking change is listed under **Breaking** in its release entry.
   - `media::TagKind` enum with all 10 known families plus
     `Other(String)` forward-compat.
   - `Movie`, `Show`, `Episode`, `Album`, `Track` gain
-    `tags: Vec<Tag>` populated by `MetadataDto::collect_tags()`.
+    `tags: Vec<Tag>` populated by `MetadataDto::collect_tags`.
     `Artist`, `Photo`, `Photoalbum`, `Season` don't carry tags on
     the wire — left out by design.
   - `Field` (per-field edit-lock indicator) intentionally not
@@ -988,8 +988,8 @@ each breaking change is listed under **Breaking** in its release entry.
 
 - **M2.4 (Read-only media — Photos)** — Photoalbum / Photo:
   - `media::Photoalbum` — top-level photo container, supports
-    nesting. `children()` returns a `PhotoEntry` sum type mixing
-    sub-albums and photos; `sub_albums()` / `photos()` filter
+    nesting. `children` returns a `PhotoEntry` sum type mixing
+    sub-albums and photos; `sub_albums` / `photos` filter
     convenience helpers built on top.
   - `media::Photo` — single photo (or video clip in a photo
     section) with parent-album back-reference, EXIF caption,
@@ -1000,7 +1000,7 @@ each breaking change is listed under **Breaking** in its release entry.
   - `MetadataDto` gains a `metadata_type` field (renamed from the
     wire `type`) so the photo path can dispatch on
     `photoalbum`/`photo`/`clip` discriminators.
-  - `LibrarySection::photoalbums()` — `?type=14` dispatch on
+  - `LibrarySection::photoalbums` — `?type=14` dispatch on
     `SectionKind::Photo`.
   - `tests/m2_photos.rs` — 1 wiremock integration test covering
     the full mixed-children walk and both convenience filters.
@@ -1008,18 +1008,18 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M2.3 (Read-only media — Music hierarchy)** — Artist / Album / Track:
   - `media::Artist` — top-level music entity with `child_count`
     (number of albums), bio summary, image surface, and
-    `Artist::albums()` listing helper.
+    `Artist::albums` listing helper.
   - `media::Album` — parent (artist) typed back-reference, year +
     release date, label/studio, leaf_count + viewed_leaf_count,
-    rating. `Album::tracks()` lists tracks.
+    rating. `Album::tracks` lists tracks.
   - `media::Track` — leaf playable with parent (album) +
     grandparent (artist) back-references, index (track within
     disc), `disc_number` (mapped from Plex's `parentIndex`, which
     is intentionally counterintuitive), duration, view count + offset,
     `original_title` for compilation per-track artist, GUID.
-    `Track::is_played()` helper.
-  - `LibrarySection::artists()` — `?type=8` dispatch on
-    `SectionKind::Music`. Shared `list_typed()` boilerplate-eliminator
+    `Track::is_played` helper.
+  - `LibrarySection::artists` — `?type=8` dispatch on
+    `SectionKind::Music`. Shared `list_typed` boilerplate-eliminator
     from M2.2 reused.
   - `tests/m2_music.rs` — 2 wiremock integration tests covering
     Artist → Album → Track walk and kind-mismatch error path.
@@ -1027,22 +1027,22 @@ each breaking change is listed under **Breaking** in its release entry.
 - **M2.2 (Read-only media — TV hierarchy)** — Show / Season / Episode:
   - `media::Show` — 24 scalar fields including child_count (seasons),
     leaf_count (total episodes), viewed_leaf_count (played episodes),
-    theme path, network/studio. `Show::seasons()` lists seasons via
-    `GET /library/metadata/<rk>/children`. `Show::watch_progress()`
+    theme path, network/studio. `Show::seasons` lists seasons via
+    `GET /library/metadata/<rk>/children`. `Show::watch_progress`
     returns `viewed_leaf_count / leaf_count`.
   - `media::Season` — parent_rating_key (typed `RatingKey`),
     parent/show metadata back-link, index (season number),
     leaf_count / child_count / viewed_leaf_count.
-    `Season::episodes()` lists episodes via the same `/children`
+    `Season::episodes` lists episodes via the same `/children`
     endpoint.
   - `media::Episode` — parent (season) and grandparent (show) typed
     back-references, index (episode number), parent_index (season
     number), summary, duration, view-count/offset, full image and
-    GUID surface. `Episode::season_episode_label()` returns the
+    GUID surface. `Episode::season_episode_label` returns the
     `S01E03`-style display label.
-  - `LibrarySection::shows()` — analogous to `movies()`, dispatches
+  - `LibrarySection::shows` — analogous to `movies`, dispatches
     on `SectionKind::Show` and queries with `?type=2`. Internal
-    `list_typed()` helper eliminates the listing-method
+    `list_typed` helper eliminates the listing-method
     boilerplate.
   - `tests/m2_tv.rs` — 4 wiremock integration tests covering the
     full Show → Season → Episode walk plus the kind-mismatch error
@@ -1052,10 +1052,10 @@ each breaking change is listed under **Breaking** in its release entry.
   - `media::Movie` — 24 scalar fields covering Plex's `<Video type="movie">`
     payload (rating_key, title, year, summary, rating triple, duration,
     view count + offset, GUIDs, thumb/art paths, timestamps).
-  - `LibrarySection::movies()` lists every movie in a movie section via
+  - `LibrarySection::movies` lists every movie in a movie section via
     `GET /library/sections/<id>/all?type=1`; returns `Error::Config`
     when called on a non-movie section.
-  - `Movie::is_played()`, `Movie::thumb_url()` convenience accessors.
+  - `Movie::is_played`, `Movie::thumb_url` convenience accessors.
   - `tests/m2_movies.rs` — 2 wiremock integration tests.
 
 - **M1 (Minimum viable client)** — first wire I/O surface, token sign-in
@@ -1063,12 +1063,12 @@ each breaking change is listed under **Breaking** in its release entry.
   - `HttpClient` is now `Clone` (reqwest's underlying client is
     `Arc`-shared, so cloning is cheap).
   - `server::PlexServer` — `connect(url, token)`,
-    `connect_with_config()`, `from_http()`, `identity()`, `library()`,
-    `ping()`. Eagerly parses `GET /` into `ServerIdentity`.
+    `connect_with_config`, `from_http`, `identity`, `library`,
+    `ping`. Eagerly parses `GET /` into `ServerIdentity`.
   - `server::ServerIdentity` — captures machine identifier, version,
     friendly name, platform, MyPlex linkage flags, capabilities. Parses
     Plex's flexible boolean encoding (`"0"`/`"1"`/`0`/`1`/`true`).
-  - `library::Library` — bound to a PMS, exposes `sections()`.
+  - `library::Library` — bound to a PMS, exposes `sections`.
   - `library::LibrarySection` — typed section with `SectionKind` enum
     (`Movie | Show | Music | Photo | Other`) and a `LibrarySectionRef`
     back-link for future edit-trait URL construction.

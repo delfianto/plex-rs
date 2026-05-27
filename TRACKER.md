@@ -1,7 +1,7 @@
 # Implementation tracker
 
 Progress against the M0..M5 milestone plan in
-[`analysis/11-rust-mapping-recommendations.md`](analysis/11-rust-mapping-recommendations.md) §10.
+[the project docs] §10.
 
 **Discipline:** every step must end with the crate green under
 `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`,
@@ -20,41 +20,41 @@ Pure-Rust primitives + HTTP transport layer. **All gates green.**
 **Code:** ~3 400 lines across 12 modules.
 
 - [x] **0.0 Bootstrap** — `Cargo.toml`, `rust-toolchain.toml`, `deny.toml`, CI workflow, lib.rs stub. (done in earlier session)
-- [x] **0.1 `src/error.rs`** — `Error` enum + `Result` alias. Maps `reqwest::Error`, `quick_xml::DeError`, `serde_json::Error`, `url::ParseError`. Wire-level kinds: `Unauthorized`, `NotFound`, `Api { status, message }`, `Timeout`, `Auth`, `Internal`. From analysis/02§6. _11 tests._
+- [x] **0.1 `src/error.rs`** — `Error` enum + `Result` alias. Maps `reqwest::Error`, `quick_xml::DeError`, `serde_json::Error`, `url::ParseError`. Wire-level kinds: `Unauthorized`, `NotFound`, `Api { status, message }`, `Timeout`, `Auth`, `Internal`. From the project docs _11 tests._
 - [x] **0.2 `src/util/ids.rs`** — `RatingKey(u64)`, `MachineIdentifier(String)`, `ClientIdentifier(String)`, `PlexToken(String)`. All `#[serde(transparent)]`. `PlexToken` has a hand-written `Debug` that prints `PlexToken("***redacted***")`. From CLAUDE.md §6.3. _18 tests._
 - [x] **0.3 `src/util/time.rs`** — Plex epoch-secs ↔ `DateTime<Utc>` and ISO-date helpers + serde adapter for the `addedAt`-style string-encoded fields. _9 tests._
 - [x] **0.4 `src/util/search_type.rs`** — `SearchType` enum mirroring `python-plexapi/plexapi/utils.py:35`. `Unknown(u32)` forward-compat. Serde via `from`/`into u32`. _8 tests._
 - [x] **0.5 `src/util/sanitize.rs`** — fixture sanitiser, 14 rules + IPv4/IPv6 dispatched in code (the `regex` crate lacks look-around). Idempotent. _19 tests._
 - [x] **0.6 `src/util/mod.rs`** — re-exports the four util modules.
-- [x] **0.7 `src/uri.rs`** — `PlexUri` enum with parser + `Display`. 7 schemes from analysis/07§8: `Server`, `LibraryItem`, `LibraryDirectory`, `Playlist`, `PlayQueueContainer`, `Device`, `SecurityToken`. Hand-written prefix parser (no `winnow`/`nom` dep). Round-trip-stable. _23 tests._
+- [x] **0.7 `src/uri.rs`** — `PlexUri` enum with parser + `Display`. 7 schemes `Server`, `LibraryItem`, `LibraryDirectory`, `Playlist`, `PlayQueueContainer`, `Device`, `SecurityToken`. Hand-written prefix parser (no `winnow`/`nom` dep). Round-trip-stable. _23 tests._
 - [x] **0.8 `src/xml/mod.rs`** — `MediaContainer<T>` generic envelope + `MediaContainerMeta`. JSON-first parser dispatching on caller-supplied items-list field name. _13 tests._
-- [x] **0.9 `src/pagination.rs`** — `PageRange { start, size }` + `advance_with()` helper. Header-based via `X-Plex-Container-Start` / `-Size`. Streaming iterator deferred to M0.12 once `HttpClient` lands. _10 tests._
+- [x] **0.9 `src/pagination.rs`** — `PageRange { start, size }` + `advance_with` helper. Header-based via `X-Plex-Container-Start` / `-Size`. Streaming iterator deferred to M0.12 once `HttpClient` lands. _10 tests._
 - [x] **0.10 `src/headers.rs`** — `PlexIdentity` builder emitting 10 `X-Plex-*` headers + `Accept: application/json`. Strict ASCII validation on values (rejects non-ASCII and control chars). _7 tests._
-- [x] **0.11 `src/config.rs`** — `ClientConfig` + `ClientConfigBuilder`. Required identity + optional token, request/connect timeouts, retry tuple (count + base/max delay). Invariants enforced at `build()`. _10 tests._
+- [x] **0.11 `src/config.rs`** — `ClientConfig` + `ClientConfigBuilder`. Required identity + optional token, request/connect timeouts, retry tuple (count + base/max delay). Invariants enforced at `build`. _10 tests._
 - [x] **0.12 `src/client.rs`** — `HttpClient`: `reqwest::Client` wrapper. Default `Accept: application/json` via identity headers. Retry/backoff with full-jitter exponential (`retry_delay`, pure & unit-tested). `Debug` redacts the token. Status-to-`Error` mapping centralised in one place. _9 unit tests._
 - [x] **0.13 Wire-up** — re-exports in `lib.rs`. `tests/m0_http_smoke.rs` proves the foundation end-to-end against `wiremock`: identity headers reach the wire, JSON deserialisation works, 401/404/api-error mapping all green, retries succeed on transient 5xx and give up cleanly on permanent ones. _8 wiremock integration tests._
 
 ## M1 — Minimum viable client  ✅ DONE (token sign-in slice)
 
 First wire I/O. Token sign-in only (PIN/password defer to M5). Single
-vertical slice: `PlexServer::connect → identity → library().sections()`.
+vertical slice: `PlexServer::connect → identity → library.sections`.
 
 - [-] **1.1-1.2 auth/** — deferred. Synthesis typestate was over-engineered
-  for a single sign-in flow; the M0 `ClientConfig::token()` setter already
+  for a single sign-in flow; the M0 `ClientConfig::token` setter already
   satisfies M1's needs. The typestate machine lands in M5 alongside PIN
-  and password+2FA per [analysis/11 §9].
+  and password+2FA per [the project docs].
 - [-] **1.3 `myplex/`** — deferred to M5 (requires plex.tv `/api/v2/user`
   which is in M5's MyPlex slice).
 - [x] **1.4-1.5 `src/server.rs`** — `PlexServer::connect(url, token)`,
-  `connect_with_config()`, `from_http()` for tests. `GET /` populates
+  `connect_with_config`, `from_http` for tests. `GET /` populates
   `ServerIdentity` (`machine_identifier`, `version`, `friendly_name`,
-  platform, MyPlex linkage flags, capabilities). `ping()` hits
+  platform, MyPlex linkage flags, capabilities). `ping` hits
   `/identity` as a lightweight reachability probe. _4 unit tests._
-- [x] **1.6-1.7 `src/library.rs`** — `Library::sections()`. `SectionKind`
+- [x] **1.6-1.7 `src/library.rs`** — `Library::sections`. `SectionKind`
   enum `Movie | Show | Music | Photo | Other(String)` for forward-compat.
   `LibrarySection` carries the descriptive fields + a `LibrarySectionRef`
   back-link that future edit traits will use to build
-  `PUT /library/sections/<id>/all?...` mutation URLs (analysis/11 §2.4).
+  `PUT /library/sections/<id>/all?...` mutation URLs.
   _5 unit tests._
 - [x] **1.8 DTO** — `DirectoryDto` (in `library.rs`) parses the
   `<Directory>` shape Plex returns. Shared `PlexBool` flexible-boolean
@@ -74,27 +74,27 @@ vertical slice: `PlexServer::connect → identity → library().sections()`.
 Read parity with python-plexapi. DTO + From conversion for every leaf.
 
 - [~] **2.1-2.2 `src/media/video.rs`** — **Movie, Show, Season, Episode
-  landed.** Movie (24 scalar fields, `LibrarySection::movies()`); TV
-  hierarchy: `LibrarySection::shows()` for type=2 listing,
-  `Show::seasons()` and `Season::episodes()` via
-  `GET /library/metadata/<rk>/children`. `Show::watch_progress()`,
-  `Episode::season_episode_label()` convenience helpers. Shared
+  landed.** Movie (24 scalar fields, `LibrarySection::movies`); TV
+  hierarchy: `LibrarySection::shows` for type=2 listing,
+  `Show::seasons` and `Season::episodes` via
+  `GET /library/metadata/<rk>/children`. `Show::watch_progress`,
+  `Episode::season_episode_label` convenience helpers. Shared
   parent/grandparent back-references on Season/Episode. Clip / Extra
   and `*Session` / `*History` composition types in follow-ups. _5 unit
   tests + 6 wiremock integration tests across `tests/m2_movies.rs`
   and `tests/m2_tv.rs`._
 - [x] **2.3 `src/media/audio.rs`** — Artist / Album / Track using the shared
-  `MetadataDto`. `LibrarySection::artists()` for `?type=8`,
-  `Artist::albums()` and `Album::tracks()` via the shared
+  `MetadataDto`. `LibrarySection::artists` for `?type=8`,
+  `Artist::albums` and `Album::tracks` via the shared
   `list_children` helper. `Track::disc_number` maps Plex's
   `parentIndex` (the per-track parent is the album; index is
   position-on-disc — `parentIndex` is the disc number, easy to
   swap). _2 wiremock integration tests covering the full walk._
 - [x] **2.4 `src/media/photo.rs`** — `Photoalbum`, `Photo`, `PhotoEntry`
-  sum type for mixed children. `Photoalbum::children()` dispatches on
+  sum type for mixed children. `Photoalbum::children` dispatches on
   the wire `type` discriminator (added to `MetadataDto` as
-  `metadata_type`); `sub_albums()` / `photos()` convenience filters.
-  `LibrarySection::photoalbums()` for `?type=14` top-level listing.
+  `metadata_type`); `sub_albums` / `photos` convenience filters.
+  `LibrarySection::photoalbums` for `?type=14` top-level listing.
   _1 wiremock integration test exercising the mixed-children walk._
 - [x] **2.5 `src/media/streams.rs`** — Full Media → MediaPart → Stream chain.
   Stream is a sum type (`Video|Audio|Subtitle|Lyric|Unknown`) dispatched
@@ -111,14 +111,14 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
 - [x] **2.7 `src/media/markers.rs`** — `Marker { kind, start_ms, end_ms,
   final_credits }` with `MarkerKind` enum (`Intro|Credits|Commercial|Other`).
   `Chapter { id, title, index, start_ms, end_ms, thumb }`. Both attached
-  as `Vec<…>` to Movie and Episode. `Marker::duration_ms()` /
+  as `Vec<…>` to Movie and Episode. `Marker::duration_ms` /
   `Marker::contains(time_ms)` convenience helpers. _7 unit tests._
 - [ ] **2.7 `src/xml/dto/metadata.rs`** — DTO per `<Video>` / `<Track>` / `<Photo>` / `<Directory>` shape.
 - [x] **2.8 `LibrarySection::search/recently_added/on_deck/unwatched`** —
   Mixed-content listing endpoints. New `LibraryItem` sum type
   (`Movie|Show|Season|Episode|Artist|Album|Track|Photoalbum|Photo`)
-  dispatches on the wire `type` discriminator. `LibraryItem::title()` /
-  `rating_key()` accessors hide the variant. Hub search (universal,
+  dispatches on the wire `type` discriminator. `LibraryItem::title` /
+  `rating_key` accessors hide the variant. Hub search (universal,
   cross-section) deferred to a follow-up. _4 wiremock integration tests._
 - [x] **2.9 `src/library/filters.rs`** — `FilterBuilder` with typed
   named ops mapping to Plex's wire suffixes per python-plexapi
@@ -128,7 +128,7 @@ Read parity with python-plexapi. DTO + From conversion for every leaf.
   `LibrarySection::filter(&builder)` executes returning
   `Vec<LibraryItem>`. _16 unit tests + 2 wiremock integration tests._
 - [-] Client-side `__icontains`/`__gte`/etc. namespace deferred to M3
-  alongside the trait architecture per analysis/11 §7.4 (smart-filter
+  alongside the trait architecture (smart-filter
   round-trip is out of scope for v1).
 - [ ] **2.10 Parser snapshot tests via insta** — every leaf has at least one fixture-driven snapshot test.
 
@@ -149,7 +149,7 @@ Largest single trait-architecture investment.
   Show / Season / Episode / Artist / Album / Track. Re-fetches via
   `GET /library/metadata/<rk>` and re-runs the appropriate `into_*`
   conversion. _2 wiremock integration tests._
-- [x] **`src/traits/playable.rs`** — `Playable::direct_play_url()`
+- [x] **`src/traits/playable.rs`** — `Playable::direct_play_url`
   returns a token-bearing URL pointing at the first part's wire key,
   ready to hand to an external media player. Impl on Movie / Episode
   / Track. Transcoded-stream URL builder defers. _1 wiremock
@@ -160,24 +160,24 @@ Largest single trait-architecture investment.
   Impl on Movie/Show/Episode/Album/Track. _3 wiremock integration tests._
 - [~] **3.4 `src/traits/edit_field.rs`** — `EditField` universal
   primitive + `FieldValue` enum + `EditTitle` / `EditSummary`
-  field-specific traits. `PlexObject` extended with `section_ref()`
-  and `metadata_type_id()`. The remaining ~30 field-specific
+  field-specific traits. `PlexObject` extended with `section_ref`
+  and `metadata_type_id`. The remaining ~30 field-specific
   traits follow. _3 unit tests + 3 wiremock integration tests._
 - [~] **3.5 `src/traits/edit_tags.rs`** — `EditTags` (replace_tags /
   remove_tags) + `HasGenres` / `HasCollections` per-family traits.
-  Remove sigil `<field>[].tag.tag-=csv` matched per analysis/08 §3.4.
+  Remove sigil `<field>[].tag.tag-=csv`
   Add semantics defer to EditBatch (need read-modify-write of current
   list). _3 wiremock integration tests._
 - [~] **3.6 `src/traits/images.rs`** — `HasArtUrl` + `HasArtLock`,
   `HasPosterUrl` + `HasPosterLock`, `HasThemeUrl` + `HasThemeLock`.
-  URL builders + lock toggles via new `EditField::lock_field()`
+  URL builders + lock toggles via new `EditField::lock_field`
   primitive. Full HasArt CRUD (upload/replace/delete) defers — needs
   multipart POST on HttpClient. `HasLogo` / `HasSquareArt` defer
   similarly. _4 wiremock integration tests._
 - [ ] **3.6 `src/traits/search.rs`** — `Splittable`, `Matchable`, `Watchlistable`.
 - [-] **3.7 `src/traits/capabilities.rs`** — `capabilities!` declarative
   macro. **OUT OF SCOPE.** This was a proposed *internal* refactor:
-  a meta-macro that emits the impl matrix from analysis/08§2 in one
+  a meta-macro that emits the impl matrix in one
   place. Zero direct user-facing value — the existing
   `declare_edit_field_trait!` and `declare_tag_trait!` macros already
   handle the per-trait expansion without duplication. Adding a
@@ -185,7 +185,7 @@ Largest single trait-architecture investment.
 - [x] **3.8 `src/traits/edit_batch.rs`** — `EditBatch` collects
   field edits, lock toggles, tag replaces, and tag removes for one
   item and flushes them as a single PUT. `EditBatchExt` adds
-  `.batch()` to every type implementing `EditField`. Builder API:
+  `.batch` to every type implementing `EditField`. Builder API:
   low-level `.set_field/lock_field/replace_tags/remove_tags` plus
   ergonomic shortcuts (`set_title`, `set_year`, `replace_genres`,
   `replace_directors`, etc.) mirroring the per-trait method names.
@@ -215,17 +215,17 @@ Largest single trait-architecture investment.
 ## M4 — Playback / playlists / collections / queues / sessions / history
 
 - [~] **4.1 `src/media/playlist.rs`** — Playlist read surface + delete.
-  PlaylistKind enum. PlexServer::playlists() + Playlist::items() +
-  Playlist::delete(). Create/rename/add/remove/move items defer
+  PlaylistKind enum. PlexServer::playlists + Playlist::items +
+  Playlist::delete. Create/rename/add/remove/move items defer
   (need `?uri=` server-URI construction). _3 wiremock integration tests._
 - [x] **4.2/4.4 `src/playback/play_queue.rs`** — `PlayQueue` and
-  `PlayQueueItem`. `PlexServer::create_play_queue()` returns a
+  `PlayQueueItem`. `PlexServer::create_play_queue` returns a
   `CreatePlayQueue` builder with `.from_item(&item)`, `.from_items(&[&item])`,
   `.from_playlist(&pl)`, plus toggles for shuffle, repeat, continuous,
   includeChapters, includeRelated, and start_at(key). `PlexServer::play_queue(id)`
   fetches an existing queue. Queue mutation methods are self-consuming
-  and return refreshed snapshots: `refresh()`, `add_item(item, play_next)`,
-  `move_item(item_id, after_id)`, `remove_item(item_id)`, `clear()`.
+  and return refreshed snapshots: `refresh`, `add_item(item, play_next)`,
+  `move_item(item_id, after_id)`, `remove_item(item_id)`, `clear`.
   URI construction: `server://<MID>/com.plexapp.plugins.library<key>` for
   single items, `library:///directory/<pct(/library/metadata/RK1,RK2,...)>`
   for lists, `playlistID=<rk>` for playlists. Wire-spelling exceptions
@@ -252,7 +252,7 @@ Largest single trait-architecture investment.
   `seek_to(ms, mtype)`, `step_forward`, `step_back`,
   `set_volume(0..=100, mtype)`, `set_repeat(mode, mtype)`,
   `set_shuffle(bool, mtype)`. `MediaType` enum (Video/Music/Photo)
-  and `RepeatMode` enum (Off/One/All) with `.as_wire()` accessors.
+  and `RepeatMode` enum (Off/One/All) with `.as_wire` accessors.
   Flagship: `play_media(&server, &queue, offset_ms)` composes
   `providerIdentifier`/`machineIdentifier`/`protocol`/`address`/
   `port`/`offset`/`key`/`type`/`containerKey`/`token` — derives
@@ -262,8 +262,8 @@ Largest single trait-architecture investment.
   full play_media composition verified against a separate PMS
   mock)._
 - [x] **4.6 `src/playback/transcode.rs`** — universal transcoder URL
-  builder. `TranscodeOptions::new().protocol(Hls).max_video_bitrate(8000)
-  .video_resolution("1920x1080").build_for(&server, item_key)` produces
+  builder. `TranscodeOptions::new.protocol(Hls).max_video_bitrate(8000)
+ .video_resolution("1920x1080").build_for(&server, item_key)` produces
   a token-bearing `/video|/audio/:/transcode/universal/start.{m3u8|mpd}`
   URL. Supports HLS / DASH, video/audio stream kinds, fast seek, copy
   timestamps, force-transcode / force-re-encode, max video bitrate
@@ -276,13 +276,13 @@ Largest single trait-architecture investment.
   bypasses the identity probe for test-only contexts.
 - [~] **4.6 `src/server/sessions.rs`** — `PlayingSession` + `SessionUser` +
   `SessionPlayer` + `TranscodeSession` + `PlayState` enum.
-  `PlexServer::sessions()` + `PlayingSession::stop(reason)`. Transcode-only
+  `PlexServer::sessions` + `PlayingSession::stop(reason)`. Transcode-only
   listing and history endpoint defer. _3 wiremock integration tests._
-- [x] **4.7 `src/server/history.rs`** — `PlexServer::history()` returns
+- [x] **4.7 `src/server/history.rs`** — `PlexServer::history` returns
   a `HistoryQuery` builder with `.account(id)`, `.library_section(id)`,
   `.rating_key(rk)`, `.mindate(dt)`, `.max_results(n)`, `.page_size(n)`.
   Default sort `viewedAt:desc` (matches python-plexapi). Terminate with
-  `.collect().await` (eager `Vec`) or `.stream()` (lazy
+  `.collect.await` (eager `Vec`) or `.stream` (lazy
   `futures::Stream<Item=Result<HistoryEntry>>`). Pagination via the
   `X-Plex-Container-Start/-Size` request headers through the new
   `HttpClient::get_bytes_with_headers` primitive; `PageRange::advance_with`
@@ -293,7 +293,7 @@ Largest single trait-architecture investment.
   tests (incl. cross-page pagination with header assertions, max_results
   cap, streaming, DELETE)._
 - [x] **4.8 `src/server/settings.rs`** — `Settings` + `Setting`.
-  `PlexServer::settings()` returns a fully-loaded `Settings` snapshot
+  `PlexServer::settings` returns a fully-loaded `Settings` snapshot
   via `GET /:/prefs`. `Setting` carries id, label, summary, kind
   (Text/Int/Double/Bool/Enum + Other for forward-compat),
   default and current `SettingValue`, hidden/advanced/secure flags,
@@ -306,23 +306,23 @@ Largest single trait-architecture investment.
   staging commit (python-plexapi's `_setValue` pattern) deferred
   in favor of explicit single-write or explicit batch — composes
   more cleanly with Rust's `await`-based ergonomics.
-  `Settings::all()`, `get(id)`, `group(name)`, `group_names()`
+  `Settings::all`, `get(id)`, `group(name)`, `group_names`
   cover the read surface. _12 unit tests + 7 wiremock integration
   tests (load, single set, batched set_many, all three client-side
   validation paths, empty set_many)._
 - [x] **4.9 `src/server/admin.rs`** — server-admin / monitoring
   read surfaces useful for monitoring agents and dashboards:
-  - `activities()` — currently-running activities (scans,
+  - `activities` — currently-running activities (scans,
     optimizes, refreshes) with uuid, kind, title, subtitle,
     progress, cancellable.
-  - `butler_tasks()` — scheduled background tasks with name,
+  - `butler_tasks` — scheduled background tasks with name,
     title, description, enabled, interval_days, schedule_randomized.
-  - `updater_status()` — current PMS version + pending releases
+  - `updater_status` — current PMS version + pending releases
     (download_key, version, added/fixed notes, download_url, state).
   - `bandwidth_stats(opts)` — bandwidth samples filterable by
     account / time range / aggregation window via
     `BandwidthOptions` builder.
-  - `resource_stats()` — CPU + memory utilization samples
+  - `resource_stats` — CPU + memory utilization samples
     (host + process).
   Mutation paths (running butler tasks, applying updates) defer —
   monitoring agents typically don't need to drive these. Browse
@@ -334,20 +334,20 @@ Largest single trait-architecture investment.
 
 - [~] **5.1 `src/auth/pin.rs`** — `MyPlexPinLogin` with start/poll/wait.
   Plain struct (not typestate); typestate machine deferred (the three
-  states map cleanly to `Result<Option<PlexToken>>` from `poll()`).
+  states map cleanly to `Result<Option<PlexToken>>` from `poll`).
   Wiremock integration tests deferred pending a `with_endpoint(base)`
   override for the plex.tv URL. _2 DTO unit tests._
 - [x] **5.2 `src/auth/password.rs`** — `MyPlexPasswordLogin` with
-  `sign_in()` and `sign_in_with_code()`. Form-urlencoded POST to
+  `sign_in` and `sign_in_with_code`. Form-urlencoded POST to
   `plex.tv/api/v2/users/signin`. Inspects the response body on 401
   for the `code: 1029` envelope (with a `"verification code"`
   substring fallback) and surfaces it as `Error::TwoFactorRequired`
   distinct from `Error::Unauthorized`. Test endpoint override via
-  `with_endpoint()`. Crate-private `HttpClient::inner()` accessor
+  `with_endpoint`. Crate-private `HttpClient::inner` accessor
   lets the auth module drive the POST with custom status mapping.
   _8 unit tests + 4 wiremock integration tests._
 - [x] **5.3 `src/myplex/{mod,resources}.rs`** — `MyPlexClient` +
-  `MyPlexResource` + `ResourceConnection`. `MyPlexClient::resources()`
+  `MyPlexResource` + `ResourceConnection`. `MyPlexClient::resources`
   fetches `GET /api/v2/resources?includeHttps=1&includeRelay=1`,
   `resource(name)` finds case-insensitively. `MyPlexResource::connect`
   uses `FuturesUnordered` to race concurrent probes across every
@@ -359,29 +359,29 @@ Largest single trait-architecture investment.
   Endpoint overridable via `MyPlexClient::with_base(url)` for test
   replicas. _11 unit tests + 4 wiremock integration tests._
 - [~] **5.4 `src/myplex/{webhooks,devices,friends,home}.rs`** —
-  - **webhooks**: `MyPlexClient::webhooks()`, `add_webhook(url)`
+  - **webhooks**: `MyPlexClient::webhooks`, `add_webhook(url)`
     (idempotent), `delete_webhook(url)` (NotFound if absent),
     `set_webhooks(&urls)` (empty slice clears). Form-encoded POST
     to `/api/v2/user/webhooks`; parser handles JSON-array, wrapped
     envelope, AND XML responses. _7 unit tests + 6 wiremock._
-  - **devices**: `MyPlexClient::devices()` lists every device
+  - **devices**: `MyPlexClient::devices` lists every device
     registered to the account via `GET /devices.xml` (XML-only on
     Plex's side); each `MyPlexDevice` carries id, name, product,
     platform, client_identifier, per-device token (Debug-redacted),
     public_address, screen_resolution/density, created_at,
-    last_seen_at, and connection URIs. `is_server()` / `is_player()`
+    last_seen_at, and connection URIs. `is_server` / `is_player`
     helpers. `MyPlexDevice::delete(&client)` revokes the token via
     `DELETE /devices/<id>.xml`. quick-xml's serde adapter drives
     the XML parsing with `@attribute`-style renames. _9 unit
     tests + 3 wiremock integration tests._
-  - **friends**: `MyPlexClient::friends()` lists shared accounts
+  - **friends**: `MyPlexClient::friends` lists shared accounts
     via `GET /api/users/` (XML). `MyPlexUser` carries id, username,
     title, email, thumb, home/restricted flags, allow_sync /
     allow_channels / allow_camera_upload, and per-share access
     token (Debug-redacted). `remove_friend(id)` via
     `DELETE /api/friends/<id>`. _6 unit tests + 2 wiremock
     integration tests._
-  - **home**: `MyPlexClient::home_users()` lists Plex Home
+  - **home**: `MyPlexClient::home_users` lists Plex Home
     sub-accounts via `GET /api/home/users` (XML). `MyPlexHomeUser`
     carries id, title, username, email, thumb, plus admin /
     protected / restricted / guest flags. Mutation (add /
@@ -400,7 +400,7 @@ Largest single trait-architecture investment.
     minority of users. Excluded to keep the crate footprint
     focused on broadly-useful surfaces.
 - [~] **5.5 `src/myplex/watchlist.rs`** — Discover watchlist.
-  `MyPlexClient::watchlist()` / `watchlist_with(&opts)` lists,
+  `MyPlexClient::watchlist` / `watchlist_with(&opts)` lists,
   `add_to_watchlist(rk)` / `remove_from_watchlist(rk)` mutate.
   `WatchlistOptions` builder with `filter` (All/Available/Released),
   `kind` (Movie/Show via numeric SearchType), `sort` (string
@@ -436,7 +436,7 @@ Largest single trait-architecture investment.
   `scrobble(rk)` / `unscrobble(rk)` mark watched / unwatched on the
   cloud catalogue (which then propagates to subscribed PMS). Wire
   endpoints are HTTP GET despite being mutations — quirk preserved.
-  `is_played()` / `is_on_watchlist()` convenience helpers on
+  `is_played` / `is_on_watchlist` convenience helpers on
   UserState. Permissive timestamp parser accepts epoch-number,
   epoch-string, and ISO-8601 shapes.
   _9 unit tests + 4 wiremock integration tests._
@@ -466,7 +466,7 @@ Largest single trait-architecture investment.
 - [x] **5.8 `src/discover_gdm/`** — `GdmEntry` + `discover_local_servers`
   via raw `tokio::net::UdpSocket` multicast to 239.0.0.250:32414
   with HTTP/1.0 `M-SEARCH` payload. Dedup by Resource-Identifier.
-  `GdmEntry::base_url()` builds the PMS URL. Gated on `discovery`
+  `GdmEntry::base_url` builds the PMS URL. Gated on `discovery`
   feature; `tokio/net` only pulled in when the feature is on.
   _5 unit tests._
 - [x] **5.9 `src/webhook/`** — inbound Plex webhook handling.
