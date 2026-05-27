@@ -105,8 +105,9 @@ pub use crate::media::{
     VideoStream,
 };
 pub use crate::myplex::{
-    ConnectOptions, MyPlexClient, MyPlexDevice, MyPlexResource, ResourceConnection, UserState,
-    WatchlistFilter, WatchlistItem, WatchlistKind, WatchlistOptions,
+    ConnectOptions, DiscoverItem, DiscoverKind, DiscoverOptions, MyPlexClient, MyPlexDevice,
+    MyPlexResource, ResourceConnection, UserState, WatchlistFilter, WatchlistItem, WatchlistKind,
+    WatchlistOptions,
 };
 pub use crate::pagination::PageRange;
 pub use crate::playback::{

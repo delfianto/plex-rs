@@ -23,12 +23,14 @@
 //! client at a wiremock replica.
 
 pub mod devices;
+pub mod discover;
 pub mod metadata_provider;
 pub mod resources;
 pub mod watchlist;
 pub mod webhooks;
 
 pub use devices::MyPlexDevice;
+pub use discover::{DiscoverItem, DiscoverKind, DiscoverOptions};
 pub use metadata_provider::UserState;
 pub use resources::{ConnectOptions, MyPlexResource, ResourceConnection};
 pub use watchlist::{WatchlistFilter, WatchlistItem, WatchlistKind, WatchlistOptions};

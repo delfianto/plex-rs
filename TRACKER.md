@@ -381,7 +381,19 @@ Largest single trait-architecture investment.
   full raw payload flattened in. New `with_discover_base` /
   `with_metadata_base` overrides on MyPlexClient for testing.
   _9 unit tests + 6 wiremock integration tests._
-  JSON Discover search — pending (yellow tier).
+  Discover search shipped — see entry below.
+
+- [x] **5.5b `src/myplex/discover.rs`** — `MyPlexClient::discover_search
+  (query, opts)` runs full-text search against
+  `discover.provider.plex.tv/library/search`. `DiscoverOptions` builder
+  with `limit` (default 30), `kind` (Movie/Show — serialized as
+  `searchTypes=movies` / `tv`), and `providers` (default `"discover"`,
+  overridable for `discover,PLEXAVOD,PLEXTVOD`). `DiscoverItem` mirrors
+  WatchlistItem shape (guid + extracted rating_key, kind, title, year,
+  summary, ratings, content_rating, score) with full raw payload
+  preserved. Flattens results across all `SearchResults` buckets
+  (`external`, `library`, etc.). _7 unit tests + 4 wiremock
+  integration tests._
   - [-] **availability metadata** — **OUT OF SCOPE.** The
     "available on Netflix / Disney+ / etc." overlay endpoint
     serves recommendation apps that map cloud-catalogue items to
