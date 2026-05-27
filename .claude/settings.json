@@ -2,15 +2,19 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "Bash(cargo check *)",
-      "Bash(cargo clippy *)",
-      "Bash(cargo fmt *)",
-      "Bash(cargo test *)",
-      "Bash(cargo doc *)",
-      "Bash(cargo build *)",
-      "Bash(cargo tree *)",
-      "Bash(cargo deny check *)",
-      "Bash(rustc --version)",
+      "Bash(cargo *)",
+      "Bash(cargo)",
+      "Bash(rustc *)",
+      "Bash(rustc)",
+      "Bash(rustup *)",
+      "Bash(rustup)",
+      "Bash(rustfmt *)",
+      "Bash(rust-analyzer *)",
+      "Bash(RUSTDOCFLAGS=* cargo *)",
+      "Bash(RUSTFLAGS=* cargo *)",
+      "Bash(RUST_BACKTRACE=* cargo *)",
+      "Bash(RUST_LOG=* cargo *)",
+      "Bash(CARGO_TARGET_DIR=* cargo *)",
       "Bash(brew list *)"
     ]
   }
