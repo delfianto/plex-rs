@@ -14,6 +14,7 @@
 //! Episode follow in M2.2, music in M2.3, photos in M2.4.
 
 pub mod audio;
+pub mod collection;
 pub mod markers;
 pub mod photo;
 pub mod playlist;
@@ -22,6 +23,7 @@ pub mod tags;
 pub mod video;
 
 pub use audio::{Album, Artist, Track};
+pub use collection::Collection;
 pub use markers::{Chapter, Marker, MarkerKind};
 pub use photo::{Photo, PhotoEntry, Photoalbum};
 pub use playlist::{Playlist, PlaylistKind};

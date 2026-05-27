@@ -43,6 +43,30 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M4.2 (Collection — list, items, delete)** — section-attached
+  named groupings:
+  - `media::Collection` — section-scoped collection with rating
+    key, title, subtype (matches owning section kind), smart flag,
+    leaf/child counts, collection_mode / collection_sort, composite
+    image, thumb, art, timestamps, GUID, and a
+    `LibrarySectionRef` back-link.
+  - Unlike `Playlist`, Collection IS section-attached — so it
+    composes naturally with the M3 trait suite. Implements
+    `PlexObject` (metadata type 18), `Ratable`, `EditField`,
+    `EditTitle`, `EditSummary`, `EditTags`, `HasGenres`,
+    `HasCollections`, `HasLabels`, `HasArtUrl` + `HasArtLock`,
+    `HasPosterUrl` + `HasPosterLock` — all the editing surface
+    inherited from the foundational traits.
+  - `LibrarySection::collections()` — `GET /library/sections/<id>/collections`
+    returning `Vec<Collection>`.
+  - `Collection::items()` — `GET /library/collections/<rk>/children`
+    returning `Vec<LibraryItem>`.
+  - `Collection::delete()` — `DELETE /library/collections/<rk>`.
+  - Add / remove items, mode / sort tweaks, smart-collection
+    mutation defer to follow-up iterations.
+  - `tests/m4_collections.rs` — 3 wiremock integration tests
+    covering list (static + smart), item walk, and DELETE.
+
 - **M4.1 (Playlist — list, items, delete)** — first piece of the
   playback layer:
   - `media::Playlist` — server-level (not section-attached) ordered

@@ -177,7 +177,11 @@ Largest single trait-architecture investment.
   Playlist::delete(). Create/rename/add/remove/move items defer
   (need `?uri=` server-URI construction). _3 wiremock integration tests._
 - [ ] **4.2 `src/playback/mod.rs`** — `PlayQueue` create/get/mutate.
-- [ ] **4.3 `src/media/collection.rs`** — regular + smart, mutations, `ManagedHub` visibility (read).
+- [~] **4.3 `src/media/collection.rs`** — Collection read surface +
+  delete + full M3 edit-trait composition (Ratable / EditTitle /
+  EditSummary / EditTags / HasGenres / HasCollections / HasLabels /
+  art + poster URL + lock). Add/remove items, mode/sort tweaks,
+  smart-collection mutation defer. _3 wiremock integration tests._
 - [ ] **4.4 `src/playback/client.rs`** — `PlexClient`, command protocol (14 nav + 19 playback + mirror).
 - [ ] **4.5 `src/playback/transcode.rs`** — `/transcode/universal` URL builder + decision endpoint.
 - [ ] **4.6 `src/server/sessions.rs`** — `sessions()`, `transcode_sessions()`, `PlexSession::stop()`.
