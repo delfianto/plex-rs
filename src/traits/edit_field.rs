@@ -145,6 +145,13 @@ pub trait EditField: PlexObject {
     }
 }
 
+/// RFC 3986 percent-encoder for query-string values. Crate-private
+/// alias re-exported as [`pct_query`] for sibling trait modules
+/// (`edit_tags`).
+pub(crate) fn pct_query(input: &str) -> String {
+    pct(input)
+}
+
 /// RFC 3986 percent-encoder for query-string values.
 fn pct(input: &str) -> String {
     let mut out = String::with_capacity(input.len());

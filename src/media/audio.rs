@@ -15,7 +15,10 @@
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
 use crate::media::video::MetadataDto;
-use crate::traits::{EditField, EditSummary, EditTitle, PlayedUnplayed, PlexObject, Ratable};
+use crate::traits::{
+    EditField, EditSummary, EditTags, EditTitle, HasCollections, HasGenres, PlayedUnplayed,
+    PlexObject, Ratable,
+};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -276,6 +279,17 @@ impl EditTitle for Track {}
 impl EditSummary for Artist {}
 impl EditSummary for Album {}
 impl EditSummary for Track {}
+
+impl EditTags for Album {}
+impl EditTags for Track {}
+impl EditTags for Artist {}
+
+impl HasGenres for Album {}
+impl HasGenres for Artist {}
+
+impl HasCollections for Album {}
+impl HasCollections for Artist {}
+impl HasCollections for Track {}
 
 // -----------------------------------------------------------------------------
 // DTO conversions (on the shared MetadataDto from media::video).

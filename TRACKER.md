@@ -151,8 +151,13 @@ Largest single trait-architecture investment.
 - [~] **3.4 `src/traits/edit_field.rs`** — `EditField` universal
   primitive + `FieldValue` enum + `EditTitle` / `EditSummary`
   field-specific traits. `PlexObject` extended with `section_ref()`
-  and `metadata_type_id()`. `EditTags` and the remaining ~30
-  field-specific traits follow. _3 unit tests + 3 wiremock integration tests._
+  and `metadata_type_id()`. The remaining ~30 field-specific
+  traits follow. _3 unit tests + 3 wiremock integration tests._
+- [~] **3.5 `src/traits/edit_tags.rs`** — `EditTags` (replace_tags /
+  remove_tags) + `HasGenres` / `HasCollections` per-family traits.
+  Remove sigil `<field>[].tag.tag-=csv` matched per analysis/08 §3.4.
+  Add semantics defer to EditBatch (need read-modify-write of current
+  list). _3 wiremock integration tests._
 - [ ] **3.5 `src/traits/images.rs`** — `HasArtUrl`, `HasArt`, `HasPoster*`, `HasTheme`, `HasLogo`, `HasSquareArt`.
 - [ ] **3.6 `src/traits/search.rs`** — `Splittable`, `Matchable`, `Watchlistable`.
 - [ ] **3.7 `src/traits/capabilities.rs`** — `capabilities!` declarative macro that emits the impl matrix from analysis/08§2.

@@ -16,10 +16,12 @@
 //!   subsequent M3 sub-items.
 
 pub mod edit_field;
+pub mod edit_tags;
 pub mod played_unplayed;
 pub mod ratable;
 
 pub use edit_field::{EditField, EditSummary, EditTitle, FieldValue};
+pub use edit_tags::{EditTags, HasCollections, HasGenres};
 pub use played_unplayed::PlayedUnplayed;
 pub use ratable::Ratable;
 

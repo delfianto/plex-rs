@@ -10,7 +10,10 @@ use url::Url;
 
 use crate::error::{Error, Result};
 use crate::library::LibrarySectionRef;
-use crate::traits::{EditField, EditSummary, EditTitle, PlayedUnplayed, PlexObject, Ratable};
+use crate::traits::{
+    EditField, EditSummary, EditTags, EditTitle, HasCollections, HasGenres, PlayedUnplayed,
+    PlexObject, Ratable,
+};
 use crate::util::ids::RatingKey;
 
 // -----------------------------------------------------------------------------
@@ -820,6 +823,18 @@ impl EditSummary for Movie {}
 impl EditSummary for Show {}
 impl EditSummary for Season {}
 impl EditSummary for Episode {}
+
+impl EditTags for Movie {}
+impl EditTags for Show {}
+impl EditTags for Episode {}
+
+impl HasGenres for Movie {}
+impl HasGenres for Show {}
+impl HasGenres for Episode {}
+
+impl HasCollections for Movie {}
+impl HasCollections for Show {}
+impl HasCollections for Episode {}
 
 #[cfg(test)]
 mod tests {
