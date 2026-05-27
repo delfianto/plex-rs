@@ -149,6 +149,11 @@ Largest single trait-architecture investment.
   Show / Season / Episode / Artist / Album / Track. Re-fetches via
   `GET /library/metadata/<rk>` and re-runs the appropriate `into_*`
   conversion. _2 wiremock integration tests._
+- [x] **`src/traits/playable.rs`** — `Playable::direct_play_url()`
+  returns a token-bearing URL pointing at the first part's wire key,
+  ready to hand to an external media player. Impl on Movie / Episode
+  / Track. Transcoded-stream URL builder defers. _1 wiremock
+  integration test._
 - [x] **3.3 `src/traits/ratable.rs`** — `Ratable` with `rate(Option<f32>)`.
   PUT `/:/rate?key=<rk>&identifier=com.plexapp.plugins.library&rating=<v>`.
   Client-side range validation (0..=10), `-1` sentinel for clear.

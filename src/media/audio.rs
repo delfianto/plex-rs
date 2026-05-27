@@ -18,7 +18,7 @@ use crate::media::video::MetadataDto;
 use crate::traits::{
     EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary, EditTags, EditTitle,
     EditYear, HasArtLock, HasArtUrl, HasCollections, HasGenres, HasLabels, HasMoods, HasPosterLock,
-    HasPosterUrl, HasStyles, PlayedUnplayed, PlexObject, Ratable, Reload,
+    HasPosterUrl, HasStyles, Playable, PlayedUnplayed, PlexObject, Ratable, Reload,
 };
 use crate::util::ids::RatingKey;
 
@@ -358,6 +358,12 @@ impl Reload for Track {
     async fn reload(self) -> Result<Self> {
         let dto = crate::traits::reload::fetch_metadata(&self).await?;
         dto.into_track(self.section_ref.clone())
+    }
+}
+
+impl Playable for Track {
+    fn first_part_key(&self) -> Option<&str> {
+        self.media.first()?.parts.first().map(|p| p.key.as_str())
     }
 }
 

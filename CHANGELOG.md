@@ -43,6 +43,32 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **Playable trait — direct-play URL builder.** First piece of
+  external-player integration:
+  - `traits::Playable` — single `direct_play_url() -> Option<Url>`
+    method that returns the absolute URL of the first
+    [`MediaPart`]'s wire key, with `X-Plex-Token` embedded as a
+    query parameter so external players (VLC, mpv, browser
+    `<video>` elements, …) can stream without setting auth
+    headers themselves.
+  - Returns `None` when either (a) the item's `Vec<Media>` is
+    empty (typically because the metadata came from a listing
+    endpoint that omits `Media[]` — call `Reload::reload()`
+    first), or (b) the bound HTTP client has no token configured.
+  - Implementors: Movie / Episode / Track. Photo and Photoalbum
+    intentionally not — Plex serves images from a different path
+    family and the use case is different.
+  - Defensive: when the wire key already contains `?…`, the
+    method appends `&X-Plex-Token=` instead of `?`.
+  - Transcoded streaming URL construction (`/video/:/transcode/
+    universal/start.<container>` with quality / decision
+    negotiation) defers to a follow-up. Most external players
+    can decode the source format directly, so `direct_play_url`
+    is the right primitive to ship first.
+  - `tests/m4_playable.rs` — 1 wiremock integration test
+    covering the partial→reload→playable-URL walk, asserting
+    the token shows up in the query.
+
 - **M3.2 (Reload trait)** — re-fetch a partial item with full
   detail:
   - `traits::Reload` — single `reload(self) -> Result<Self::Full>`
