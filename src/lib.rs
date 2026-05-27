@@ -109,7 +109,8 @@ pub use crate::myplex::{
 };
 pub use crate::pagination::PageRange;
 pub use crate::playback::{
-    CreatePlayQueue, MediaType, PlayQueue, PlayQueueItem, PlexClient, RepeatMode,
+    CreatePlayQueue, LocationHint, MediaType, PlayQueue, PlayQueueItem, PlexClient, RepeatMode,
+    StreamKind, TranscodeOptions, TranscodeProtocol,
 };
 pub use crate::server::{
     EnumValues, HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,

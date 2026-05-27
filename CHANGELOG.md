@@ -159,6 +159,35 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M4.6 (Transcoded streaming URL builder)** — complement to
+  `Playable::direct_play_url()`. Use direct-play when the source
+  media is compatible with the player; reach for the transcoder
+  when you need bandwidth caps, resolution downscaling, or format
+  conversion for legacy players:
+  - `TranscodeOptions::new().protocol(Hls).max_video_bitrate(8000)
+    .video_resolution("1920x1080").build_for(&server, item_key)`
+    builds a token-bearing
+    `/<video|audio>/:/transcode/universal/start.<m3u8|mpd>` URL.
+  - Builder methods: `protocol` (HLS / DASH), `stream_kind`
+    (Video / Audio), `offset_ms`, `fast_seek`, `copy_ts`,
+    `force_transcode`, `force_re_encode`, `max_video_bitrate`
+    (clamped ≥ 64 — matches python), `video_resolution`
+    (WxH validated client-side), `video_quality` (clamped
+    0..=100), `subtitle_size` / `audio_boost` (clamped 0..=200),
+    `location` (LAN / WAN), `media_buffer_size`, `platform`,
+    `session_id`.
+  - `TranscodeProtocol` enum maps to the right container
+    extension (`.m3u8` / `.mpd`) and wire spelling.
+  - `LocationHint::Lan` permits higher bitrates than `Wan` —
+    Plex uses this in its quality-decision pipeline.
+  - The decision endpoint (`/video/:/transcode/universal/decision`)
+    is deferred. External players consume the manifest URL
+    directly without needing the decision dance.
+  - `PlexServer::__test_new` (doc-hidden) constructs a server
+    handle without the GET / identity probe, so integration tests
+    can hand a `PlexServer` to URL-building code without standing
+    up a wiremock just for the probe.
+
 - **M3.8 (EditBatch transaction)** — single PUT for multi-field
   edits, eliminating N round-trips for bulk library cleanup:
   - `EditBatch::new(&item)` or `item.batch()` (via `EditBatchExt`)

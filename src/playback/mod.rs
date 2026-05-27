@@ -7,6 +7,8 @@
 
 pub mod client;
 pub mod play_queue;
+pub mod transcode;
 
 pub use client::{MediaType, PlexClient, RepeatMode};
 pub use play_queue::{CreatePlayQueue, PlayQueue, PlayQueueItem};
+pub use transcode::{LocationHint, StreamKind, TranscodeOptions, TranscodeProtocol, transcode_url};
