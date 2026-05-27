@@ -175,9 +175,20 @@ Largest single trait-architecture investment.
   multipart POST on HttpClient. `HasLogo` / `HasSquareArt` defer
   similarly. _4 wiremock integration tests._
 - [ ] **3.6 `src/traits/search.rs`** — `Splittable`, `Matchable`, `Watchlistable`.
-- [ ] **3.7 `src/traits/capabilities.rs`** — `capabilities!` declarative macro that emits the impl matrix from analysis/08§2.
+- [-] **3.7 `src/traits/capabilities.rs`** — `capabilities!` declarative
+  macro. **OUT OF SCOPE.** This was a proposed *internal* refactor:
+  a meta-macro that emits the impl matrix from analysis/08§2 in one
+  place. Zero direct user-facing value — the existing
+  `declare_edit_field_trait!` and `declare_tag_trait!` macros already
+  handle the per-trait expansion without duplication. Adding a
+  third macro layer would obscure the call sites with no payoff.
 - [ ] **3.8 `src/batch.rs`** — `EditBatch` transaction (analysis/08§3.1).
-- [ ] **3.9 `src/library/filters.rs`** — client-side `__` operator namespace via `client(|q| …)` closure.
+- [-] **3.9 `src/library/filters.rs`** — client-side `__` operator
+  namespace. **OUT OF SCOPE.** This would duplicate the typed
+  `FilterBuilder` API with python-style `genre__exact="Sci-Fi"`
+  string sugar. Only useful as a porting aid for users translating
+  python-plexapi scripts line-by-line — Rust callers reach for the
+  typed builder. Keeping one canonical filter surface.
 - [ ] **3.10 `src/library/smart_filter.rs`** — `push/pop/and/or` URI parser (read-only).
 
 ## M4 — Playback / playlists / collections / queues / sessions / history
@@ -296,7 +307,7 @@ Largest single trait-architecture investment.
   Per-resource access token honored on the winning probe.
   Endpoint overridable via `MyPlexClient::with_base(url)` for test
   replicas. _11 unit tests + 4 wiremock integration tests._
-- [~] **5.4 `src/myplex/{webhooks,devices}.rs`** —
+- [~] **5.4 `src/myplex/{webhooks,devices,friends,home}.rs`** —
   - **webhooks**: `MyPlexClient::webhooks()`, `add_webhook(url)`
     (idempotent), `delete_webhook(url)` (NotFound if absent),
     `set_webhooks(&urls)` (empty slice clears). Form-encoded POST
@@ -312,7 +323,20 @@ Largest single trait-architecture investment.
     `DELETE /devices/<id>.xml`. quick-xml's serde adapter drives
     the XML parsing with `@attribute`-style renames. _9 unit
     tests + 3 wiremock integration tests._
-  - friends / home / claim / sonos still deferred.
+  - friends — pending.
+  - home — pending.
+  - [-] **claim** — **OUT OF SCOPE.** A claim token is a one-shot
+    credential generated to bind a fresh Plex Media Server install
+    to a plex.tv account. It's used exactly once per server
+    lifetime, almost always through the PMS web setup UI; very few
+    callers ever need to mint one programmatically. Excluding it
+    keeps the auth surface focused.
+  - [-] **sonos** — **OUT OF SCOPE.** Sonos integration endpoints
+    (`https://sonos.plex.tv/resources`) target the specific Plex
+    for Sonos product. Audience is Plex Pass holders who also own
+    Sonos hardware AND want to drive it programmatically — a tiny
+    minority of users. Excluded to keep the crate footprint
+    focused on broadly-useful surfaces.
 - [~] **5.5 `src/myplex/watchlist.rs`** — Discover watchlist.
   `MyPlexClient::watchlist()` / `watchlist_with(&opts)` lists,
   `add_to_watchlist(rk)` / `remove_from_watchlist(rk)` mutate.
@@ -324,7 +348,13 @@ Largest single trait-architecture investment.
   full raw payload flattened in. New `with_discover_base` /
   `with_metadata_base` overrides on MyPlexClient for testing.
   _9 unit tests + 6 wiremock integration tests._
-  JSON Discover search + availability metadata deferred.
+  JSON Discover search — pending (yellow tier).
+  - [-] **availability metadata** — **OUT OF SCOPE.** The
+    "available on Netflix / Disney+ / etc." overlay endpoint
+    serves recommendation apps that map cloud-catalogue items to
+    consumer streaming services. Narrow audience, narrow utility;
+    the same data is available via third-party sources (JustWatch
+    API etc.) for callers who actually need it.
 - [x] **5.6 `src/myplex/metadata_provider.rs`** —
   `MyPlexClient::user_state(rk)` reads cloud per-user state
   (view_count, view_offset_ms, view_state_complete, last_viewed_at,
@@ -383,7 +413,13 @@ Largest single trait-architecture investment.
   _9 unit tests + 6 wiremock/axum integration tests (full
   end-to-end with axum::serve listener, real multipart bodies sent
   via reqwest, all three rejection paths, thumb capture)._
-- [ ] **5.10 `src/playback/sync.rs`** — legacy mobile sync (best-effort).
+- [-] **5.10 `src/playback/sync.rs`** — legacy mobile sync.
+  **OUT OF SCOPE.** Plex deprecated the legacy "sync library to
+  phone" API in favor of the newer Download feature, which uses a
+  different endpoint family. The legacy endpoints still exist for
+  backward compatibility with very old mobile-app builds but Plex
+  itself recommends not using them. Investing in implementing a
+  deprecated API surface is wasted effort.
 
 ---
 
