@@ -23,6 +23,7 @@
 //! client at a wiremock replica.
 
 pub mod resources;
+pub mod webhooks;
 
 pub use resources::{ConnectOptions, MyPlexResource, ResourceConnection};
 
