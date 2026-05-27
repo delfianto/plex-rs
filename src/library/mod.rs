@@ -50,8 +50,9 @@ const fn hex_upper(n: u8) -> char {
         _ => '?',
     }
 }
+use crate::media::collection::CollectionDto;
 use crate::media::video::MetadataDto;
-use crate::media::{Artist, LibraryItem, Movie, Photoalbum, Show};
+use crate::media::{Artist, Collection, LibraryItem, Movie, Photoalbum, Show};
 use crate::server::join_path;
 use crate::xml::MediaContainer;
 
@@ -306,6 +307,31 @@ impl LibrarySection {
     /// Any transport [`Error`].
     pub async fn unwatched(&self) -> Result<Vec<LibraryItem>> {
         self.list_mixed("/unwatched").await
+    }
+
+    /// List every collection in this section.
+    ///
+    /// Calls `GET /library/sections/<id>/collections`. Collections
+    /// are returned with the same `<Directory>` shape Plex uses
+    /// for the section list itself, but reinterpreted as
+    /// [`Collection`] domain values.
+    ///
+    /// # Errors
+    /// Any transport [`Error`] variant.
+    pub async fn collections(&self) -> Result<Vec<Collection>> {
+        let url = self.section_ref.url("/collections")?;
+        let body = self.section_ref.http.get_bytes(url.as_str()).await?;
+        let body_str = std::str::from_utf8(&body).map_err(|e| {
+            Error::Config(format!(
+                "sections/{}/collections body not utf-8: {e}",
+                self.section_ref.id
+            ))
+        })?;
+        let mc: MediaContainer<CollectionDto> = MediaContainer::from_json(body_str, "Metadata")?;
+        mc.items
+            .into_iter()
+            .map(|dto| dto.into_domain(self.section_ref.clone()))
+            .collect()
     }
 
     /// Execute a [`FilterBuilder`] against this section.
