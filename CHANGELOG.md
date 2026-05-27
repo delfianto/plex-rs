@@ -159,6 +159,26 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.5b (Discover catalogue search)** — full-text search against
+  Plex's global cloud catalogue, sibling to `watchlist`:
+  - `MyPlexClient::discover_search(query, &opts)` hits
+    `discover.provider.plex.tv/library/search`. Returns
+    `Vec<DiscoverItem>` flattened across every result bucket
+    Plex emits.
+  - `DiscoverOptions` builder: `limit` (default 30), `kind`
+    (Movie / Show, serialized as `searchTypes=movies` / `tv`),
+    `providers` (default `"discover"`, can be expanded to
+    `"discover,PLEXAVOD,PLEXTVOD"` to also include Plex's free /
+    rental services).
+  - `DiscoverItem` mirrors `WatchlistItem` (cloud catalogue
+    entry — guid, extracted rating_key, kind, title, year,
+    summary, content_rating, ratings) plus per-result `score`.
+    Full raw payload preserved in `raw` for callers needing
+    fields beyond the projection.
+  - The discover endpoint nests results under `SearchResults[].
+    SearchResult[].Metadata`; the flattener walks every bucket
+    rather than picking just `id == "external"` like python.
+
 - **M3.10 (Smart filter URI parser)** — read-only parser for
   Plex's smart-playlist / smart-collection filter URIs:
   - `SmartFilter::from_uri(s)` accepts a bare query string
