@@ -282,7 +282,29 @@ Largest single trait-architecture investment.
 - [ ] **5.4 `src/myplex/{devices,friends,home,webhooks,claim,sonos}.rs`** — long tail.
 - [ ] **5.5 `src/discover/`** — watchlist + JSON Discover search + availability.
 - [ ] **5.6 `src/metadata_provider/`** — userState + GET scrobble.
-- [ ] **5.7 `src/alerts/`** — WebSocket stream + reconnect with backoff + typed events (analysis/11§8).
+- [x] **5.7 `src/alerts/`** — `Alerts::connect(&server)` opens a
+  WebSocket to `/:/websockets/notifications` (with `X-Plex-Token`
+  via query param — Plex's WS endpoint doesn't accept standard
+  X-Plex-* headers). Returns `Alerts: Stream<Item=Result<AlertEvent>>`
+  yielding one event per inner notification (frames carrying N
+  entries flatten to N yields). `AlertEvent` enum: Playing,
+  Timeline, Activity, TranscodeSession (with `TranscodeLifecycle::
+  {Start, Update, End}`), Status, Reachability, Setting,
+  BackgroundProcessingQueue, plus `Unknown { kind, raw }` for
+  forward-compat. Per-variant DTO captures the documented fields
+  (PlaySessionStateNotification's sessionKey/state/viewOffset/userID/
+  transcodeSession, TimelineEntry's itemID/state/title/type with
+  the documented state values 0/1/2/3/4/5/9). `Alerts::connect_with_url`
+  is the test-friendly primitive that the integration tests drive
+  against a `tokio::net::TcpListener` + `accept_hdr_async` WS replica.
+  Reconnect with backoff documented as a usage pattern (caller-driven
+  loop using `retry_delay`) rather than wrapping it inside the crate
+  — keeps the surface minimal and lets callers compose with their
+  own shutdown signals. Gated behind the `alerts` Cargo feature
+  (pulls in `tokio-tungstenite` with `connect` + `rustls-tls-webpki-roots`).
+  _12 unit tests + 3 wiremock/WS integration tests (full end-to-end
+  handshake + multi-frame sequencing + clean-close termination +
+  unreachable-URL error path)._
 - [x] **5.8 `src/discover_gdm/`** — `GdmEntry` + `discover_local_servers`
   via raw `tokio::net::UdpSocket` multicast to 239.0.0.250:32414
   with HTTP/1.0 `M-SEARCH` payload. Dedup by Resource-Identifier.

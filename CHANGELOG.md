@@ -159,6 +159,43 @@ each breaking change is listed under **Breaking** in its release entry.
     place in the crate that bypasses the standard JSON-with-retry
     envelope.
 
+- **M5.7 (Alerts WebSocket)** — real-time monitoring of PMS events:
+  - `alerts::Alerts::connect(&server)` opens a WebSocket to
+    `/:/websockets/notifications`. Authentication is via the
+    `X-Plex-Token` query parameter — Plex's WS endpoint ignores
+    HTTP headers, so the standard `X-Plex-*` identity baked into
+    `HttpClient` doesn't apply here.
+  - `Alerts` implements `futures::Stream<Item=Result<AlertEvent>>`.
+    Frames that carry multiple inner notifications flatten so each
+    `.next().await` returns exactly one event.
+  - `AlertEvent` enum: `Playing`, `Timeline`, `Activity`,
+    `TranscodeSession` (with `TranscodeLifecycle::{Start, Update,
+    End}` discriminator), `Status`, `Reachability`, `Setting`,
+    `BackgroundProcessingQueue`, and `Unknown { kind, raw }` for
+    forward-compat.
+  - Per-variant DTOs (`PlayingNotification`, `TimelineEntry`,
+    `ActivityNotification`/`ActivityBody`,
+    `TranscodeSessionNotification`, `StatusNotification`,
+    `ReachabilityNotification`, `SettingNotification`,
+    `BackgroundProcessingQueueNotification`) cover the documented
+    fields. `TimelineEntry::state` follows Plex's documented state
+    table (0=created, 1=processing, 2=matching, 3=metadata
+    download, 4=metadata process, 5=done, 9=deleted).
+  - `Alerts::connect_with_url(ws_url)` — escape hatch for advanced
+    callers (e.g. tunneled PMS, custom WebSocket proxies) and the
+    integration-test path. Skips the PMS base-URL derivation.
+  - Reconnection: not wrapped in the crate. Documented as a
+    caller-driven loop using `client::retry_delay` (already pub).
+    Keeps the surface minimal and lets callers compose with
+    `tokio::select!` shutdown signals.
+  - Gated behind the `alerts` Cargo feature, which pulls in
+    `tokio-tungstenite` with `connect` + `rustls-tls-webpki-roots`.
+  - Integration tests stand up a `tokio::net::TcpListener` +
+    `accept_hdr_async` WS replica that records the handshake URI
+    (asserts the token + path are correct), emits a sequence of
+    typed frames, then closes cleanly — exercises the full
+    transport + decoder + stream wrapping end-to-end.
+
 - **M4.5 (PlexClient remote control)** — the second half of the
   playback story; completes the "create a queue, then tell a
   player to consume it" flow that python-plexapi users expect:

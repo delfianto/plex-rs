@@ -46,7 +46,7 @@ regex        = { version = "1", default-features = false, features = ["std", "pe
 
 # Optional feature deps
 axum         = { version = "0.7", optional = true, default-features = false, features = ["json", "tokio"] }
-tokio-tungstenite = { version = "0.24", optional = true, default-features = false, features = ["rustls-tls-webpki-roots"] }
+tokio-tungstenite = { version = "0.24", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
 # Note: GDM is NOT mDNS — see analysis/09-realtime-and-discovery.md.
 # Discovery is implemented with raw `tokio::net::UdpSocket` + HTTP/1.0 M-SEARCH;
 # no extra dependency required, so the `discovery` feature is a pure marker.
@@ -71,6 +71,8 @@ pretty_assertions = "1"
 rstest       = "0.21"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 tokio-test   = "0.4"
+tokio-tungstenite = { version = "0.24", default-features = false, features = ["handshake"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
 
 # Criterion benches are opt-in to avoid pulling them in for `cargo test`.
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
