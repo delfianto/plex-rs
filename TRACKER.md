@@ -356,8 +356,19 @@ Largest single trait-architecture investment.
     `DELETE /devices/<id>.xml`. quick-xml's serde adapter drives
     the XML parsing with `@attribute`-style renames. _9 unit
     tests + 3 wiremock integration tests._
-  - friends — pending.
-  - home — pending.
+  - **friends**: `MyPlexClient::friends()` lists shared accounts
+    via `GET /api/users/` (XML). `MyPlexUser` carries id, username,
+    title, email, thumb, home/restricted flags, allow_sync /
+    allow_channels / allow_camera_upload, and per-share access
+    token (Debug-redacted). `remove_friend(id)` via
+    `DELETE /api/friends/<id>`. _6 unit tests + 2 wiremock
+    integration tests._
+  - **home**: `MyPlexClient::home_users()` lists Plex Home
+    sub-accounts via `GET /api/home/users` (XML). `MyPlexHomeUser`
+    carries id, title, username, email, thumb, plus admin /
+    protected / restricted / guest flags. Mutation (add /
+    remove / restrict) deferred — admin-UI workflow with PIN
+    complications. _5 unit tests + 1 wiremock._
   - [-] **claim** — **OUT OF SCOPE.** A claim token is a one-shot
     credential generated to bind a fresh Plex Media Server install
     to a plex.tv account. It's used exactly once per server
