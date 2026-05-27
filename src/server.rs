@@ -11,8 +11,10 @@
 
 pub mod history;
 pub mod sessions;
+pub mod settings;
 pub use history::{HistoryEntry, HistoryQuery, HistoryStream};
 pub use sessions::{PlayState, PlayingSession, SessionPlayer, SessionUser, TranscodeSession};
+pub use settings::{EnumValues, Setting, SettingKind, SettingValue, Settings};
 
 use std::fmt;
 

@@ -248,7 +248,24 @@ Largest single trait-architecture investment.
   hits `DELETE <history_key>`. _9 unit tests + 6 wiremock integration
   tests (incl. cross-page pagination with header assertions, max_results
   cap, streaming, DELETE)._
-- [ ] **4.8 `src/server/settings.rs`** — `Settings` + `Setting`, two-phase commit via staging slot.
+- [x] **4.8 `src/server/settings.rs`** — `Settings` + `Setting`.
+  `PlexServer::settings()` returns a fully-loaded `Settings` snapshot
+  via `GET /:/prefs`. `Setting` carries id, label, summary, kind
+  (Text/Int/Double/Bool/Enum + Other for forward-compat),
+  default and current `SettingValue`, hidden/advanced/secure flags,
+  group name, and (for enum settings) `enum_values` as either a
+  flat `List` or a `Mapping` of `key:label` pairs. Mutation:
+  `set(server, id, value).await` writes one preference and reloads;
+  `set_many(server, updates).await` batches into one PUT. Client-side
+  validation rejects unknown ids, wrong-kind values, and
+  out-of-enum choices before issuing a network call. Two-phase
+  staging commit (python-plexapi's `_setValue` pattern) deferred
+  in favor of explicit single-write or explicit batch — composes
+  more cleanly with Rust's `await`-based ergonomics.
+  `Settings::all()`, `get(id)`, `group(name)`, `group_names()`
+  cover the read surface. _12 unit tests + 7 wiremock integration
+  tests (load, single set, batched set_many, all three client-side
+  validation paths, empty set_many)._
 - [ ] **4.9 `src/server/{butler,activities,updater,statistics,transcode,browse}.rs`** — long tail.
 
 ## M5 — Real-time / discovery / cloud catalogue / webhooks

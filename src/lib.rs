@@ -107,8 +107,9 @@ pub use crate::playback::{
     CreatePlayQueue, MediaType, PlayQueue, PlayQueueItem, PlexClient, RepeatMode,
 };
 pub use crate::server::{
-    HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,
-    ServerIdentity, SessionPlayer, SessionUser, TranscodeSession,
+    EnumValues, HistoryEntry, HistoryQuery, HistoryStream, PlayState, PlayingSession, PlexServer,
+    ServerIdentity, SessionPlayer, SessionUser, Setting, SettingKind, SettingValue, Settings,
+    TranscodeSession,
 };
 pub use crate::traits::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
