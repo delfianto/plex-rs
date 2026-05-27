@@ -18,7 +18,7 @@ use crate::media::video::MetadataDto;
 use crate::traits::{
     EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary, EditTags, EditTitle,
     EditYear, HasArtLock, HasArtUrl, HasCollections, HasGenres, HasLabels, HasMoods, HasPosterLock,
-    HasPosterUrl, HasStyles, PlayedUnplayed, PlexObject, Ratable,
+    HasPosterUrl, HasStyles, PlayedUnplayed, PlexObject, Ratable, Reload,
 };
 use crate::util::ids::RatingKey;
 
@@ -338,6 +338,28 @@ impl HasPosterUrl for Track {
     }
 }
 impl HasPosterLock for Track {}
+
+impl Reload for Artist {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_artist(self.section_ref.clone())
+    }
+}
+impl Reload for Album {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_album(self.section_ref.clone())
+    }
+}
+impl Reload for Track {
+    type Full = Self;
+    async fn reload(self) -> Result<Self> {
+        let dto = crate::traits::reload::fetch_metadata(&self).await?;
+        dto.into_track(self.section_ref.clone())
+    }
+}
 
 // -----------------------------------------------------------------------------
 // DTO conversions (on the shared MetadataDto from media::video).

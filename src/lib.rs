@@ -107,7 +107,7 @@ pub use crate::traits::{
     EditTagline, EditTags, EditTitle, EditYear, FieldValue, HasArtLock, HasArtUrl, HasCollections,
     HasCountries, HasDirectors, HasGenres, HasLabels, HasMoods, HasPosterLock, HasPosterUrl,
     HasProducers, HasRoles, HasStyles, HasThemeLock, HasThemeUrl, HasWriters, PlayedUnplayed,
-    PlexObject, Ratable,
+    PlexObject, Ratable, Reload,
 };
 pub use crate::uri::PlexUri;
 pub use crate::util::{

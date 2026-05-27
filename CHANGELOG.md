@@ -43,6 +43,26 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M3.2 (Reload trait)** — re-fetch a partial item with full
+  detail:
+  - `traits::Reload` — single `reload(self) -> Result<Self::Full>`
+    method (consumes `self` because the caller will replace their
+    previously-held partial). Associated type `Full` always equals
+    `Self` in this crate (no separate partial / full type — the
+    same struct carries an empty or populated `Vec<Media>` /
+    `Vec<Tag>` / etc. depending on which endpoint emitted it).
+  - Underlying request: `GET /library/metadata/<rating_key>`.
+  - Implemented on Movie / Show / Season / Episode / Artist /
+    Album / Track. Each impl calls the crate-private
+    `fetch_metadata` helper and dispatches into the appropriate
+    `into_*` conversion to re-build the leaf with the section ref
+    preserved.
+  - Listing endpoints (`/library/sections/<id>/all`, search,
+    recentlyAdded, …) return partial metadata; for tag/media/
+    marker access callers can now `.reload().await` to upgrade.
+  - `tests/m3_reload.rs` — 2 wiremock integration tests covering
+    partial→full upgrade and 404 → `Error::NotFound` propagation.
+
 - **M5.8 (GDM local discovery)** — zero-config PMS discovery on the
   LAN. Behind the `discovery` Cargo feature.
   - `discover_gdm::GdmEntry` — one discovered server. Carries

@@ -144,6 +144,11 @@ Largest single trait-architecture investment.
   Implemented on Movie/Show/Season/Episode/Artist/Album/Track.
   `Playable` (full play-control surface) defers to M4 alongside
   PlayQueue + PlexClient. _3 wiremock integration tests._
+- [x] **`src/traits/reload.rs`** — `Reload` trait with
+  `async fn reload(self) -> Result<Self::Full>`. Impl on Movie /
+  Show / Season / Episode / Artist / Album / Track. Re-fetches via
+  `GET /library/metadata/<rk>` and re-runs the appropriate `into_*`
+  conversion. _2 wiremock integration tests._
 - [x] **3.3 `src/traits/ratable.rs`** — `Ratable` with `rate(Option<f32>)`.
   PUT `/:/rate?key=<rk>&identifier=com.plexapp.plugins.library&rating=<v>`.
   Client-side range validation (0..=10), `-1` sentinel for clear.

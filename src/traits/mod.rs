@@ -20,6 +20,7 @@ pub mod edit_tags;
 pub mod images;
 pub mod played_unplayed;
 pub mod ratable;
+pub mod reload;
 
 pub use edit_field::{
     EditContentRating, EditField, EditOriginalTitle, EditSortTitle, EditStudio, EditSummary,
@@ -32,6 +33,7 @@ pub use edit_tags::{
 pub use images::{HasArtLock, HasArtUrl, HasPosterLock, HasPosterUrl, HasThemeLock, HasThemeUrl};
 pub use played_unplayed::PlayedUnplayed;
 pub use ratable::Ratable;
+pub use reload::Reload;
 
 use url::Url;
 
