@@ -43,6 +43,30 @@ each breaking change is listed under **Breaking** in its release entry.
   - `client` — `HttpClient`: JSON-first content negotiation, full-jitter
     exponential backoff retries, status-to-`Error` mapping, token-safe
     `Debug`.
+- **M5.1 (PIN sign-in)** — first plex.tv authentication flow:
+  - `auth::MyPlexPinLogin` — in-progress PIN sign-in. Built via
+    `start(client_identifier, identity)` (or
+    `start_with_client(http)` for callers who already have a
+    configured `HttpClient`). Holds the PIN id, the 4-char code
+    to show the user, and the expiry time.
+  - `MyPlexPinLogin::code()` — the code the user types at
+    `https://plex.tv/link`.
+  - `MyPlexPinLogin::poll()` — `Ok(Some(token))` once the user
+    has claimed the PIN, `Ok(None)` while still pending,
+    `Err(Error::Auth)` if the PIN expires before being claimed.
+  - `MyPlexPinLogin::wait(timeout, interval)` — convenience
+    polling loop. Sleeps `interval` between polls; surfaces
+    `Error::Auth` when `timeout` elapses or the PIN expires.
+  - Wire endpoints: `POST https://plex.tv/api/v2/pins?strong=true`
+    creates the PIN; `GET https://plex.tv/api/v2/pins/<id>` polls
+    for claim. Identity headers from the constructor are honored
+    on both calls — `X-Plex-Client-Identifier` must match between
+    create and poll (a known plex.tv pitfall).
+  - Wiremock integration tests skipped — the endpoint URL is
+    hard-coded; a future iteration will add a
+    `with_endpoint(base)` knob for test override. Unit tests
+    cover DTO parsing of both create and claimed responses.
+
 - **M4.3 (Sessions — list + stop)** — current-playback surface:
   - `server::sessions::PlayingSession` — one currently-playing
     session. Carries the played `LibraryItem`, view offset, plus

@@ -67,6 +67,7 @@
 // the features that need them. See `CLAUDE.md` §3.
 // -----------------------------------------------------------------------------
 
+pub mod auth;
 pub mod client;
 pub mod config;
 pub mod error;
@@ -80,6 +81,7 @@ pub mod uri;
 pub mod util;
 pub mod xml;
 
+pub use crate::auth::MyPlexPinLogin;
 pub use crate::client::HttpClient;
 pub use crate::config::{ClientConfig, ClientConfigBuilder};
 pub use crate::error::{Error, Result};

@@ -194,7 +194,11 @@ Largest single trait-architecture investment.
 
 ## M5 — Real-time / discovery / cloud catalogue / webhooks
 
-- [ ] **5.1 `src/auth/pin.rs`** — PIN flow typestate (analysis/11§9).
+- [~] **5.1 `src/auth/pin.rs`** — `MyPlexPinLogin` with start/poll/wait.
+  Plain struct (not typestate); typestate machine deferred (the three
+  states map cleanly to `Result<Option<PlexToken>>` from `poll()`).
+  Wiremock integration tests deferred pending a `with_endpoint(base)`
+  override for the plex.tv URL. _2 DTO unit tests._
 - [ ] **5.2 `src/auth/password.rs`** — password + 2FA state machine.
 - [ ] **5.3 `src/myplex/resources.rs`** — `MyPlexResource`, parallel connect race with TLS error surfacing.
 - [ ] **5.4 `src/myplex/{devices,friends,home,webhooks,claim,sonos}.rs`** — long tail.
