@@ -9,7 +9,7 @@
 //!   `PUT /library/sections/<sid>/all?id=<rk>&type=<n>&<field>[].tag.tag-=v1,v2&<field>.locked=<0|1>`
 //!   (note the trailing `-` on `tag-=`).
 //!
-//! See analysis/08 §3.4 for the canonical sigil. The "add" semantic
+//! The "add" semantic
 //! is **not** a single wire op — python-plexapi reads the current tag
 //! list, prepends, and emits a full replace. We expose `replace_tags`
 //! and `remove_tags` as primitives; per-family traits
@@ -86,7 +86,7 @@ pub trait EditTags: PlexObject {
     /// Remove the named tags from this item's `<field>` list.
     ///
     /// Wire form: `…?id=<rk>&type=<n>&<field>[].tag.tag-=v1,v2&<field>.locked=<0|1>`
-    /// (the trailing `-` on `tag-=` is the remove sigil — analysis/08 §3.4).
+    /// (the trailing `-` on `tag-=` is the remove sigil).
     ///
     /// # Errors
     /// Any transport [`crate::Error`] variant.

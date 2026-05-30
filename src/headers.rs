@@ -7,8 +7,7 @@
 //! `Client-Identifier`); requests against authenticated endpoints add
 //! `X-Plex-Token`.
 //!
-//! See [`analysis/02-base-and-http.md`](../analysis/02-base-and-http.md)
-//! §5 for the wire-level details. The set we emit by default matches
+//! The set we emit by default matches
 //! `python-plexapi/plexapi/config.py:53-68`'s `BASE_HEADERS`, with a
 //! few additions Plex documents on its developer portal:
 //!
@@ -102,9 +101,7 @@ pub const ACCEPT_JSON: &str = "application/json";
 /// every outgoing request.
 ///
 /// Plex relies on these values for device deduplication, sharing
-/// permissions, and webhook routing — see
-/// [`analysis/02-base-and-http.md`](../analysis/02-base-and-http.md)
-/// §5 for the wire details.
+/// permissions, and webhook routing.
 #[derive(Debug, Clone)]
 pub struct PlexIdentity {
     /// `X-Plex-Client-Identifier` — must be stable per install.

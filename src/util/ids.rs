@@ -78,8 +78,7 @@ impl FromStr for RatingKey {
 /// Plex play-queue identifier.
 ///
 /// Returned by `POST /playQueues` and referenced in subsequent client
-/// commands as a `containerKey` (see
-/// `analysis/07-playback-and-playlists.md` §3).
+/// commands as a `containerKey`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct PlayQueueId(pub u64);
@@ -127,8 +126,7 @@ impl FromStr for PlayQueueId {
 /// The Plex Media Server's stable identifier (40-char hex string).
 ///
 /// Returned by `GET /` as the `machineIdentifier` attribute. Used to
-/// route plex.tv resource picks and to form `server://` URIs (see
-/// `analysis/07-playback-and-playlists.md` §8).
+/// route plex.tv resource picks and to form `server://` URIs.
 ///
 /// Stored as a `String` rather than 20 raw bytes because Plex itself
 /// transmits the value as a hex string; round-tripping through bytes
@@ -193,8 +191,7 @@ impl FromStr for MachineIdentifier {
 ///
 /// This is the value sent in the `X-Plex-Client-Identifier` header.
 /// Plex uses it to deduplicate auth sessions, devices, and webhooks.
-/// **It must be stable per install** — see
-/// `analysis/02-base-and-http.md` §5 and the warning in
+/// **It must be stable per install** — see the warning in
 /// `CLAUDE.md` §8.
 ///
 /// For ephemeral or test use, [`ClientIdentifier::generated`] returns

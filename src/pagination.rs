@@ -2,9 +2,7 @@
 //!
 //! Plex Media Server paginates listing responses via two request
 //! headers — **not** query parameters as the casual reader might
-//! expect (see [`analysis/01-openapi-overview.md`](../analysis/01-openapi-overview.md)
-//! §4.2 and [`analysis/11-rust-mapping-recommendations.md`](../analysis/11-rust-mapping-recommendations.md)
-//! §4.3):
+//! expect:
 //!
 //! | Header                       | Meaning                              |
 //! | ---------------------------- | ------------------------------------ |

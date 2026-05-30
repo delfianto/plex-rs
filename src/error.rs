@@ -6,8 +6,7 @@
 //! [`reqwest::Error`].
 //!
 //! The variants intentionally mirror the categories surfaced by
-//! `python-plexapi`'s exception hierarchy
-//! (`analysis/02-base-and-http.md` §6) but use typed status codes and
+//! `python-plexapi`'s exception hierarchy but use typed status codes and
 //! `#[from]` conversions rather than string sniffing.
 
 use std::time::Duration;
@@ -31,8 +30,7 @@ pub enum Error {
 
     /// The server returned an HTTP status that does not map to a more
     /// specific variant. `message` is the response body verbatim (Plex
-    /// often returns short HTML stubs — see
-    /// `analysis/01-openapi-overview.md` §4.4).
+    /// often returns short HTML stubs).
     #[error("plex api error {status}: {message}")]
     Api {
         /// HTTP status code returned by the server.
@@ -69,7 +67,7 @@ pub enum Error {
     ///
     /// Distinct from [`Unauthorized`](Error::Unauthorized) so callers
     /// can distinguish "no/bad credentials" from "credentials OK but
-    /// 2FA gate". See `analysis/03-myplex-and-auth.md` §2.3.
+    /// 2FA gate".
     #[error("two-factor authentication required")]
     TwoFactorRequired,
 
@@ -113,7 +111,7 @@ impl Error {
     ///
     /// Bodies are truncated at [`Self::MAX_BODY_LEN`] bytes to keep
     /// `Display` impls readable; Plex's error bodies are short HTML
-    /// stubs in practice (see `analysis/01-openapi-overview.md` §4.4).
+    /// stubs in practice.
     #[must_use]
     pub fn from_status(status: http::StatusCode, body: &str, path: &str) -> Self {
         let trimmed = if body.len() > Self::MAX_BODY_LEN {
@@ -147,8 +145,7 @@ impl Error {
     /// Returns `true` when the error is plausibly transient and the
     /// caller can retry after a backoff.
     ///
-    /// Used by `HttpClient`'s retry middleware; see
-    /// `analysis/11-rust-mapping-recommendations.md` §4.8.
+    /// Used by `HttpClient`'s retry middleware.
     #[must_use]
     pub fn is_retryable(&self) -> bool {
         match self {

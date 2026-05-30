@@ -27,7 +27,7 @@ pub const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 pub const DEFAULT_MAX_RETRIES: u32 = 3;
 
 /// Default base backoff between retries; the actual delay is
-/// `base * 2^attempt * jitter` per `analysis/11` §4.8.
+/// `base * 2^attempt * jitter`.
 pub const DEFAULT_RETRY_BASE_DELAY: Duration = Duration::from_millis(250);
 
 /// Default ceiling on a single retry delay.

@@ -5,20 +5,18 @@
 //! `Accept: application/json` negotiation, status-to-[`Error`] mapping,
 //! and retry/backoff exactly once.
 //!
-//! Key design points (cross-references into the analysis docs):
+//! Key design points:
 //!
 //! - **JSON-first content negotiation** — every request carries
 //!   `Accept: application/json` by default; XML-only endpoints opt out
 //!   via the dedicated `get_bytes` family.
-//!   (`analysis/01-openapi-overview.md` §1.)
 //! - **Status mapping** — non-2xx responses are folded into
 //!   [`Error`] variants by [`Error::from_status`].
-//!   (`analysis/02-base-and-http.md` §6.)
 //! - **Retry with full-jitter exponential backoff** —
 //!   `delay = rand([0, base * 2^attempt])` capped at `retry_max_delay`.
 //!   Only retryable kinds (timeouts, transient connects, 5xx, 408, 425,
-//!   429) trigger a retry. (`analysis/11-rust-mapping-recommendations.md`
-//!   §4.8 — added on top of python-plexapi which has no retry layer.)
+//!   429) trigger a retry. (Added on top of python-plexapi which has no
+//!   retry layer.)
 //! - **Token redaction** — the [`HttpClient`]'s `Debug` impl never prints
 //!   the token; tracing spans elide URL `X-Plex-Token` query parameters.
 //!

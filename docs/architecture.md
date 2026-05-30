@@ -222,8 +222,7 @@ which has no retry layer.
 ## Trait architecture (M3)
 
 The metadata-edit surface uses **extension traits per capability**
-rather than one monolithic interface. Decision documented in
-`analysis/11` §5; outcome:
+rather than one monolithic interface. Outcome:
 
 ```
 PlexObject                              ← supertrait (rating_key, type_id, section_ref)

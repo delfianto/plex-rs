@@ -1,7 +1,6 @@
 //! Capability traits exposed by domain leaf types.
 //!
-//! Following the architecture decision in
-//! `analysis/11-rust-mapping-recommendations.md` §5 — explicit
+//! Following the architecture decision to use explicit
 //! extension traits per capability (Option B) rather than a single
 //! monolithic interface. Each leaf type (`Movie`, `Episode`, …)
 //! implements the subset of traits that apply to it; pattern-match
@@ -62,8 +61,7 @@ pub trait PlexObject: Send + Sync {
     /// Borrow the owning library-section back-reference. Edit traits
     /// use this to construct
     /// `PUT /library/sections/<section_id>/all?...` URLs — Plex
-    /// dispatches edits through the section, not the item itself
-    /// (analysis/11 §2.4).
+    /// dispatches edits through the section, not the item itself.
     fn section_ref(&self) -> &LibrarySectionRef;
 
     /// This object's primary [`RatingKey`].

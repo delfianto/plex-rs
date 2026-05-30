@@ -2,9 +2,7 @@
 //!
 //! Plex uses URI strings as opaque references in query parameters and
 //! as the persisted `content` field on smart playlists and
-//! collections. From the inventory in
-//! [`analysis/07-playback-and-playlists.md`](../analysis/07-playback-and-playlists.md)
-//! §8 there are seven distinct shapes. [`PlexUri`] models all of
+//! collections. There are seven distinct shapes. [`PlexUri`] models all of
 //! them as a typed enum so the wire form can be discriminated at
 //! parse time and reconstructed via [`Display`](fmt::Display) without losing
 //! round-trip stability.

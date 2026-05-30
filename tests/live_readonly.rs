@@ -430,12 +430,22 @@ async fn server_statistics() {
         return;
     };
 
-    // `/statistics/*` is frequently NOT exposed through reverse proxies — a
-    // blocked path returns a plain HTML 404 (→ `Error::NotFound`) rather than
-    // a Plex error envelope. Treat that as a skip: reachability is a property
-    // of the deployment, while the parser is what these assertions cover.
-    // Hours granularity (`4`) keeps bandwidth bounded and is a timespan that
-    // endpoint supports (unlike `6`=seconds, which only resources aggregates).
+    // The dashboard statistics endpoints (`/statistics/bandwidth`,
+    // `/statistics/resources`) are **Plex Pass features**: PMS only mounts
+    // those routes for an account with an active subscription and otherwise
+    // 404s them as unknown routes (verified — the 404 carries `X-Plex-Protocol`
+    // and matches a bogus path, so it is PMS itself, not a proxy). The paths
+    // the crate builds are correct and byte-identical to python-plexapi's, so
+    // when there is no Plex Pass we skip rather than fail.
+    // See <https://support.plex.tv/articles/200871837-status-and-dashboard/>.
+    if !server.identity().my_plex_subscription {
+        eprintln!("[live] no active Plex Pass — /statistics/* is subscription-gated, skipping");
+        return;
+    }
+
+    // Hours granularity (`4`) keeps bandwidth bounded; it is a timespan the
+    // bandwidth endpoint supports (unlike `6`=seconds, which only the
+    // resources endpoint aggregates). Tolerate NotFound defensively.
     match server
         .bandwidth_stats(&BandwidthOptions::default().with_timespan(4))
         .await
@@ -447,7 +457,7 @@ async fn server_statistics() {
             eprintln!("[live] {} bandwidth sample(s)", bandwidth.len());
         }
         Err(Error::NotFound { .. }) => {
-            eprintln!("[live] /statistics/bandwidth not exposed (reverse proxy?) — skipping");
+            eprintln!("[live] /statistics/bandwidth unavailable — skipping");
         }
         Err(e) => panic!("GET /statistics/bandwidth: {e}"),
     }
@@ -463,7 +473,7 @@ async fn server_statistics() {
             eprintln!("[live] {} resource sample(s)", resources.len());
         }
         Err(Error::NotFound { .. }) => {
-            eprintln!("[live] /statistics/resources not exposed (reverse proxy?) — skipping");
+            eprintln!("[live] /statistics/resources unavailable — skipping");
         }
         Err(e) => panic!("GET /statistics/resources: {e}"),
     }
