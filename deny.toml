@@ -40,6 +40,7 @@ allow = [
     "Unlicense",
     "BSL-1.0",
     "OpenSSL", # only pulled in via the optional native-tls feature
+    "CDLA-Permissive-2.0", # webpki-roots: Mozilla CA root store (permissive data license)
 ]
 # Reject GPL/AGPL family.
 exceptions = []
@@ -53,13 +54,21 @@ wildcards         = "deny"
 highlight         = "all"
 allow             = []
 deny = [
-    # We do not want a synchronous reqwest path in this crate.
-    { name = "reqwest", wrappers = [], features = ["blocking"] },
-    # OpenSSL is opt-in via the native-tls feature only.
-    { name = "openssl-sys", wrappers = ["native-tls", "reqwest"] },
+    # OpenSSL is opt-in via the native-tls feature only. openssl-sys has two
+    # direct parents in the graph — `native-tls` and the `openssl` crate — and
+    # cargo-deny requires every direct parent to be an allowed wrapper.
+    { name = "openssl-sys", wrappers = ["native-tls", "openssl"] },
 ]
 skip       = []
 skip-tree  = []
+
+# We do not want a synchronous reqwest path in this crate. Feature bans use
+# their own [[bans.features]] table — a `features` key on a `deny` entry is
+# not valid cargo-deny config (CLAUDE.md §5: "reqwest::blocking is forbidden").
+[[bans.features]]
+crate  = "reqwest"
+deny   = ["blocking"]
+reason = "this crate is fully async; the synchronous reqwest::blocking API is forbidden (CLAUDE.md §5)"
 
 # ----------------------------------------------------------------------------
 # Sources — only crates.io and well-known git hosts.
