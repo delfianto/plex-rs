@@ -108,7 +108,7 @@ struct RootContainerDto {
     #[serde(default)]
     allow_sharing: Option<PlexBool>,
     #[serde(default)]
-    livetv: Option<String>,
+    livetv: Option<FlexString>,
     #[serde(default)]
     updated_at: Option<i64>,
 }
@@ -147,6 +147,31 @@ impl PlexBool {
 /// the same flexible-boolean parser without duplicating it.
 pub(crate) type PlexBoolField = PlexBool;
 
+/// A field Plex serialises as either a JSON string (`"7"`) or a JSON
+/// number (`7`), depending on server version and endpoint (PMS 1.43+
+/// emits the root `livetv` flag as a bare number). Normalised to
+/// `String` so the public API stays stable across both wire forms.
+///
+/// `i64` (not `serde_json::Number`) is used for the numeric arm because
+/// this type is nested inside the `#[serde(untagged)]` `RootEnvelope`,
+/// and `serde_json::Number`/`Value` do not round-trip through serde's
+/// untagged content buffer.
+#[derive(Debug, Clone, Deserialize)]
+#[serde(untagged)]
+pub(crate) enum FlexString {
+    Str(String),
+    Int(i64),
+}
+
+impl FlexString {
+    pub(crate) fn into_string(self) -> String {
+        match self {
+            Self::Str(s) => s,
+            Self::Int(n) => n.to_string(),
+        }
+    }
+}
+
 impl ServerIdentity {
     fn from_dto(dto: RootContainerDto) -> Result<Self> {
         Ok(Self {
@@ -161,7 +186,7 @@ impl ServerIdentity {
             my_plex_subscription: dto.my_plex_subscription.is_some_and(|b| b.to_bool()),
             allow_media_deletion: dto.allow_media_deletion.is_some_and(|b| b.to_bool()),
             allow_sharing: dto.allow_sharing.is_some_and(|b| b.to_bool()),
-            livetv: dto.livetv,
+            livetv: dto.livetv.map(FlexString::into_string),
             updated_at: dto.updated_at,
         })
     }

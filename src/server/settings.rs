@@ -444,9 +444,11 @@ struct SettingDto {
     summary: String,
     #[serde(default, rename = "type")]
     kind: String,
-    #[serde(default)]
+    // PMS 1.43+ emits bool/int/double values as native JSON booleans/numbers
+    // rather than quoted strings; normalise both wire forms to a String.
+    #[serde(default, deserialize_with = "crate::xml::de_string_flex")]
     default: String,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::xml::de_string_flex")]
     value: String,
     #[serde(default)]
     hidden: bool,

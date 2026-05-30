@@ -24,6 +24,64 @@ use serde_json::Value;
 
 use crate::error::{Error, Result};
 
+/// Deserialize an optional `u32` that Plex may serialise as either a JSON
+/// number (`1`) or a JSON string (`"1"`).
+///
+/// Plex is inconsistent across endpoints: library listings emit
+/// `librarySectionID` as a number, but `/status/sessions/history` emits the
+/// very same field as a string. This accepts both forms (and `null` /
+/// absence as `None`) and rejects anything non-numeric.
+pub(crate) fn de_opt_u32_flex<'de, D>(de: D) -> std::result::Result<Option<u32>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum NumOrStr {
+        Num(u32),
+        Str(String),
+    }
+
+    Ok(match Option::<NumOrStr>::deserialize(de)? {
+        None => None,
+        Some(NumOrStr::Num(n)) => Some(n),
+        Some(NumOrStr::Str(s)) => Some(s.trim().parse().map_err(serde::de::Error::custom)?),
+    })
+}
+
+/// Deserialize a field Plex may emit as a JSON string, boolean, or number
+/// into a `String`.
+///
+/// `/:/prefs` is the worst offender: PMS 1.43+ emits the `value` / `default`
+/// of `bool` settings as bare JSON booleans and of `int` / `double` settings
+/// as bare numbers, while older servers quote everything. Normalising to a
+/// `String` lets the downstream typed parse (per the setting's declared kind)
+/// stay unchanged across both wire forms. `null` / absence becomes `""`.
+pub(crate) fn de_string_flex<'de, D>(de: D) -> std::result::Result<String, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrPrimitive {
+        Str(String),
+        Bool(bool),
+        // `i64` / `f64` (not `serde_json::Number`) so the variants round-trip
+        // through serde's untagged content buffer; `Str` is tried first so a
+        // quoted numeric like `"60"` stays verbatim rather than being reparsed.
+        Int(i64),
+        Float(f64),
+    }
+
+    Ok(match Option::<StringOrPrimitive>::deserialize(de)? {
+        None => String::new(),
+        Some(StringOrPrimitive::Str(s)) => s,
+        Some(StringOrPrimitive::Bool(b)) => b.to_string(),
+        Some(StringOrPrimitive::Int(n)) => n.to_string(),
+        Some(StringOrPrimitive::Float(f)) => f.to_string(),
+    })
+}
+
 // -----------------------------------------------------------------------------
 // MediaContainerMeta — the well-known scalar fields every container carries.
 // -----------------------------------------------------------------------------
@@ -81,7 +139,7 @@ pub struct MediaContainerMeta {
     pub title2: Option<String>,
 
     /// Library section integer key for child items, when applicable.
-    #[serde(default)]
+    #[serde(default, deserialize_with = "crate::xml::de_opt_u32_flex")]
     pub library_section_id: Option<u32>,
 
     /// Library section title.

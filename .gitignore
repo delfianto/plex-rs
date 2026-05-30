@@ -27,6 +27,11 @@ target
 # Per-user Claude Code state — committed settings live in .claude/settings.json
 /.claude/settings.local.json
 
+# Local secrets — live test credentials (Plex token + base URL). Never commit.
+.env
+.env.*
+!.env.example
+
 # Local OS files
 .DS_Store
 

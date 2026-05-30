@@ -59,7 +59,7 @@ async fn butler_tasks_returns_scheduled_jobs() {
     Mock::given(method("GET"))
         .and(path("/butler"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
-            "MediaContainer": {
+            "ButlerTasks": {
                 "ButlerTask": [{
                     "name": "BackupDatabase",
                     "title": "Backup",

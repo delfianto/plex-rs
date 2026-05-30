@@ -84,7 +84,14 @@ async fn resources_parses_and_returns_entries() {
     assert!(resources[0].is_server());
     assert!(resources[0].owned);
     assert_eq!(resources[0].connections.len(), 1);
-    assert_eq!(resources[0].access_token.expose(), "per-resource-token");
+    assert_eq!(
+        resources[0]
+            .access_token
+            .as_ref()
+            .expect("owned server resource has a per-resource token")
+            .expose(),
+        "per-resource-token"
+    );
 }
 
 #[tokio::test]
