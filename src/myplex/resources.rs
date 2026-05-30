@@ -88,11 +88,13 @@ pub struct MyPlexResource {
     /// `true` when the server has DNS rebinding protection enabled
     /// (forces the `*.plex.direct` hostnames over raw IPs).
     pub dns_rebinding_protection: bool,
-    /// Per-resource access token for this resource. Distinct from
-    /// the account-level `MyPlex` token — Plex mints a separate
-    /// token per resource so a shared server can be revoked without
-    /// invalidating the user's main session.
-    pub access_token: PlexToken,
+    /// Per-resource access token for this resource, when plex.tv mints
+    /// one. Distinct from the account-level `MyPlex` token — Plex mints a
+    /// separate token per resource so a shared server can be revoked
+    /// without invalidating the user's main session. `None` for resources
+    /// plex.tv lists without a token (e.g. players you merely control,
+    /// or other accounts' shared resources).
+    pub access_token: Option<PlexToken>,
     /// Public IP address plex.tv last saw the resource on.
     pub public_address: Option<String>,
     /// All connection URIs plex.tv knows about for this resource.
@@ -170,9 +172,17 @@ impl MyPlexResource {
                 resource: format!("no usable connections for resource '{}'", self.name),
             });
         }
+        let Some(token) = self.access_token.clone() else {
+            return Err(Error::NotFound {
+                resource: format!(
+                    "resource '{}' has no access token to connect with",
+                    self.name
+                ),
+            });
+        };
         let mut probes = FuturesUnordered::new();
         for raw in urls {
-            let token = self.access_token.clone();
+            let token = token.clone();
             let identifier = opts.client_identifier.clone();
             let identity = opts.identity.clone();
             let per_attempt = opts.per_attempt_timeout;
@@ -195,7 +205,11 @@ impl MyPlexResource {
     /// Crate-private constructor used by [`crate::myplex::MyPlexClient`].
     pub(crate) fn from_dto(dto: MyPlexResourceDto) -> Result<Self> {
         let client_identifier = MachineIdentifier::new(dto.client_identifier)?;
-        let access_token = PlexToken::new(dto.access_token)?;
+        let access_token = dto
+            .access_token
+            .filter(|s| !s.is_empty())
+            .map(PlexToken::new)
+            .transpose()?;
         let provides = dto
             .provides
             .split(',')
@@ -409,7 +423,10 @@ pub(crate) struct MyPlexResourceDto {
     dns_rebinding_protection: Option<bool>,
     #[serde(default)]
     public_address: Option<String>,
-    access_token: String,
+    // Null/absent for resources plex.tv lists without a per-resource token
+    // (players, other accounts' shared resources).
+    #[serde(default)]
+    access_token: Option<String>,
     #[serde(default)]
     connections: Vec<ResourceConnectionDto>,
 }

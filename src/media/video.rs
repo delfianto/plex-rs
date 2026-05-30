@@ -551,7 +551,11 @@ pub(crate) struct MetadataDto {
     /// `librarySectionID` carried on every playlist item — used by
     /// [`super::playlist::Playlist::items`] to construct the right
     /// section back-reference for each returned leaf.
-    #[serde(default, rename = "librarySectionID")]
+    #[serde(
+        default,
+        rename = "librarySectionID",
+        deserialize_with = "crate::xml::de_opt_u32_flex"
+    )]
     pub(crate) library_section_id: Option<u32>,
 }
 
@@ -584,6 +588,16 @@ impl MetadataDto {
 fn parse_rating_key(s: &str, field: &str) -> Result<RatingKey> {
     s.parse::<RatingKey>()
         .map_err(|e| Error::Config(format!("metadata.{field} not numeric: {e}")))
+}
+
+/// Derive a [`RatingKey`] from a `/library/metadata/<N>` key path.
+///
+/// History (and some hub) responses omit `parentRatingKey` /
+/// `grandparentRatingKey` but still carry the corresponding `parentKey` /
+/// `grandparentKey` path, whose trailing segment is the same numeric id.
+/// Returns `None` when the last segment is not a valid rating key.
+fn rating_key_from_key_path(key: &str) -> Option<RatingKey> {
+    key.rsplit('/').next()?.parse::<RatingKey>().ok()
 }
 
 impl MetadataDto {
@@ -626,6 +640,11 @@ impl MetadataDto {
             .as_deref()
             .map(|s| parse_rating_key(s, "parentRatingKey"))
             .transpose()?
+            .or_else(|| {
+                self.parent_key
+                    .as_deref()
+                    .and_then(rating_key_from_key_path)
+            })
             .ok_or_else(|| Error::Config("season missing parentRatingKey".to_owned()))?;
         Ok(Season {
             rating_key,
@@ -669,12 +688,22 @@ impl MetadataDto {
             .as_deref()
             .map(|s| parse_rating_key(s, "parentRatingKey"))
             .transpose()?
+            .or_else(|| {
+                self.parent_key
+                    .as_deref()
+                    .and_then(rating_key_from_key_path)
+            })
             .ok_or_else(|| Error::Config("episode missing parentRatingKey".to_owned()))?;
         let grandparent_rating_key = self
             .grandparent_rating_key
             .as_deref()
             .map(|s| parse_rating_key(s, "grandparentRatingKey"))
             .transpose()?
+            .or_else(|| {
+                self.grandparent_key
+                    .as_deref()
+                    .and_then(rating_key_from_key_path)
+            })
             .ok_or_else(|| Error::Config("episode missing grandparentRatingKey".to_owned()))?;
         let media = self
             .media

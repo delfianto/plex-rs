@@ -321,9 +321,11 @@ impl From<ActivityDto> for Activity {
     }
 }
 
+// Unlike most PMS endpoints, `/butler` is *not* wrapped in a
+// `MediaContainer` — the JSON root element is `ButlerTasks` itself.
 #[derive(Debug, Deserialize)]
 struct ButlerEnvelope {
-    #[serde(rename = "MediaContainer")]
+    #[serde(rename = "ButlerTasks")]
     container: ButlerContainer,
 }
 
@@ -537,7 +539,7 @@ mod tests {
     #[test]
     fn butler_task_dto_round_trip() {
         let env: ButlerEnvelope = serde_json::from_value(serde_json::json!({
-            "MediaContainer": {
+            "ButlerTasks": {
                 "ButlerTask": [{
                     "name": "BackupDatabase",
                     "title": "Backup",
@@ -646,7 +648,7 @@ mod tests {
             serde_json::from_value(serde_json::json!({"MediaContainer": {}})).unwrap();
         assert!(act.container.activities.is_empty());
         let butler: ButlerEnvelope =
-            serde_json::from_value(serde_json::json!({"MediaContainer": {}})).unwrap();
+            serde_json::from_value(serde_json::json!({"ButlerTasks": {}})).unwrap();
         assert!(butler.container.butler_tasks.is_empty());
         let upd: UpdaterEnvelope =
             serde_json::from_value(serde_json::json!({"MediaContainer": {}})).unwrap();

@@ -9,6 +9,30 @@ each breaking change is listed under **Breaking** in its release entry.
 
 ## [Unreleased]
 
+### Breaking
+- `myplex`: `MyPlexResource::access_token` is now `Option<PlexToken>` (was
+  `PlexToken`). plex.tv returns `accessToken: null` for resources it lists
+  without a per-resource token (players you only control, other accounts'
+  shared resources); the non-optional type panicked the `resources()` parser
+  on real accounts. `connect()` now returns `Error::NotFound` for a tokenless
+  resource. Mirrors the existing `MyPlexUser::access_token` shape.
+
+### Fixed
+- Real-data parser robustness, surfaced by the live read-only integration
+  suite (`tests/live_readonly.rs`) running against PMS 1.43.2:
+  - `server::settings`: `/:/prefs` parses `value`/`default` whether emitted as
+    quoted strings (older PMS) or native JSON booleans/numbers (PMS 1.43+).
+  - `server::admin`: `/butler` is parsed from its actual `ButlerTasks` JSON
+    root rather than a (non-existent) `MediaContainer` wrapper, so
+    `butler_tasks()` no longer fails on every real server.
+  - `server`: the root `livetv` flag parses whether emitted as a JSON string
+    or a bare number (PMS 1.43+).
+  - `media`/`xml`: `librarySectionID` parses as either a number or a string
+    (it differs between library listings and `/status/sessions/history`);
+    season/episode rating keys are derived from `parentKey`/`grandparentKey`
+    path segments when history responses omit the explicit
+    `parentRatingKey`/`grandparentRatingKey`.
+
 ### Added
 - Project bootstrap: `Cargo.toml`, `rust-toolchain.toml`, `deny.toml`, CI
   workflow, lint baseline in `src/lib.rs`.

@@ -58,6 +58,7 @@ native-tls       = ["reqwest/native-tls"]
 webhook-axum     = ["dep:axum"]
 discovery        = []                                # GDM uses raw UDP — no extra deps
 alerts           = ["dep:tokio-tungstenite"]         # WebSocket alert stream
+live-tests       = []                                # opt-in tests against a real PMS (see tests/live_readonly.rs); never run in CI
 
 # ---------------------------------------------------------------------------
 # Dev / test dependencies
