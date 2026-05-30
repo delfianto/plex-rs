@@ -1,7 +1,7 @@
 //! GDM — local-network Plex Media Server discovery.
 //!
 //! GDM (G'Day Mate) is Plex's local discovery protocol. **It is not
-//! mDNS** (analysis/09 §2): it's raw UDP carrying an HTTP/1.0
+//! mDNS**: it's raw UDP carrying an HTTP/1.0
 //! `M-SEARCH` request to a known multicast group.
 //!
 //! - **Server discovery** (this module): client sends a UDP packet

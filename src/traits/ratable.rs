@@ -16,9 +16,8 @@ const CLEAR_SENTINEL: f32 = -1.0;
 /// Set or clear the user's personal rating for an item.
 ///
 /// Implementors are leaf types whose metadata carries a `rating`
-/// field on the wire (Movie / Show / Episode / Album / Track). Per
-/// the matrix in `analysis/08-mixins-and-traits.md`, photos and
-/// photoalbums also accept ratings but are not implemented in M3.3
+/// field on the wire (Movie / Show / Episode / Album / Track). Photos
+/// and photoalbums also accept ratings but are not implemented in M3.3
 /// because the read side doesn't yet surface `rating` on them.
 pub trait Ratable: PlexObject {
     /// Set the user's rating to `value`, or clear it when `None`.

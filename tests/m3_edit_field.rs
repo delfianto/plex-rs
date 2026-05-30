@@ -65,8 +65,8 @@ async fn setup() -> (MockServer, plex_rs::Movie) {
 #[tokio::test]
 async fn edit_title_routes_through_section_endpoint() {
     let (server, movie) = setup().await;
-    // The edit endpoint is on the SECTION, not the metadata item — see
-    // analysis/11 §2.4. The id, type, field.value, and field.locked
+    // The edit endpoint is on the SECTION, not the metadata item.
+    // The id, type, field.value, and field.locked
     // pairs are all in the query string.
     Mock::given(method("PUT"))
         .and(path("/library/sections/1/all"))

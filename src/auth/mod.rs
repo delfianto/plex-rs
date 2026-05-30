@@ -1,7 +1,6 @@
 //! plex.tv authentication flows.
 //!
-//! Three flows are documented in
-//! [`analysis/03-myplex-and-auth.md`](../../analysis/03-myplex-and-auth.md):
+//! Three flows are supported:
 //!
 //! - **Direct token** — caller already has an `X-Plex-Token`; no
 //!   sign-in needed. Pass it to [`crate::PlexServer::connect`].

@@ -5,9 +5,6 @@
 //! the connection and harvest the server's [`ServerIdentity`] (machine
 //! identifier, version, friendly name, capabilities). All further
 //! method calls reuse the cached [`HttpClient`] and resolved base URL.
-//!
-//! See [`analysis/04-plexserver.md`](../analysis/04-plexserver.md) for
-//! the full set of endpoints this surface is expected to grow into.
 
 pub mod admin;
 pub mod history;

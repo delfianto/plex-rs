@@ -5,9 +5,6 @@
 //! list as typed [`LibrarySection`] values; each one carries a
 //! [`LibrarySectionRef`] that future mutation traits can use to call
 //! back into the right `/library/sections/<id>/...` endpoint.
-//!
-//! See [`analysis/05-library-and-search.md`](../analysis/05-library-and-search.md)
-//! for the python-plexapi parity baseline.
 
 pub mod filters;
 pub mod smart_filter;
@@ -120,8 +117,7 @@ impl fmt::Display for SectionKind {
 
 /// Back-reference an editable leaf needs to reach its parent section.
 ///
-/// Per [`analysis/11-rust-mapping-recommendations.md`](../analysis/11-rust-mapping-recommendations.md)
-/// §2.4, the PMS edit endpoint is
+/// The PMS edit endpoint is
 /// `PUT /library/sections/<sectionKey>/all?id=<ratingKey>…`, not the
 /// intuitive `/library/metadata/<ratingKey>?…`. Every editable leaf
 /// type therefore carries a `LibrarySectionRef` so it can construct
@@ -303,7 +299,7 @@ impl LibrarySection {
     /// Items the user has never finished.
     ///
     /// Calls `GET /library/sections/<id>/unwatched`. Behaviour
-    /// depends on section kind — see analysis/05 §11.
+    /// depends on section kind.
     ///
     /// # Errors
     /// Any transport [`Error`].

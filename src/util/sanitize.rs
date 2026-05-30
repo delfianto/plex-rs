@@ -6,9 +6,7 @@
 //! a fixed ordered list of regex substitutions producing a body with
 //! every secret replaced by a deterministic placeholder.
 //!
-//! The rule list is the 15-row table in
-//! [`analysis/10-testing-strategy.md`](../../analysis/10-testing-strategy.md)
-//! §9. Order matters: rules that match wider patterns (e.g. URLs)
+//! Order matters: rules that match wider patterns (e.g. URLs)
 //! must run before rules that match narrower sub-strings, otherwise
 //! the wider rule never sees a clean input.
 //!

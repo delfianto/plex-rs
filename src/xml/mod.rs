@@ -6,8 +6,7 @@
 //! name varies by endpoint (`Video`, `Directory`, `Metadata`, `Hub`,
 //! `Setting`, `Provider`, …).
 //!
-//! From [`analysis/01-openapi-overview.md`](../../analysis/01-openapi-overview.md)
-//! §4.6 the 12 `mediaContainerWith*` schemas in the official
+//! The 12 `mediaContainerWith*` schemas in the official
 //! `OpenAPI` spec collapse to **one** generic envelope in Rust. This module
 //! provides that generic plus helpers to parse the JSON body Plex
 //! returns when `Accept: application/json` is sent.
@@ -16,8 +15,7 @@
 //! speak JSON) is **not** modelled here — it lives in `xml::dto::*`
 //! per surface area, since `quick_xml::de` cannot generically
 //! dispatch on dynamically-named child elements without a custom
-//! `Deserialize` impl. The JSON-first design follows the
-//! recommendation in `analysis/01` §1.
+//! `Deserialize` impl.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

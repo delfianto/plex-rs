@@ -1,8 +1,8 @@
 //! [`EditField`] and field-specific traits.
 //!
 //! Plex's metadata edit endpoint is the somewhat-surprising
-//! `PUT /library/sections/<section_id>/all?id=<rating_key>&type=<N>&<field>.value=<v>&<field>.locked=<0|1>`
-//! (analysis/11 §2.4). One request emits *one* `<field>.value` /
+//! `PUT /library/sections/<section_id>/all?id=<rating_key>&type=<N>&<field>.value=<v>&<field>.locked=<0|1>`.
+//! One request emits *one* `<field>.value` /
 //! `<field>.locked` pair — multiple-field edits chain pairs in the
 //! same query string. The `LibrarySectionRef` carried on every leaf
 //! object provides the section-id back-link the URL needs.

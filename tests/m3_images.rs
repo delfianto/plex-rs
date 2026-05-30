@@ -84,7 +84,7 @@ async fn poster_url_resolves_against_base() {
 async fn lock_art_emits_art_locked_one() {
     let (server, movie) = setup().await;
     // Lock toggles emit JUST `<field>.locked=<0|1>` — no `.value`
-    // pair (analysis/08 §6).
+    // pair.
     Mock::given(method("PUT"))
         .and(path("/library/sections/1/all"))
         .and(query_param("id", "100"))

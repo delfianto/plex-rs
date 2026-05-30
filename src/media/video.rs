@@ -3,7 +3,7 @@
 //! Currently models [`Movie`]. Show / Season / Episode / Clip / Extra
 //! land in M2.2 — they'll share the common-video field set that
 //! `python-plexapi/plexapi/video.py:Video._loadData` populates on every
-//! video class (analysis/06 §B).
+//! video class.
 
 use serde::Deserialize;
 use url::Url;
@@ -454,7 +454,7 @@ pub(crate) struct MetadataDto {
     pub(crate) rating_critic: Option<f32>,
     // Note: Plex emits the critic field as `ratingCritic`, not
     // `criticRating`, in the JSON-on-the-wire payload despite the
-    // schema-doc name. See analysis/08 §3 wart list.
+    // schema-doc name.
     #[serde(default)]
     pub(crate) duration: Option<u64>,
     #[serde(default)]

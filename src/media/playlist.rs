@@ -8,8 +8,8 @@
 //!
 //! Smart playlists are persisted as a stored filter URI on the
 //! playlist record. The read side preserves the URI; smart-playlist
-//! mutation is deferred (analysis/11 §7.4 puts smart-filter
-//! round-trip out of scope for v1).
+//! mutation is deferred: smart-filter round-trip is out of scope for
+//! v1.
 //!
 //! Endpoint surface (M4.1 implements *italicised* methods):
 //!

@@ -17,7 +17,7 @@
 //! - **`*Lock`** traits add `lock_*()` / `unlock_*()` that toggle
 //!   the per-field `<field>.locked` flag via [`EditField`]. They
 //!   require [`EditField`] which in turn requires the leaf to live
-//!   under a `LibrarySectionRef` — see analysis/11 §2.4.
+//!   under a `LibrarySectionRef`.
 //!
 //! Full image CRUD (`set_*`, `upload_*_url`, `upload_*_bytes`,
 //! `delete_*`) needs Plex's `POST /library/metadata/<rk>/<kind>`

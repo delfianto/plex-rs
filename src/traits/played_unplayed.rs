@@ -2,7 +2,7 @@
 //!
 //! Implements Plex's `/:/scrobble` and `/:/unscrobble` endpoints,
 //! both of which are confusingly served via HTTP `GET` despite being
-//! mutations. We mirror that on the wire (see analysis/11 §4.10);
+//! mutations. We mirror that on the wire;
 //! the public Rust surface still uses `mark_*` verbs to make the
 //! intent obvious at the call site.
 
@@ -30,7 +30,7 @@ pub trait PlayedUnplayed: PlexObject {
     ///
     /// Issues `GET /:/scrobble?key=<rating_key>&identifier=com.plexapp.plugins.library`
     /// against the bound PMS. The request is served as `GET` because
-    /// that is what Plex requires — see analysis/11 §4.10.
+    /// that is what Plex requires.
     ///
     /// # Errors
     /// Any [`crate::Error`] variant from the underlying transport.
