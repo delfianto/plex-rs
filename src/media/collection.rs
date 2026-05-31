@@ -228,3 +228,92 @@ impl CollectionDto {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::HttpClient;
+    use url::Url;
+
+    fn fixture_ref() -> LibrarySectionRef {
+        let cfg = crate::ClientConfig::builder(crate::ClientIdentifier::new("t").unwrap())
+            .build()
+            .unwrap();
+        let http = HttpClient::new(cfg).unwrap();
+        LibrarySectionRef {
+            id: 1,
+            http,
+            base_url: Url::parse("http://plex.local:32400/").unwrap(),
+        }
+    }
+
+    #[test]
+    fn collection_dto_full_parse() {
+        let body = serde_json::json!({
+            "ratingKey": "700",
+            "key": "/library/collections/700",
+            "title": "Best of 2024",
+            "subtype": "movie",
+            "childCount": 8,
+            "smart": false,
+            "collectionMode": "default",
+            "collectionSort": "alpha",
+            "composite": "/library/collections/700/composite/1",
+            "thumb": "/library/metadata/700/thumb/1700000000",
+        });
+        let dto: CollectionDto = serde_json::from_value(body).unwrap();
+        let collection = dto.into_domain(fixture_ref()).unwrap();
+        assert_eq!(collection.rating_key.get(), 700);
+        assert_eq!(collection.title, "Best of 2024");
+        assert_eq!(collection.subtype.as_deref(), Some("movie"));
+        assert_eq!(collection.child_count, Some(8));
+        assert!(!collection.smart);
+        assert_eq!(collection.collection_mode.as_deref(), Some("default"));
+        assert_eq!(collection.collection_sort.as_deref(), Some("alpha"));
+        assert_eq!(
+            collection.composite.as_deref(),
+            Some("/library/collections/700/composite/1")
+        );
+    }
+
+    #[test]
+    fn collection_dto_smart_string_flag_is_truthy() {
+        // Plex emits `smart` as the flex-bool string "1" on some
+        // endpoints; that must parse to `true`.
+        let body = serde_json::json!({
+            "ratingKey": "701",
+            "key": "/library/collections/701",
+            "title": "Sci-Fi Smart",
+            "smart": "1",
+            "leafCount": 42,
+        });
+        let dto: CollectionDto = serde_json::from_value(body).unwrap();
+        let collection = dto.into_domain(fixture_ref()).unwrap();
+        assert!(collection.smart);
+        assert_eq!(collection.leaf_count, Some(42));
+    }
+
+    #[test]
+    fn collection_dto_absent_smart_defaults_to_false() {
+        let body = serde_json::json!({
+            "ratingKey": "702",
+            "key": "/library/collections/702",
+            "title": "Plain",
+        });
+        let dto: CollectionDto = serde_json::from_value(body).unwrap();
+        let collection = dto.into_domain(fixture_ref()).unwrap();
+        assert!(!collection.smart);
+    }
+
+    #[test]
+    fn collection_dto_rejects_non_numeric_rating_key() {
+        let body = serde_json::json!({
+            "ratingKey": "not-a-key",
+            "key": "/library/collections/x",
+            "title": "Bad",
+        });
+        let dto: CollectionDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_domain(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+}

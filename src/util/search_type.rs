@@ -278,4 +278,68 @@ mod tests {
         assert_eq!(SearchType::OptimizedVersion.as_u32(), 42);
         assert_eq!(SearchType::UserPlaylistItem.as_u32(), 1001);
     }
+
+    /// The full (variant, wire-int, wire-name) table — the source of
+    /// truth for the three mappings. Exercising every row hits every
+    /// match arm in `from_u32`, `as_u32`, `as_name`, and `from_str`.
+    const TABLE: &[(SearchType, u32, &str)] = &[
+        (SearchType::Movie, 1, "movie"),
+        (SearchType::Show, 2, "show"),
+        (SearchType::Season, 3, "season"),
+        (SearchType::Episode, 4, "episode"),
+        (SearchType::Trailer, 5, "trailer"),
+        (SearchType::Comic, 6, "comic"),
+        (SearchType::Person, 7, "person"),
+        (SearchType::Artist, 8, "artist"),
+        (SearchType::Album, 9, "album"),
+        (SearchType::Track, 10, "track"),
+        (SearchType::Picture, 11, "picture"),
+        (SearchType::Clip, 12, "clip"),
+        (SearchType::Photo, 13, "photo"),
+        (SearchType::Photoalbum, 14, "photoalbum"),
+        (SearchType::Playlist, 15, "playlist"),
+        (SearchType::PlaylistFolder, 16, "playlistFolder"),
+        (SearchType::Collection, 18, "collection"),
+        (SearchType::OptimizedVersion, 42, "optimizedVersion"),
+        (SearchType::UserPlaylistItem, 1001, "userPlaylistItem"),
+    ];
+
+    #[test]
+    fn every_variant_round_trips_through_u32() {
+        for &(variant, n, _) in TABLE {
+            assert_eq!(variant.as_u32(), n, "as_u32 wrong for {variant:?}");
+            assert_eq!(
+                SearchType::from_u32(n),
+                variant,
+                "from_u32({n}) should yield {variant:?}"
+            );
+            // The blanket From impls delegate to the inherent methods.
+            assert_eq!(u32::from(variant), n);
+            assert_eq!(SearchType::from(n), variant);
+        }
+    }
+
+    #[test]
+    fn every_variant_maps_to_canonical_name() {
+        for &(variant, _, name) in TABLE {
+            assert_eq!(
+                variant.as_name(),
+                Some(name),
+                "as_name wrong for {variant:?}"
+            );
+            // Display of a named variant is exactly its canonical name.
+            assert_eq!(variant.to_string(), name);
+        }
+    }
+
+    #[test]
+    fn every_canonical_name_parses_back() {
+        for &(variant, _, name) in TABLE {
+            assert_eq!(
+                name.parse::<SearchType>().unwrap(),
+                variant,
+                "from_str({name:?}) should yield {variant:?}"
+            );
+        }
+    }
 }

@@ -153,3 +153,112 @@ impl MetadataDto {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::HttpClient;
+    use url::Url;
+
+    fn fixture_ref() -> LibrarySectionRef {
+        let cfg = crate::ClientConfig::builder(crate::ClientIdentifier::new("t").unwrap())
+            .build()
+            .unwrap();
+        let http = HttpClient::new(cfg).unwrap();
+        LibrarySectionRef {
+            id: 1,
+            http,
+            base_url: Url::parse("http://plex.local:32400/").unwrap(),
+        }
+    }
+
+    /// Build a `LibraryItem` of the given wire `type` from a minimal
+    /// metadata DTO, supplying the parent/grandparent keys the TV /
+    /// music hierarchies require.
+    fn item(ty: &str) -> LibraryItem {
+        let body = serde_json::json!({
+            "ratingKey": "42",
+            "key": "/library/metadata/42",
+            "title": "Item Title",
+            "type": ty,
+            "parentRatingKey": "7",
+            "grandparentRatingKey": "3",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        dto.into_library_item(fixture_ref()).unwrap()
+    }
+
+    #[test]
+    fn accessors_agree_across_every_variant() {
+        for ty in [
+            "movie",
+            "show",
+            "season",
+            "episode",
+            "artist",
+            "album",
+            "track",
+            "photoalbum",
+            "photo",
+            "clip",
+        ] {
+            let it = item(ty);
+            assert_eq!(it.title(), "Item Title", "title wrong for {ty}");
+            assert_eq!(it.key(), "/library/metadata/42", "key wrong for {ty}");
+            assert_eq!(it.rating_key().get(), 42, "rating_key wrong for {ty}");
+        }
+    }
+
+    #[test]
+    fn variant_dispatch_picks_the_right_leaf() {
+        assert!(matches!(item("movie"), LibraryItem::Movie(_)));
+        assert!(matches!(item("show"), LibraryItem::Show(_)));
+        assert!(matches!(item("season"), LibraryItem::Season(_)));
+        assert!(matches!(item("episode"), LibraryItem::Episode(_)));
+        assert!(matches!(item("artist"), LibraryItem::Artist(_)));
+        assert!(matches!(item("album"), LibraryItem::Album(_)));
+        assert!(matches!(item("track"), LibraryItem::Track(_)));
+        assert!(matches!(item("photoalbum"), LibraryItem::Photoalbum(_)));
+        // Both "photo" and "clip" map to the Photo variant.
+        assert!(matches!(item("photo"), LibraryItem::Photo(_)));
+        assert!(matches!(item("clip"), LibraryItem::Photo(_)));
+    }
+
+    #[test]
+    fn list_type_groups_by_content_family() {
+        assert_eq!(item("movie").list_type(), "video");
+        assert_eq!(item("show").list_type(), "video");
+        assert_eq!(item("season").list_type(), "video");
+        assert_eq!(item("episode").list_type(), "video");
+        assert_eq!(item("artist").list_type(), "audio");
+        assert_eq!(item("album").list_type(), "audio");
+        assert_eq!(item("track").list_type(), "audio");
+        assert_eq!(item("photoalbum").list_type(), "photo");
+        assert_eq!(item("photo").list_type(), "photo");
+    }
+
+    #[test]
+    fn into_library_item_rejects_missing_type() {
+        let body = serde_json::json!({
+            "ratingKey": "1",
+            "key": "/library/metadata/1",
+            "title": "No Type",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_library_item(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn into_library_item_rejects_unknown_type() {
+        let body = serde_json::json!({
+            "ratingKey": "1",
+            "key": "/library/metadata/1",
+            "title": "Mystery",
+            "type": "hologram",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_library_item(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+}

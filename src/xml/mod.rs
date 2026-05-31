@@ -429,4 +429,89 @@ mod tests {
         assert!(c.is_empty());
         assert_eq!(c.meta, MediaContainerMeta::default());
     }
+
+    // ---------- de_string_flex ----------
+
+    #[derive(Debug, Deserialize)]
+    struct FlexStr {
+        #[serde(default, deserialize_with = "de_string_flex")]
+        value: String,
+    }
+
+    fn flex_str(v: serde_json::Value) -> String {
+        let mut map = serde_json::Map::new();
+        map.insert("value".to_owned(), v);
+        let parsed: FlexStr = serde_json::from_value(serde_json::Value::Object(map)).unwrap();
+        parsed.value
+    }
+
+    #[test]
+    fn de_string_flex_accepts_string() {
+        assert_eq!(flex_str(serde_json::json!("hi")), "hi");
+    }
+
+    #[test]
+    fn de_string_flex_accepts_bool() {
+        assert_eq!(flex_str(serde_json::json!(true)), "true");
+        assert_eq!(flex_str(serde_json::json!(false)), "false");
+    }
+
+    #[test]
+    fn de_string_flex_accepts_integer() {
+        assert_eq!(flex_str(serde_json::json!(60)), "60");
+    }
+
+    #[test]
+    fn de_string_flex_accepts_float() {
+        assert_eq!(flex_str(serde_json::json!(1.5)), "1.5");
+    }
+
+    #[test]
+    fn de_string_flex_null_and_absent_become_empty() {
+        assert_eq!(flex_str(serde_json::json!(null)), "");
+        // Field entirely absent (relies on #[serde(default)]).
+        let parsed: FlexStr = serde_json::from_value(serde_json::json!({})).unwrap();
+        assert_eq!(parsed.value, "");
+    }
+
+    // ---------- de_opt_u32_flex ----------
+
+    #[derive(Debug, Deserialize)]
+    struct FlexOptU32 {
+        #[serde(default, deserialize_with = "de_opt_u32_flex")]
+        value: Option<u32>,
+    }
+
+    fn flex_opt_u32(v: serde_json::Value) -> std::result::Result<Option<u32>, serde_json::Error> {
+        let mut map = serde_json::Map::new();
+        map.insert("value".to_owned(), v);
+        serde_json::from_value::<FlexOptU32>(serde_json::Value::Object(map)).map(|p| p.value)
+    }
+
+    #[test]
+    fn de_opt_u32_flex_accepts_number() {
+        assert_eq!(flex_opt_u32(serde_json::json!(5)).unwrap(), Some(5));
+    }
+
+    #[test]
+    fn de_opt_u32_flex_accepts_numeric_string() {
+        assert_eq!(flex_opt_u32(serde_json::json!("5")).unwrap(), Some(5));
+    }
+
+    #[test]
+    fn de_opt_u32_flex_trims_whitespace_in_string() {
+        assert_eq!(flex_opt_u32(serde_json::json!(" 7 ")).unwrap(), Some(7));
+    }
+
+    #[test]
+    fn de_opt_u32_flex_null_and_absent_become_none() {
+        assert_eq!(flex_opt_u32(serde_json::json!(null)).unwrap(), None);
+        let parsed: FlexOptU32 = serde_json::from_value(serde_json::json!({})).unwrap();
+        assert_eq!(parsed.value, None);
+    }
+
+    #[test]
+    fn de_opt_u32_flex_rejects_non_numeric_string() {
+        assert!(flex_opt_u32(serde_json::json!("abc")).is_err());
+    }
 }
