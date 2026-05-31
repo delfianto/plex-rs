@@ -176,3 +176,94 @@ pub trait HasThemeLock: HasThemeUrl + EditField {
         self.lock_field("theme", false)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::library::LibrarySectionRef;
+    use crate::{ClientConfig, ClientIdentifier, HttpClient, RatingKey};
+
+    /// Minimal [`PlexObject`] carrying the three image paths so the
+    /// default `*_url()` builders can be exercised without any I/O.
+    struct ImageStub {
+        section_ref: LibrarySectionRef,
+        art: Option<String>,
+        thumb: Option<String>,
+        theme: Option<String>,
+    }
+
+    impl PlexObject for ImageStub {
+        fn section_ref(&self) -> &LibrarySectionRef {
+            &self.section_ref
+        }
+        fn rating_key(&self) -> RatingKey {
+            RatingKey::new(1)
+        }
+        fn metadata_type_id(&self) -> u32 {
+            1
+        }
+    }
+
+    impl HasArtUrl for ImageStub {
+        fn art_path(&self) -> Option<&str> {
+            self.art.as_deref()
+        }
+    }
+    impl HasPosterUrl for ImageStub {
+        fn thumb_path(&self) -> Option<&str> {
+            self.thumb.as_deref()
+        }
+    }
+    impl HasThemeUrl for ImageStub {
+        fn theme_path(&self) -> Option<&str> {
+            self.theme.as_deref()
+        }
+    }
+
+    fn stub(art: Option<&str>, thumb: Option<&str>, theme: Option<&str>) -> ImageStub {
+        let cfg = ClientConfig::builder(ClientIdentifier::new("t").unwrap())
+            .build()
+            .unwrap();
+        let http = HttpClient::new(cfg).unwrap();
+        ImageStub {
+            section_ref: LibrarySectionRef {
+                id: 1,
+                http,
+                base_url: url::Url::parse("http://plex.local:32400/").unwrap(),
+            },
+            art: art.map(ToOwned::to_owned),
+            thumb: thumb.map(ToOwned::to_owned),
+            theme: theme.map(ToOwned::to_owned),
+        }
+    }
+
+    #[test]
+    fn art_url_resolves_against_base() {
+        let s = stub(Some("/library/metadata/1/art/9"), None, None);
+        let url = s.art_url().unwrap().unwrap();
+        assert_eq!(url.path(), "/library/metadata/1/art/9");
+        assert_eq!(url.host_str(), Some("plex.local"));
+    }
+
+    #[test]
+    fn poster_url_resolves_against_base() {
+        let s = stub(None, Some("/library/metadata/1/thumb/9"), None);
+        let url = s.poster_url().unwrap().unwrap();
+        assert_eq!(url.path(), "/library/metadata/1/thumb/9");
+    }
+
+    #[test]
+    fn theme_url_resolves_against_base() {
+        let s = stub(None, None, Some("/library/metadata/1/theme/9"));
+        let url = s.theme_url().unwrap().unwrap();
+        assert_eq!(url.path(), "/library/metadata/1/theme/9");
+    }
+
+    #[test]
+    fn all_url_builders_return_none_when_path_absent() {
+        let s = stub(None, None, None);
+        assert!(s.art_url().unwrap().is_none());
+        assert!(s.poster_url().unwrap().is_none());
+        assert!(s.theme_url().unwrap().is_none());
+    }
+}

@@ -1092,4 +1092,223 @@ mod tests {
         let m = dto.into_movie(fixture_ref()).unwrap();
         assert!(m.thumb_url().unwrap().is_none());
     }
+
+    // ---------- Show ----------
+
+    #[test]
+    fn show_dto_parses_counts_and_watch_progress() {
+        let body = serde_json::json!({
+            "ratingKey": "200",
+            "key": "/library/metadata/200",
+            "title": "The Expanse",
+            "childCount": 6,
+            "leafCount": 62,
+            "viewedLeafCount": 31,
+            "theme": "/library/metadata/200/theme/1",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let show = dto.into_show(fixture_ref()).unwrap();
+        assert_eq!(show.rating_key.get(), 200);
+        assert_eq!(show.child_count, Some(6));
+        assert_eq!(show.leaf_count, Some(62));
+        assert_eq!(show.viewed_leaf_count, Some(31));
+        assert_eq!(show.theme.as_deref(), Some("/library/metadata/200/theme/1"));
+        // 31/62 = 0.5 exactly.
+        assert_eq!(show.watch_progress(), Some(0.5));
+    }
+
+    #[test]
+    fn show_watch_progress_none_when_counts_missing_or_zero() {
+        let base = serde_json::json!({
+            "ratingKey": "201",
+            "key": "/library/metadata/201",
+            "title": "No Counts",
+        });
+        let dto: MetadataDto = serde_json::from_value(base).unwrap();
+        assert!(
+            dto.into_show(fixture_ref())
+                .unwrap()
+                .watch_progress()
+                .is_none()
+        );
+
+        let zero = serde_json::json!({
+            "ratingKey": "202",
+            "key": "/library/metadata/202",
+            "title": "Zero Total",
+            "leafCount": 0,
+            "viewedLeafCount": 0,
+        });
+        let dto: MetadataDto = serde_json::from_value(zero).unwrap();
+        assert!(
+            dto.into_show(fixture_ref())
+                .unwrap()
+                .watch_progress()
+                .is_none()
+        );
+    }
+
+    // ---------- Season ----------
+
+    #[test]
+    fn season_dto_uses_explicit_parent_rating_key() {
+        let body = serde_json::json!({
+            "ratingKey": "300",
+            "key": "/library/metadata/300",
+            "title": "Season 1",
+            "index": 1,
+            "parentRatingKey": "200",
+            "parentKey": "/library/metadata/200",
+            "parentTitle": "The Expanse",
+            "leafCount": 10,
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let season = dto.into_season(fixture_ref()).unwrap();
+        assert_eq!(season.rating_key.get(), 300);
+        assert_eq!(season.index, Some(1));
+        assert_eq!(season.parent_rating_key.get(), 200);
+        assert_eq!(season.parent_title.as_deref(), Some("The Expanse"));
+        assert_eq!(season.leaf_count, Some(10));
+    }
+
+    #[test]
+    fn season_derives_parent_rating_key_from_parent_key_path() {
+        // No explicit parentRatingKey: it must be recovered from the
+        // trailing segment of parentKey ("/library/metadata/123" -> 123).
+        let body = serde_json::json!({
+            "ratingKey": "301",
+            "key": "/library/metadata/301",
+            "title": "Season 2",
+            "parentKey": "/library/metadata/123",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let season = dto.into_season(fixture_ref()).unwrap();
+        assert_eq!(season.parent_rating_key.get(), 123);
+    }
+
+    #[test]
+    fn season_missing_parent_rating_key_entirely_fails() {
+        let body = serde_json::json!({
+            "ratingKey": "302",
+            "key": "/library/metadata/302",
+            "title": "Orphan Season",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_season(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn season_non_numeric_parent_key_segment_fails() {
+        // A parentKey whose trailing segment isn't a valid rating key
+        // falls through the derivation and ends in the "missing" error.
+        let body = serde_json::json!({
+            "ratingKey": "303",
+            "key": "/library/metadata/303",
+            "title": "Bad Parent Key",
+            "parentKey": "/library/metadata/not-a-number",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_season(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    // ---------- Episode ----------
+
+    #[test]
+    fn episode_dto_full_parse_and_label() {
+        let body = serde_json::json!({
+            "ratingKey": "400",
+            "key": "/library/metadata/400",
+            "title": "Dulcinea",
+            "index": 1,
+            "parentIndex": 1,
+            "parentRatingKey": "300",
+            "grandparentRatingKey": "200",
+            "grandparentTitle": "The Expanse",
+            "viewCount": 2,
+            "viewOffset": 1234,
+            "duration": 2_700_000,
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let ep = dto.into_episode(fixture_ref()).unwrap();
+        assert_eq!(ep.rating_key.get(), 400);
+        assert_eq!(ep.parent_rating_key.get(), 300);
+        assert_eq!(ep.grandparent_rating_key.get(), 200);
+        assert_eq!(ep.grandparent_title.as_deref(), Some("The Expanse"));
+        assert_eq!(ep.view_offset_ms, Some(1234));
+        assert!(ep.is_played());
+        assert_eq!(ep.season_episode_label(), Some("S01E01".to_owned()));
+    }
+
+    #[test]
+    fn episode_label_none_when_index_missing() {
+        let body = serde_json::json!({
+            "ratingKey": "401",
+            "key": "/library/metadata/401",
+            "title": "Special",
+            "parentRatingKey": "300",
+            "grandparentRatingKey": "200",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let ep = dto.into_episode(fixture_ref()).unwrap();
+        assert!(ep.season_episode_label().is_none());
+        assert!(!ep.is_played());
+    }
+
+    #[test]
+    fn episode_derives_parent_and_grandparent_from_key_paths() {
+        // Neither parentRatingKey nor grandparentRatingKey present:
+        // both are recovered from the corresponding *Key path tails.
+        let body = serde_json::json!({
+            "ratingKey": "402",
+            "key": "/library/metadata/402",
+            "title": "History Entry Episode",
+            "parentKey": "/library/metadata/555",
+            "grandparentKey": "/library/metadata/777",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let ep = dto.into_episode(fixture_ref()).unwrap();
+        assert_eq!(ep.parent_rating_key.get(), 555);
+        assert_eq!(ep.grandparent_rating_key.get(), 777);
+    }
+
+    #[test]
+    fn episode_missing_parent_rating_key_fails() {
+        let body = serde_json::json!({
+            "ratingKey": "403",
+            "key": "/library/metadata/403",
+            "title": "Orphan",
+            "grandparentRatingKey": "200",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_episode(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn episode_missing_grandparent_rating_key_fails() {
+        let body = serde_json::json!({
+            "ratingKey": "404",
+            "key": "/library/metadata/404",
+            "title": "Half Orphan",
+            "parentRatingKey": "300",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_episode(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn rating_key_from_key_path_unit() {
+        // Direct unit coverage of the derivation helper.
+        assert_eq!(
+            rating_key_from_key_path("/library/metadata/123"),
+            Some(RatingKey::new(123))
+        );
+        // Trailing segment numeric even without a leading path.
+        assert_eq!(rating_key_from_key_path("99"), Some(RatingKey::new(99)));
+        // Non-numeric trailing segment -> None.
+        assert!(rating_key_from_key_path("/library/metadata/abc").is_none());
+    }
 }

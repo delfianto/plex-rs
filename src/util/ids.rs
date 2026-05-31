@@ -369,6 +369,49 @@ mod tests {
         assert_eq!(back, rk);
     }
 
+    #[test]
+    fn rating_key_from_u64() {
+        let rk: RatingKey = RatingKey::from(99u64);
+        assert_eq!(rk.get(), 99);
+        // Ord / PartialOrd are derived; sanity-check they behave.
+        assert!(RatingKey::new(1) < RatingKey::new(2));
+    }
+
+    // --------- PlayQueueId ---------
+
+    #[test]
+    fn play_queue_id_new_get_and_display() {
+        let id = PlayQueueId::new(555);
+        assert_eq!(id.get(), 555);
+        assert_eq!(id.to_string(), "555");
+    }
+
+    #[test]
+    fn play_queue_id_from_u64() {
+        let id: PlayQueueId = PlayQueueId::from(7u64);
+        assert_eq!(id.get(), 7);
+    }
+
+    #[test]
+    fn play_queue_id_from_str_ok() {
+        let id: PlayQueueId = "12345".parse().unwrap();
+        assert_eq!(id.get(), 12345);
+    }
+
+    #[test]
+    fn play_queue_id_from_str_rejects_non_numeric() {
+        let err = "nope".parse::<PlayQueueId>().unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn play_queue_id_serde_transparent() {
+        let id = PlayQueueId::new(13);
+        assert_eq!(serde_json::to_string(&id).unwrap(), "13");
+        let back: PlayQueueId = serde_json::from_str("13").unwrap();
+        assert_eq!(back, id);
+    }
+
     // --------- MachineIdentifier ---------
 
     #[test]
@@ -391,6 +434,25 @@ mod tests {
         assert_eq!(j, "\"xyz\"");
     }
 
+    #[test]
+    fn machine_identifier_as_ref_and_debug() {
+        let mid = MachineIdentifier::new("mid-123").unwrap();
+        // AsRef<str> borrows the inner value.
+        let s: &str = mid.as_ref();
+        assert_eq!(s, "mid-123");
+        // Debug surfaces the value (unlike PlexToken, this is not secret).
+        let dbg = format!("{mid:?}");
+        assert!(dbg.contains("MachineIdentifier"));
+        assert!(dbg.contains("mid-123"));
+    }
+
+    #[test]
+    fn machine_identifier_from_str() {
+        let mid: MachineIdentifier = "abc".parse().unwrap();
+        assert_eq!(mid.as_str(), "abc");
+        assert!("".parse::<MachineIdentifier>().is_err());
+    }
+
     // --------- ClientIdentifier ---------
 
     #[test]
@@ -411,6 +473,30 @@ mod tests {
     fn client_identifier_rejects_empty() {
         let err = ClientIdentifier::new("").unwrap_err();
         assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn client_identifier_as_ref_display_and_debug() {
+        let cid = ClientIdentifier::new("cid-xyz").unwrap();
+        let s: &str = cid.as_ref();
+        assert_eq!(s, "cid-xyz");
+        assert_eq!(cid.to_string(), "cid-xyz");
+        let dbg = format!("{cid:?}");
+        assert!(dbg.contains("ClientIdentifier"));
+        assert!(dbg.contains("cid-xyz"));
+    }
+
+    #[test]
+    fn client_identifier_from_str() {
+        let cid: ClientIdentifier = "stable".parse().unwrap();
+        assert_eq!(cid.as_str(), "stable");
+        assert!("".parse::<ClientIdentifier>().is_err());
+    }
+
+    #[test]
+    fn client_identifier_serde_transparent() {
+        let cid = ClientIdentifier::new("wire-cid").unwrap();
+        assert_eq!(serde_json::to_string(&cid).unwrap(), "\"wire-cid\"");
     }
 
     // --------- PlexToken — the load-bearing tests ---------
@@ -469,6 +555,23 @@ mod tests {
     fn token_rejects_empty() {
         let err = PlexToken::new("").unwrap_err();
         assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn token_from_str_ok_and_rejects_empty() {
+        let t: PlexToken = "from-str-token".parse().unwrap();
+        assert_eq!(t.expose(), "from-str-token");
+        assert!("".parse::<PlexToken>().is_err());
+    }
+
+    #[test]
+    fn token_redacted_boundary_exactly_four_chars() {
+        // Exactly 4 chars hits the `<= 4` short-token branch.
+        let t = PlexToken::new("abcd").unwrap();
+        assert_eq!(t.redacted(), "***");
+        // Five chars crosses into the head/tail branch.
+        let t5 = PlexToken::new("abcde").unwrap();
+        assert_eq!(t5.redacted(), "ab***de");
     }
 
     #[test]

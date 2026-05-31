@@ -487,3 +487,171 @@ impl MetadataDto {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::HttpClient;
+    use url::Url;
+
+    fn fixture_ref() -> LibrarySectionRef {
+        let cfg = crate::ClientConfig::builder(crate::ClientIdentifier::new("t").unwrap())
+            .build()
+            .unwrap();
+        let http = HttpClient::new(cfg).unwrap();
+        LibrarySectionRef {
+            id: 5,
+            http,
+            base_url: Url::parse("http://plex.local:32400/").unwrap(),
+        }
+    }
+
+    #[test]
+    fn artist_dto_parses_scalars() {
+        let body = serde_json::json!({
+            "ratingKey": "2000",
+            "key": "/library/metadata/2000",
+            "title": "Daft Punk",
+            "titleSort": "Daft Punk",
+            "summary": "French electronic duo.",
+            "childCount": 4,
+            "thumb": "/library/metadata/2000/thumb/1",
+            "art": "/library/metadata/2000/art/1",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let artist = dto.into_artist(fixture_ref()).unwrap();
+        assert_eq!(artist.rating_key.get(), 2000);
+        assert_eq!(artist.title, "Daft Punk");
+        assert_eq!(artist.child_count, Some(4));
+        assert_eq!(
+            artist.thumb.as_deref(),
+            Some("/library/metadata/2000/thumb/1")
+        );
+        assert_eq!(artist.view_count, 0);
+    }
+
+    #[test]
+    fn artist_dto_rejects_non_numeric_rating_key() {
+        let body = serde_json::json!({
+            "ratingKey": "nope",
+            "key": "/library/metadata/nope",
+            "title": "Bad",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_artist(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn album_dto_full_parse() {
+        let body = serde_json::json!({
+            "ratingKey": "2100",
+            "key": "/library/metadata/2100",
+            "title": "Discovery",
+            "year": 2001,
+            "studio": "Virgin",
+            "rating": 9.0,
+            "leafCount": 14,
+            "viewedLeafCount": 7,
+            "originallyAvailableAt": "2001-03-12",
+            "parentRatingKey": "2000",
+            "parentTitle": "Daft Punk",
+            "thumb": "/library/metadata/2100/thumb/1",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let album = dto.into_album(fixture_ref()).unwrap();
+        assert_eq!(album.rating_key.get(), 2100);
+        assert_eq!(album.year, Some(2001));
+        assert_eq!(album.studio.as_deref(), Some("Virgin"));
+        assert_eq!(album.rating, Some(9.0));
+        assert_eq!(album.leaf_count, Some(14));
+        assert_eq!(album.viewed_leaf_count, Some(7));
+        assert_eq!(album.parent_rating_key.get(), 2000);
+        assert_eq!(album.parent_title.as_deref(), Some("Daft Punk"));
+        assert_eq!(album.originally_available_at.as_deref(), Some("2001-03-12"));
+    }
+
+    #[test]
+    fn album_missing_parent_rating_key_fails() {
+        let body = serde_json::json!({
+            "ratingKey": "2100",
+            "key": "/library/metadata/2100",
+            "title": "Orphan Album",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_album(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn track_dto_full_parse_with_disc_number() {
+        let body = serde_json::json!({
+            "ratingKey": "2101",
+            "key": "/library/metadata/2101",
+            "title": "One More Time",
+            "index": 1,
+            "parentIndex": 2,
+            "duration": 320_000,
+            "viewCount": 5,
+            "viewOffset": 42,
+            "originalTitle": "DP",
+            "parentRatingKey": "2100",
+            "parentTitle": "Discovery",
+            "grandparentRatingKey": "2000",
+            "grandparentTitle": "Daft Punk",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let track = dto.into_track(fixture_ref()).unwrap();
+        assert_eq!(track.rating_key.get(), 2101);
+        assert_eq!(track.index, Some(1));
+        // disc_number maps from parentIndex.
+        assert_eq!(track.disc_number, Some(2));
+        assert_eq!(track.duration_ms, Some(320_000));
+        assert_eq!(track.view_offset_ms, Some(42));
+        assert_eq!(track.original_title.as_deref(), Some("DP"));
+        assert_eq!(track.parent_rating_key.get(), 2100);
+        assert_eq!(track.grandparent_rating_key.get(), 2000);
+        assert!(track.is_played());
+    }
+
+    #[test]
+    fn track_missing_parent_rating_key_fails() {
+        let body = serde_json::json!({
+            "ratingKey": "2101",
+            "key": "/library/metadata/2101",
+            "title": "No Album",
+            "grandparentRatingKey": "2000",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_track(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn track_missing_grandparent_rating_key_fails() {
+        let body = serde_json::json!({
+            "ratingKey": "2101",
+            "key": "/library/metadata/2101",
+            "title": "No Artist",
+            "parentRatingKey": "2100",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let err = dto.into_track(fixture_ref()).unwrap_err();
+        assert!(matches!(err, Error::Config(_)));
+    }
+
+    #[test]
+    fn track_not_played_when_view_count_zero() {
+        let body = serde_json::json!({
+            "ratingKey": "2102",
+            "key": "/library/metadata/2102",
+            "title": "Aerodynamic",
+            "parentRatingKey": "2100",
+            "grandparentRatingKey": "2000",
+        });
+        let dto: MetadataDto = serde_json::from_value(body).unwrap();
+        let track = dto.into_track(fixture_ref()).unwrap();
+        assert!(!track.is_played());
+        assert_eq!(track.view_count, 0);
+    }
+}

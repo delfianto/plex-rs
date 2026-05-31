@@ -435,4 +435,42 @@ mod tests {
         };
         assert!(matches!(result, Err(Error::Config(_))));
     }
+
+    fn parse_identity(body: &str) -> ServerIdentity {
+        let env: RootEnvelope = serde_json::from_str(body).unwrap();
+        match env {
+            RootEnvelope::Wrapped { container } => ServerIdentity::from_dto(container).unwrap(),
+        }
+    }
+
+    #[test]
+    fn flex_string_into_string_for_both_arms() {
+        assert_eq!(FlexString::Str("7".to_owned()).into_string(), "7");
+        assert_eq!(FlexString::Int(7).into_string(), "7");
+    }
+
+    #[test]
+    fn server_identity_parses_livetv_as_quoted_string() {
+        // Pre-1.43 servers quote the livetv flag.
+        let id = parse_identity(
+            r#"{"MediaContainer":{"machineIdentifier":"m","version":"v","livetv":"7"}}"#,
+        );
+        assert_eq!(id.livetv.as_deref(), Some("7"));
+    }
+
+    #[test]
+    fn server_identity_parses_livetv_as_bare_number() {
+        // PMS 1.43+ emits the livetv flag as a bare JSON number; it must
+        // normalise to the same "7" string.
+        let id = parse_identity(
+            r#"{"MediaContainer":{"machineIdentifier":"m","version":"v","livetv":7}}"#,
+        );
+        assert_eq!(id.livetv.as_deref(), Some("7"));
+    }
+
+    #[test]
+    fn server_identity_livetv_absent_is_none() {
+        let id = parse_identity(r#"{"MediaContainer":{"machineIdentifier":"m","version":"v"}}"#);
+        assert!(id.livetv.is_none());
+    }
 }
