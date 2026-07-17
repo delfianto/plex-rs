@@ -46,7 +46,7 @@ async fn spawn_ws_server(frames: Vec<String>) -> (String, tokio::task::JoinHandl
         let (mut writer, _reader) = ws.split();
         for frame in frames.iter() {
             writer
-                .send(Message::Text(frame.clone()))
+                .send(Message::Text(frame.clone().into()))
                 .await
                 .expect("send");
         }

@@ -2,7 +2,7 @@
 name        = "plex-rs"
 version     = "0.0.1"
 edition     = "2024"
-rust-version = "1.85"
+rust-version = "1.86"
 authors     = ["Dwi <dwi.elfianto@accenture.com>"]
 license     = "MIT"
 description = "Idiomatic, fully-async Rust 2024 client for the Plex Media Server HTTP API and plex.tv (MyPlex)."
@@ -17,7 +17,6 @@ include = [
     "Cargo.toml",
     "LICENSE",
     "README.md",
-    "CHANGELOG.md",
 ]
 
 [lib]
@@ -25,12 +24,12 @@ name = "plex_rs"
 path = "src/lib.rs"
 
 [dependencies]
-reqwest      = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream", "gzip", "http2", "charset"] }
+reqwest      = { version = "0.13", default-features = false, features = ["rustls", "json", "stream", "gzip", "http2", "charset"] }
 tokio        = { version = "1",    default-features = false, features = ["rt", "macros", "sync", "time", "net"] }
 serde        = { version = "1",    features = ["derive"] }
 serde_json   = "1"
-quick-xml    = { version = "0.36", features = ["serialize"] }
-thiserror    = "1"
+quick-xml    = { version = "0.41", features = ["serialize"] }
+thiserror    = "2"
 url          = { version = "2", features = ["serde"] }
 chrono       = { version = "0.4", default-features = false, features = ["serde", "clock"] }
 uuid         = { version = "1",   features = ["v4", "serde"] }
@@ -39,8 +38,8 @@ bytes        = "1"
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 http         = "1"
 regex        = { version = "1", default-features = false, features = ["std", "perf"] }
-axum         = { version = "0.7", optional = true, default-features = false, features = ["json", "tokio", "multipart", "http1"] }
-tokio-tungstenite = { version = "0.24", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
+axum         = { version = "0.8", optional = true, default-features = false, features = ["json", "tokio", "multipart", "http1"] }
+tokio-tungstenite = { version = "0.30", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
 
 [features]
 default          = ["rustls"]
@@ -56,14 +55,14 @@ tokio        = { version = "1", features = ["full", "test-util"] }
 wiremock     = "0.6"
 insta        = { version = "1", features = ["yaml", "json", "redactions"] }
 pretty_assertions = "1"
-rstest       = "0.21"
+rstest       = "0.26"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 tokio-test   = "0.4"
-tokio-tungstenite = { version = "0.24", default-features = false, features = ["handshake"] }
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
-criterion = { version = "0.5", features = ["html_reports"] }
+criterion = { version = "0.8", features = ["html_reports"] }
 
 [profile.dev]
 opt-level = 0
