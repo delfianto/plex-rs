@@ -24,10 +24,6 @@ include = [
 name = "plex_rs"
 path = "src/lib.rs"
 
-# ---------------------------------------------------------------------------
-# Dependencies — see CLAUDE.md §5. Keep the tree small and rustls-by-default.
-# ---------------------------------------------------------------------------
-
 [dependencies]
 reqwest      = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "stream", "gzip", "http2", "charset"] }
 tokio        = { version = "1",    default-features = false, features = ["rt", "macros", "sync", "time", "net"] }
@@ -43,26 +39,17 @@ bytes        = "1"
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 http         = "1"
 regex        = { version = "1", default-features = false, features = ["std", "perf"] }
-
-# Optional feature deps
 axum         = { version = "0.7", optional = true, default-features = false, features = ["json", "tokio", "multipart", "http1"] }
 tokio-tungstenite = { version = "0.24", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
-# Note: GDM is NOT mDNS.
-# Discovery is implemented with raw `tokio::net::UdpSocket` + HTTP/1.0 M-SEARCH;
-# no extra dependency required, so the `discovery` feature is a pure marker.
 
 [features]
 default          = ["rustls"]
-rustls           = []                                # alias / documentation marker
+rustls           = []
 native-tls       = ["reqwest/native-tls"]
 webhook-axum     = ["dep:axum"]
-discovery        = []                                # GDM uses raw UDP — no extra deps
-alerts           = ["dep:tokio-tungstenite"]         # WebSocket alert stream
-live-tests       = []                                # opt-in tests against a real PMS (see tests/live_readonly.rs); never run in CI
-
-# ---------------------------------------------------------------------------
-# Dev / test dependencies
-# ---------------------------------------------------------------------------
+discovery        = []
+alerts           = ["dep:tokio-tungstenite"]
+live-tests       = []
 
 [dev-dependencies]
 tokio        = { version = "1", features = ["full", "test-util"] }
@@ -75,13 +62,8 @@ tokio-test   = "0.4"
 tokio-tungstenite = { version = "0.24", default-features = false, features = ["handshake"] }
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 
-# Criterion benches are opt-in to avoid pulling them in for `cargo test`.
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
-
-# ---------------------------------------------------------------------------
-# Profile tweaks
-# ---------------------------------------------------------------------------
 
 [profile.dev]
 opt-level = 0
@@ -94,20 +76,14 @@ codegen-units = 1
 strip     = "symbols"
 debug     = false
 
-# Faster test iteration without sacrificing useful backtraces.
 [profile.test]
 opt-level = 0
 debug     = true
 
-# Benches need release-level optimisation.
 [profile.bench]
 opt-level = 3
 lto       = "thin"
 codegen-units = 1
-
-# ---------------------------------------------------------------------------
-# Documentation
-# ---------------------------------------------------------------------------
 
 [package.metadata.docs.rs]
 all-features = true
