@@ -460,7 +460,7 @@ mod tests {
         let cid = ClientIdentifier::generated();
         // UUID v4 string is 36 chars including dashes.
         assert_eq!(cid.as_str().len(), 36);
-        assert!(cid.as_str().chars().filter(|&c| c == '-').count() == 4);
+        assert_eq!(cid.as_str().chars().filter(|&c| c == '-').count(), 4);
     }
 
     #[test]
