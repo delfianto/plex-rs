@@ -342,7 +342,6 @@ impl IntoResponse for WebhookRejection {
     }
 }
 
-#[axum::async_trait]
 impl<S: Send + Sync> FromRequest<S> for WebhookPayload {
     type Rejection = WebhookRejection;
 
