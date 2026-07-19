@@ -12,34 +12,15 @@ documentation = "https://docs.rs/plex-rs"
 readme      = "README.md"
 keywords    = ["plex", "media", "api", "client", "async"]
 categories  = ["api-bindings", "multimedia", "asynchronous"]
-include = [
-    "src/**/*.rs",
-    "Cargo.toml",
-    "LICENSE",
-    "README.md",
-]
+include = ["src/**/*.rs", "Cargo.toml", "LICENSE", "README.md"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [lib]
 name = "plex_rs"
 path = "src/lib.rs"
-
-[dependencies]
-reqwest      = { version = "0.13", default-features = false, features = ["rustls", "json", "stream", "gzip", "http2", "charset"] }
-tokio        = { version = "1",    default-features = false, features = ["rt", "macros", "sync", "time", "net"] }
-serde        = { version = "1",    features = ["derive"] }
-serde_json   = "1"
-quick-xml    = { version = "0.41", features = ["serialize"] }
-thiserror    = "2"
-url          = { version = "2", features = ["serde"] }
-chrono       = { version = "0.4", default-features = false, features = ["serde", "clock"] }
-uuid         = { version = "1",   features = ["v4", "serde"] }
-tracing      = "0.1"
-bytes        = "1"
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
-http         = "1"
-regex        = { version = "1", default-features = false, features = ["std", "perf"] }
-axum         = { version = "0.8", optional = true, default-features = false, features = ["json", "tokio", "multipart", "http1"] }
-tokio-tungstenite = { version = "0.30", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
 
 [features]
 default          = ["rustls"]
@@ -50,16 +31,34 @@ discovery        = []
 alerts           = ["dep:tokio-tungstenite"]
 live-tests       = []
 
+[dependencies]
+axum         = { version = "0.8", optional = true, default-features = false, features = ["json", "tokio", "multipart", "http1"] }
+bytes        = "1"
+chrono       = { version = "0.4", default-features = false, features = ["serde", "clock"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+http         = "1"
+quick-xml    = { version = "0.41", features = ["serialize"] }
+regex        = { version = "1", default-features = false, features = ["std", "perf"] }
+reqwest      = { version = "0.13", default-features = false, features = ["rustls", "json", "stream", "gzip", "http2", "charset"] }
+serde        = { version = "1", features = ["derive"] }
+serde_json   = "1"
+thiserror    = "2"
+tokio        = { version = "1", default-features = false, features = ["rt", "macros", "sync", "time", "net"] }
+tokio-tungstenite = { version = "0.30", optional = true, default-features = false, features = ["rustls-tls-webpki-roots", "connect"] }
+tracing      = "0.1"
+url          = { version = "2", features = ["serde"] }
+uuid         = { version = "1", features = ["v4", "serde"] }
+
 [dev-dependencies]
-tokio        = { version = "1", features = ["full", "test-util"] }
-wiremock     = "0.6"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
 insta        = { version = "1", features = ["yaml", "json", "redactions"] }
 pretty_assertions = "1"
 rstest       = "0.26"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tokio        = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "test-util", "time"] }
 tokio-test   = "0.4"
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
-futures-util = { version = "0.3", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+wiremock     = "0.6"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }
@@ -83,7 +82,3 @@ debug     = true
 opt-level = 3
 lto       = "thin"
 codegen-units = 1
-
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
