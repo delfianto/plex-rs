@@ -2,7 +2,7 @@
 name        = "plex-rs"
 version     = "0.0.1"
 edition     = "2024"
-rust-version = "1.86"
+rust-version = "1.98.0"
 authors     = ["Dwi <dwi.elfianto@accenture.com>"]
 license     = "MIT"
 description = "Idiomatic, fully-async Rust 2024 client for the Plex Media Server HTTP API and plex.tv (MyPlex)."

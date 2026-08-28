@@ -88,10 +88,10 @@ impl PageRange {
         }
         // Compute the next offset; saturate rather than overflow.
         let next_start = self.start.saturating_add(self.size);
-        if let Some(total) = meta.total_size {
-            if next_start >= total {
-                return None;
-            }
+        if let Some(total) = meta.total_size
+            && next_start >= total
+        {
+            return None;
         }
         Some(Self {
             start: next_start,

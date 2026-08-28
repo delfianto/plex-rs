@@ -175,13 +175,13 @@ pub struct MediaContainer<T> {
 impl<T> MediaContainer<T> {
     /// Length of the [`items`](Self::items) list.
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.items.len()
     }
 
     /// Whether [`items`](Self::items) is empty.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
 }

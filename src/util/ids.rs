@@ -300,7 +300,7 @@ impl PlexToken {
     /// `self.expose().as_bytes()` — same intent (explicit unwrap of the
     /// secret) but useful when constructing HTTP header values.
     #[must_use]
-    pub fn expose_bytes(&self) -> &[u8] {
+    pub const fn expose_bytes(&self) -> &[u8] {
         self.0.as_bytes()
     }
 

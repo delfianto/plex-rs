@@ -126,10 +126,10 @@ impl MyPlexResource {
         let mut out = Vec::with_capacity(self.connections.len());
         for &location in &[Location::Local, Location::Remote, Location::Relay] {
             for &https in &[true, false] {
-                if let Some(want_ssl) = ssl {
-                    if want_ssl != https {
-                        continue;
-                    }
+                if let Some(want_ssl) = ssl
+                    && want_ssl != https
+                {
+                    continue;
                 }
                 for c in &self.connections {
                     if c.location() != location {

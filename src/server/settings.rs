@@ -105,7 +105,7 @@ impl SettingValue {
     /// Borrow the string representation when this is a text value.
     /// Returns `None` for non-text variants.
     #[must_use]
-    pub fn as_text(&self) -> Option<&str> {
+    pub const fn as_text(&self) -> Option<&str> {
         match self {
             Self::Text(s) => Some(s.as_str()),
             _ => None,
@@ -372,22 +372,20 @@ impl Settings {
             )));
         }
         if let (Some(EnumValues::List(opts)), SettingValue::Text(v)) = (&setting.enum_values, value)
+            && !opts.iter().any(|o| o == v)
         {
-            if !opts.iter().any(|o| o == v) {
-                return Err(Error::Config(format!(
-                    "setting {id}: {v:?} not in enum {opts:?}",
-                )));
-            }
+            return Err(Error::Config(format!(
+                "setting {id}: {v:?} not in enum {opts:?}",
+            )));
         }
         if let (Some(EnumValues::Mapping(opts)), SettingValue::Text(v)) =
             (&setting.enum_values, value)
+            && !opts.iter().any(|(k, _)| k == v)
         {
-            if !opts.iter().any(|(k, _)| k == v) {
-                let keys: Vec<&String> = opts.iter().map(|(k, _)| k).collect();
-                return Err(Error::Config(format!(
-                    "setting {id}: {v:?} not in enum {keys:?}",
-                )));
-            }
+            let keys: Vec<&String> = opts.iter().map(|(k, _)| k).collect();
+            return Err(Error::Config(format!(
+                "setting {id}: {v:?} not in enum {keys:?}",
+            )));
         }
         Ok(setting)
     }
