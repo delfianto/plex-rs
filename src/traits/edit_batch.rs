@@ -91,14 +91,14 @@ impl<'a, O: PlexObject> EditBatch<'a, O> {
 
     /// `true` when no operations have been queued.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.ops.is_empty()
     }
 
     /// Number of queued operations. Useful for "did anything
     /// actually change?" checks before calling [`Self::execute`].
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.ops.len()
     }
 

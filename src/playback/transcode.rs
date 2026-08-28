@@ -352,12 +352,12 @@ impl TranscodeOptions {
     pub fn build_for(&self, server: &PlexServer, item_key: &str) -> Result<Url> {
         // Validate video_resolution shape early so callers see a
         // meaningful error rather than the transcoder's 500.
-        if let Some(res) = &self.video_resolution {
-            if !is_valid_resolution(res) {
-                return Err(Error::Config(format!(
-                    "video_resolution must be WxH, got {res:?}",
-                )));
-            }
+        if let Some(res) = &self.video_resolution
+            && !is_valid_resolution(res)
+        {
+            return Err(Error::Config(format!(
+                "video_resolution must be WxH, got {res:?}",
+            )));
         }
         let token = server
             .http()

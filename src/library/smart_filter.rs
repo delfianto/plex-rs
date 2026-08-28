@@ -175,12 +175,12 @@ fn parse_decoded(decoded: &str) -> Result<SmartFilter> {
     let mut filter = SmartFilter::default();
     // Path may carry section id (`/library/sections/<sid>/all`).
     let (path, query) = decoded.split_once('?').unwrap_or((decoded, ""));
-    if let Some(rest) = path.strip_prefix("/library/sections/") {
-        if let Some(slash) = rest.find('/') {
-            let sid = &rest[..slash];
-            if let Ok(n) = sid.parse::<u32>() {
-                filter.section_id = Some(n);
-            }
+    if let Some(rest) = path.strip_prefix("/library/sections/")
+        && let Some(slash) = rest.find('/')
+    {
+        let sid = &rest[..slash];
+        if let Ok(n) = sid.parse::<u32>() {
+            filter.section_id = Some(n);
         }
     }
     // Walk the query pairs in source order.

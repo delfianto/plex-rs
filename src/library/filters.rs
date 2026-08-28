@@ -323,7 +323,7 @@ impl FilterBuilder {
     /// Returns `true` when the builder would emit an empty query
     /// string (no clauses, no sort, no pagination).
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.clauses.is_empty()
             && self.sort.is_none()
             && self.limit.is_none()

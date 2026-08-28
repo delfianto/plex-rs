@@ -241,14 +241,13 @@ fn encode_form(
 /// the human-readable hint Plex has used in the past
 /// (`"verification code"`, case-insensitive).
 fn body_signals_otp(body: &str) -> bool {
-    if let Ok(parsed) = serde_json::from_str::<SigninErrorEnvelope>(body) {
-        if parsed
+    if let Ok(parsed) = serde_json::from_str::<SigninErrorEnvelope>(body)
+        && parsed
             .errors
             .iter()
             .any(|e| e.code == Some(ERR_CODE_OTP_REQUIRED))
-        {
-            return true;
-        }
+    {
+        return true;
     }
     body.to_ascii_lowercase().contains("verification code")
 }
