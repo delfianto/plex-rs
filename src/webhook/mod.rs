@@ -112,7 +112,7 @@ impl WebhookEvent {
 
     /// Wire spelling, matching what Plex sends.
     #[must_use]
-    pub fn as_wire(&self) -> &str {
+    pub const fn as_wire(&self) -> &str {
         match self {
             Self::MediaPlay => "media.play",
             Self::MediaPause => "media.pause",
