@@ -59,12 +59,12 @@ fn live_var(key: &str) -> Option<String> {
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
-        if let Some((k, v)) = line.split_once('=') {
-            if k.trim() == key {
-                let v = v.trim().trim_matches('"').trim_matches('\'').trim();
-                if !v.is_empty() {
-                    return Some(v.to_owned());
-                }
+        if let Some((k, v)) = line.split_once('=')
+            && k.trim() == key
+        {
+            let v = v.trim().trim_matches('"').trim_matches('\'').trim();
+            if !v.is_empty() {
+                return Some(v.to_owned());
             }
         }
     }
