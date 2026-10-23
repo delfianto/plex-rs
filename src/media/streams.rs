@@ -565,7 +565,7 @@ mod tests {
         let dto: MediaDto = serde_json::from_value(serde_json::json!({"id": 1})).unwrap();
         let m = dto.into_domain();
         assert_eq!(m.id, 1);
-        assert!(m.parts.is_empty());
+        assert_eq!(m.parts, [] as [crate::media::streams::MediaPart; 0]);
         assert!(!m.optimized_for_streaming);
     }
 }

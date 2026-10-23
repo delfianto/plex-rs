@@ -157,7 +157,7 @@ mod smoke_tests {
     #[test]
     fn version_matches_cargo() {
         // Sanity check: the constant is populated by env! at compile time.
-        assert!(!VERSION.is_empty());
+        assert_ne!(VERSION, "");
         assert!(VERSION.chars().next().is_some_and(|c| c.is_ascii_digit()));
     }
 

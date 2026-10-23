@@ -361,14 +361,14 @@ mod tests {
         let body = r#"{"MediaContainer": {"size": 0, "title1": "Empty"}}"#;
         let c: MediaContainer<StubItem> = MediaContainer::from_json(body, "Metadata").unwrap();
         assert_eq!(c.meta.title1.as_deref(), Some("Empty"));
-        assert!(c.items.is_empty());
+        assert_eq!(c.items, [] as [crate::xml::tests::StubItem; 0]);
     }
 
     #[test]
     fn null_items_field_yields_empty_vec() {
         let body = r#"{"MediaContainer": {"size": 0, "Metadata": null}}"#;
         let c: MediaContainer<StubItem> = MediaContainer::from_json(body, "Metadata").unwrap();
-        assert!(c.items.is_empty());
+        assert_eq!(c.items, [] as [crate::xml::tests::StubItem; 0]);
     }
 
     #[test]

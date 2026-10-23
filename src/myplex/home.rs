@@ -201,7 +201,10 @@ mod tests {
     #[test]
     fn empty_container_yields_empty_vec() {
         let xml = r"<MediaContainer/>";
-        assert!(parse_home_users(xml).unwrap().is_empty());
+        assert_eq!(
+            parse_home_users(xml).unwrap(),
+            [] as [crate::myplex::home::MyPlexHomeUser; 0]
+        );
     }
 
     #[test]
