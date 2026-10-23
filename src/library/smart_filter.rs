@@ -493,7 +493,7 @@ mod tests {
     fn empty_value_yields_empty_values_vec() {
         let f = SmartFilter::from_uri("type=1&label=").unwrap();
         let label = f.clauses.iter().find(|c| c.field == "label").unwrap();
-        assert!(label.values.is_empty());
+        assert_eq!(label.values, [] as [std::string::String; 0]);
     }
 
     #[test]

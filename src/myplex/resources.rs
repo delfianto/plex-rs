@@ -533,7 +533,10 @@ mod tests {
         let r = MyPlexResource::from_dto(sample_dto()).unwrap();
         assert_eq!(r.preferred_connections(Some(true)).len(), 3);
         // All connections in the sample are https, so http-only is empty.
-        assert!(r.preferred_connections(Some(false)).is_empty());
+        assert_eq!(
+            r.preferred_connections(Some(false)),
+            [] as [std::string::String; 0]
+        );
     }
 
     #[test]
