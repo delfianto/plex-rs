@@ -2,7 +2,6 @@
 
 [![Rust](https://img.shields.io/badge/rust-2024-orange?logo=rust)](https://www.rust-lang.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Coded by Claude](https://img.shields.io/badge/coded%20by-Claude%20Opus%204.7-7c5cff?logo=anthropic)](https://www.anthropic.com)
 [![Probably works](https://img.shields.io/badge/probably-works-yellow?logo=question)](https://en.wikipedia.org/wiki/It_works_on_my_machine)
 [![Salt](https://img.shields.io/badge/take%20with-a%20barn%20of%20salt-red?logo=warning)](#hold-on-a-second)
 
@@ -29,11 +28,6 @@ in `Debug`, races concurrent connect probes, parses WebSocket
 alert frames into typed events, and exposes a forward-compatible
 `Unknown(String)` variant on every wire-discriminated enum. None
 of this is strictly necessary to list your movies.
-
-It was written over a marathon Claude Opus 4.7 session that
-treated every "continue" as marching orders. The result is
-either thorough or comically over-engineered, depending on your
-priors.
 
 **Has anyone run it against a real Plex server?** Excellent
 question. Every endpoint has wiremock integration tests
@@ -170,8 +164,6 @@ RUSTDOCFLAGS='-D warnings' cargo doc --no-deps --all-features
   baseline from. If you need something that's been around since
   2015 and has actually shipped, go there. They'd appreciate the
   GitHub star more than we would.
-- Claude Opus 4.7 — wrote approximately every line of this.
-  Sometimes correctly.
 - Plex — for an API surface so sprawling that documenting it
   required eight separate doc files.
 
