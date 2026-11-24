@@ -1,14 +1,13 @@
 [package]
 name        = "plex-rs"
-version     = "0.0.1"
+version     = "0.1.0"
 edition     = "2024"
-rust-version = "1.98.0"
+rust-version = "1.100.0"
 authors     = ["Dwi <dwi.elfianto@accenture.com>"]
 license     = "MIT"
 description = "Idiomatic, fully-async Rust 2024 client for the Plex Media Server HTTP API and plex.tv (MyPlex)."
-repository  = "https://github.com/justdewey/plex-rs"
-homepage    = "https://github.com/justdewey/plex-rs"
-documentation = "https://docs.rs/plex-rs"
+repository  = "https://github.com/delfianto/plex-rs"
+documentation = "https://github.com/delfianto/plex-rs/tree/main/docs"
 readme      = "README.md"
 keywords    = ["plex", "media", "api", "client", "async"]
 categories  = ["api-bindings", "multimedia", "asynchronous"]
@@ -53,7 +52,7 @@ uuid         = { version = "1", features = ["v4", "serde"] }
 futures-util = { version = "0.3", default-features = false, features = ["std"] }
 insta        = { version = "1", features = ["yaml", "json", "redactions"] }
 pretty_assertions = "1"
-rstest       = "0.28"
+rstest       = "0.29"
 tokio        = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "test-util", "time"] }
 tokio-test   = "0.4"
 tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }

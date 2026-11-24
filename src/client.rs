@@ -313,7 +313,7 @@ fn response_path(resp: &reqwest::Response) -> String {
     format!(
         "{}{}",
         url.path(),
-        url.query().map(|q| format!("?{q}")).unwrap_or_default()
+        url.query().map_or_default(|q| format!("?{q}"))
     )
 }
 

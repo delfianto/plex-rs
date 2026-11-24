@@ -291,7 +291,7 @@ impl std::fmt::Debug for HistoryStream {
 
 impl HistoryStream {
     fn new(query: HistoryQuery) -> Self {
-        let url = query.build_url().map(|u| u.to_string()).unwrap_or_default();
+        let url = query.build_url().map_or_default(|u| u.to_string());
         let page = Some(PageRange::first(query.page_size));
         Self {
             query,

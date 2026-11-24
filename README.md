@@ -9,10 +9,12 @@ A fully-async Rust 2024 client for [Plex Media
 Server](https://www.plex.tv/) and the `plex.tv` cloud, born from
 a very long evening of "what if I just kept pressing accept on
 the next milestone."
+Source builds require Rust 1.100.0 or later. Tagged sources are available on
+[GitHub Releases](https://github.com/delfianto/plex-rs/releases).
 
 ```toml
 [dependencies]
-plex-rs = "0.0"   # version reflects level of confidence
+plex-rs = { git = "https://github.com/delfianto/plex-rs.git", tag = "v0.1.0" }
 ```
 
 ## Hold on, a second.
