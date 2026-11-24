@@ -162,7 +162,7 @@ fn decode_inner_path(input: &str) -> Result<String> {
             return Ok(decoded.into_owned());
         }
         // Otherwise treat the URL's path+query as the inner shape.
-        let q = url.query().map(|q| format!("?{q}")).unwrap_or_default();
+        let q = url.query().map_or_default(|q| format!("?{q}"));
         return Ok(format!("{path}{q}"));
     }
     Err(Error::Config(format!(
